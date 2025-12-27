@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SolidOS Browser</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mashlib/dist/mash.css" />
+  <script src="https://cdn.jsdelivr.net/npm/mashlib/dist/mashlib.min.js"></script>
+  <style>
+    :root {
+      --primary: #7C3AED;
+      --primary-dark: #6D28D9;
+      --secondary: #2563EB;
+      --bg-light: #f8fafc;
+      --bg-dark: #0f172a;
+      --text-light: #1e293b;
+      --text-dark: #e2e8f0;
+      --card-light: #ffffff;
+      --card-dark: #1e293b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-light);
+      color: var(--text-light);
+      min-height: 100vh;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: var(--bg-dark);
+        color: var(--text-dark);
+      }
+      .header { background: linear-gradient(135deg, #5B21B6, #1D4ED8); }
+      .card { background: var(--card-dark); border-color: #334155; }
+      #uriField { background: #1e293b; color: #e2e8f0; border-color: #475569; }
+      #uriField:focus { border-color: var(--primary); }
+      .quick-link { background: #334155; color: #e2e8f0; }
+      .quick-link:hover { background: #475569; }
+      .status-bar { background: var(--card-dark); border-color: #334155; }
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.75rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .header h1::before {
+      content: "";
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="white" opacity="0.9"/><circle cx="50" cy="30" r="8" fill="%237C3AED"/><circle cx="30" cy="60" r="8" fill="%232563EB"/><circle cx="70" cy="60" r="8" fill="%236D28D9"/><line x1="50" y1="30" x2="30" y2="60" stroke="%237C3AED" stroke-width="2"/><line x1="50" y1="30" x2="70" y2="60" stroke="%237C3AED" stroke-width="2"/><line x1="30" y1="60" x2="70" y2="60" stroke="%232563EB" stroke-width="2"/></svg>') no-repeat center;
+      background-size: contain;
+    }
+
+    .header-subtitle {
+      opacity: 0.9;
+      font-size: 0.95rem;
+    }
+
+    .search-container {
+      margin-top: 1.25rem;
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    #uriField {
+      flex: 1;
+      min-width: 280px;
+      padding: 0.875rem 1.25rem;
+      font-size: 1rem;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.95);
+      color: var(--text-light);
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    #uriField:focus {
+      border-color: white;
+      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
+    }
+
+    #uriField::placeholder {
+      color: #94a3b8;
+    }
+
+    #goButton {
+      padding: 0.875rem 2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      background: white;
+      color: var(--primary);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    #goButton:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    #goButton:active {
+      transform: translateY(0);
+    }
+
+    .quick-links {
+      margin-top: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .quick-links-label {
+      font-size: 0.85rem;
+      opacity: 0.8;
+      margin-right: 0.25rem;
+    }
+
+    .quick-link {
+      display: inline-block;
+      padding: 0.4rem 0.9rem;
+      font-size: 0.85rem;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      text-decoration: none;
+      border-radius: 20px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .quick-link:hover {
+      background: rgba(255, 255, 255, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .status-bar {
+      background: var(--card-light);
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0.75rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .status-bar-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .user-info .label {
+      color: #64748b;
+    }
+
+    #webId {
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+      font-size: 0.85rem;
+      color: var(--primary);
+    }
+
+    #loginButtonArea {
+      display: flex;
+      align-items: center;
+    }
+
+    #loginButtonArea input[type="button"] {
+      padding: 0.5rem 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    #loginButtonArea input[type="button"]:hover {
+      background: var(--primary-dark);
+    }
+
+    .browser-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem;
+    }
+
+    .card {
+      background: var(--card-light);
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+    }
+
+    #DummyUUID {
+      min-height: 60vh;
+      padding: 1rem;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 3rem;
+      color: #64748b;
+    }
+
+    .loading.active {
+      display: block;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #e2e8f0;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .welcome-message {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #64748b;
+    }
+
+    .welcome-message h2 {
+      color: var(--text-light);
+      margin-bottom: 0.5rem;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .welcome-message h2 { color: var(--text-dark); }
+    }
+
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      color: #64748b;
+      font-size: 0.85rem;
+    }
+
+    .footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 640px) {
+      .header { padding: 1rem; }
+      .browser-container { padding: 1rem; }
+      .status-bar { padding: 0.75rem 1rem; }
+      #uriField { min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-content">
+      <h1>SolidOS Browser</h1>
+      <p class="header-subtitle">Explore and manage your decentralized data</p>
+
+      <div class="search-container">
+        <input
+          type="text"
+          id="uriField"
+          placeholder="Enter a Solid pod URL or WebID..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button id="goButton">Browse</button>
+      </div>
+
+      <div class="quick-links">
+        <span class="quick-links-label">Try:</span>
+        <a class="quick-link" data-uri="https://timbl.solidcommunity.net/profile/card#me">Tim Berners-Lee</a>
+        <a class="quick-link" data-uri="https://solidcommunity.net/">SolidCommunity</a>
+        <a class="quick-link" data-uri="https://solidweb.org/">SolidWeb</a>
+        <a class="quick-link" data-uri="https://solidos.solidcommunity.net/">SolidOS Team</a>
+        <a class="quick-link" data-uri="https://www.w3.org/">W3C</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="status-bar">
+    <div class="status-bar-content">
+      <div class="user-info">
+        <span class="label">Logged in as:</span>
+        <span id="webId">Not logged in</span>
+      </div>
+      <div id="loginButtonArea"></div>
+    </div>
+  </div>
+
+  <main class="browser-container">
+    <div class="card">
+      <div id="welcome" class="welcome-message">
+        <h2>Welcome to SolidOS Browser</h2>
+        <p>Enter a URL above or click one of the quick links to get started.</p>
+        <p>Log in with your WebID to access private data and edit resources.</p>
+      </div>
+
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>Loading resource...</p>
+      </div>
+
+      <div class="TabulatorOutline" id="DummyUUID" role="main" style="display: none;">
+        <table id="outline"></table>
+        <div id="GlobalDashboard"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>
+      Powered by <a href="https://github.com/SolidOS/mashlib" target="_blank">mashlib</a> |
+      <a href="https://solid-docs.github.io/docs/" target="_blank">Developer Docs</a> |
+      <a href="https://solidproject.org/" target="_blank">Solid Project</a>
+    </p>
+  </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const authn = SolidLogic.authn
+  const authSession = SolidLogic.authSession
+  const store = SolidLogic.store
+  const dom = document
+
+  const uriField = dom.getElementById('uriField')
+  const goButton = dom.getElementById('goButton')
+  const loginButtonArea = dom.getElementById('loginButtonArea')
+  const webIdArea = dom.getElementById('webId')
+  const welcomeEl = dom.getElementById('welcome')
+  const loadingEl = dom.getElementById('loading')
+  const browserEl = dom.getElementById('DummyUUID')
+
+  const outliner = panes.getOutliner(dom)
+
+  // Navigate to a URI
+  function go(uri) {
+    if (!uri) uri = uriField.value.trim()
+    if (!uri) return
+
+    uriField.value = uri
+    console.log('Navigating to:', uri)
+
+    // Show loading state
+    welcomeEl.style.display = 'none'
+    loadingEl.classList.add('active')
+    browserEl.style.display = 'none'
+
+    // Update URL bar
+    const params = new URLSearchParams(location.search)
+    params.set('uri', uri)
+    window.history.replaceState({}, '', `${location.origin}${location.pathname}?${params}`)
+    document.title = `SolidOS Browser - ${uri}`
+
+    // Load the resource
+    const subject = $rdf.sym(uri)
+
+    setTimeout(() => {
+      loadingEl.classList.remove('active')
+      browserEl.style.display = 'block'
+      outliner.GotoSubject(subject, true, undefined, true, undefined)
+    }, 100)
+
+    updateLoginArea()
+  }
+
+  // Update login status display
+  async function updateLoginArea() {
+    loginButtonArea.innerHTML = ''
+    loginButtonArea.appendChild(UI.login.loginStatusBox(document, null, {}))
+
+    const me = authn.currentUser()
+    if (me) {
+      const shortId = me.value.length > 50
+        ? me.value.substring(0, 47) + '...'
+        : me.value
+      webIdArea.textContent = shortId
+      webIdArea.title = me.value
+    } else {
+      webIdArea.textContent = 'Not logged in'
+      webIdArea.title = ''
+    }
+  }
+
+  // Event listeners
+  uriField.addEventListener('keyup', (e) => {
+    if (e.keyCode === 13) go()
+  })
+  goButton.addEventListener('click', () => go())
+
+  // Quick links
+  document.querySelectorAll('.quick-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault()
+      const uri = link.dataset.uri
+      go(uri)
+    })
+  })
+
+  // Handle auth events
+  if (authSession) {
+    authSession.events.on('login', () => {
+      updateLoginArea()
+      if (uriField.value) go()
+    })
+    authSession.events.on('logout', () => {
+      updateLoginArea()
+      if (uriField.value) go()
+    })
+    authSession.events.on('sessionRestore', () => {
+      updateLoginArea()
+      if (uriField.value) go()
+    })
+  }
+
+  // Check for URI in query string
+  const initial = new URLSearchParams(location.search).get('uri')
+  if (initial) {
+    go(initial)
+  }
+
+  updateLoginArea()
+})
+</script>
+</body>
+</html>
