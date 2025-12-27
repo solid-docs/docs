@@ -455,14 +455,31 @@ document.addEventListener('DOMContentLoaded', function() {
     loginButtonArea.innerHTML = ''
     loginButtonArea.appendChild(UI.login.loginStatusBox(document, null, {}))
 
-    // Override signup link to point to solidproject.org
+    // Override signup button/link to point to correct URL
     setTimeout(() => {
+      // Fix any anchor links
       const signupLinks = loginButtonArea.querySelectorAll('a')
       signupLinks.forEach(link => {
         const text = link.textContent.toLowerCase()
         if (text.includes('sign') || text.includes('register') || text.includes('pod')) {
           link.href = 'https://solidproject.org/get_a_pod'
           link.target = '_blank'
+        }
+      })
+
+      // Fix signup button (which opens broken popup)
+      const buttons = loginButtonArea.querySelectorAll('input[type="button"], button')
+      buttons.forEach(btn => {
+        const text = (btn.value || btn.textContent || '').toLowerCase()
+        if (text.includes('sign up')) {
+          // Clone to remove old event listeners
+          const newBtn = btn.cloneNode(true)
+          btn.parentNode.replaceChild(newBtn, btn)
+          newBtn.addEventListener('click', (e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            window.open('https://solidproject.org/get_a_pod', '_blank')
+          })
         }
       })
     }, 100)
