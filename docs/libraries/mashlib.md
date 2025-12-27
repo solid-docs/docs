@@ -8,7 +8,7 @@ description: The bundled SolidOS data browser
 
 mashlib is the complete SolidOS data browser bundle — it combines all libraries and panes into a single distributable package.
 
-**[Try the Live Browser Demo →](pathname:///browser/)**
+**[Try the Live Browser Demo →](https://solid-docs.github.io/docs/browser/)**
 
 ## What's New in mashlib 2.0
 
