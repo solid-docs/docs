@@ -446,6 +446,16 @@ document.addEventListener('DOMContentLoaded', function() {
     loginButtonArea.innerHTML = ''
     loginButtonArea.appendChild(UI.login.loginStatusBox(document, null, {}))
 
+    // Override signup link to point to solidproject.org
+    setTimeout(() => {
+      const signupLinks = loginButtonArea.querySelectorAll('a')
+      signupLinks.forEach(link => {
+        if (link.textContent.toLowerCase().includes('sign up')) {
+          link.href = 'https://solidproject.org/get_a_pod'
+        }
+      })
+    }, 100)
+
     const me = authn.currentUser()
     if (me) {
       const shortId = me.value.length > 50
