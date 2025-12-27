@@ -63,7 +63,9 @@ const config: Config = {
       title: 'SolidOS Docs',
       logo: {
         alt: 'SolidOS Logo',
-        src: 'img/logo.svg',
+        src: 'img/logo.png',
+        width: 32,
+        height: 32,
       },
       items: [
         {
