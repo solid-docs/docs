@@ -45,7 +45,15 @@ const config: Config = {
     image: 'img/solidos-social-card.png',
     metadata: [
       {name: 'keywords', content: 'SolidOS, Solid, mashlib, panes, data browser, linked data, RDF, decentralized web'},
-      {name: 'twitter:card', content: 'summary_large_image'},
+      {name: 'description', content: 'Developer documentation for SolidOS - build data browsers and panes for the Solid ecosystem'},
+      {name: 'author', content: 'SolidOS Community'},
+      {name: 'twitter:card', content: 'summary'},
+      {name: 'twitter:title', content: 'SolidOS Docs'},
+      {name: 'twitter:description', content: 'Build data browsers and panes for the Solid ecosystem'},
+      {property: 'og:type', content: 'website'},
+      {property: 'og:title', content: 'SolidOS Docs'},
+      {property: 'og:description', content: 'Developer documentation for SolidOS - build data browsers and panes for the Solid ecosystem'},
+      {property: 'og:site_name', content: 'SolidOS Docs'},
     ],
     colorMode: {
       defaultMode: 'light',
