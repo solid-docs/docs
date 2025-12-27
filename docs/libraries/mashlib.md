@@ -8,6 +8,77 @@ description: The bundled SolidOS data browser
 
 mashlib is the complete SolidOS data browser bundle — it combines all libraries and panes into a single distributable package.
 
+## What's New in mashlib 2.0
+
+**Released:** November 29, 2025 ([v2.0.0](https://github.com/SolidOS/mashlib/releases/tag/v2.0.0))
+
+mashlib 2.0 is a major release with breaking API changes. See [PR #220](https://github.com/SolidOS/mashlib/pull/220) for full details.
+
+### Breaking Changes
+
+#### New `SolidLogic` Global
+
+The way you access core functionality has changed:
+
+| v1.x (Old) | v2.0 (New) |
+|------------|------------|
+| `panes.UI` | `UI` |
+| `store` / `UI.store` / `panes.UI.store` | `SolidLogic.store` |
+| `authSession` / `UI.authn.authSession` | `SolidLogic.authSession` |
+| `UI.rdf` / `panes.UI.rdf` | `$rdf` |
+| `authn.currentUser()` / `UI.authn.currentUser()` | `SolidLogic.authn.currentUser()` |
+
+#### Node.js Requirements
+
+- **Dropped:** Node 18
+- **Required:** Node 20.x or 22.x
+
+### New Features
+
+- **`SolidLogic` global** — consolidated access to store, authentication, and session
+- **`mashlib.versionInfo`** — runtime version information
+- **Dual bundles** — both `mashlib.js` (development) and `mashlib.min.js` (production)
+- **rdflib 2.3.0** — updated RDF library
+
+### Migration Example
+
+**Before (v1.x):**
+```javascript
+// Accessing the store
+const store = panes.UI.store
+// Or
+const store = UI.store
+
+// Authentication
+const user = panes.UI.authn.currentUser()
+
+// RDF operations
+const sym = panes.UI.rdf.sym('https://example.org/')
+```
+
+**After (v2.0):**
+```javascript
+// Accessing the store
+const store = SolidLogic.store
+
+// Authentication
+const user = SolidLogic.authn.currentUser()
+
+// RDF operations
+const sym = $rdf.sym('https://example.org/')
+```
+
+### Quick Check
+
+Verify your mashlib version at runtime:
+
+```javascript
+console.log(mashlib.versionInfo)
+// { version: '2.0.0', ... }
+```
+
+---
+
 ## Installation
 
 ### npm
@@ -46,32 +117,40 @@ The simplest way to run SolidOS:
 </html>
 ```
 
-## The `panes` Global
+## Global Objects
 
-mashlib exposes a global `panes` object:
+mashlib 2.0 exposes several global objects:
 
 ```javascript
 // The main entry point
 panes.runDataBrowser(document)
 
-// Access to solid-ui
-panes.UI.widgets.button(...)
-panes.UI.forms.buildForm(...)
-panes.UI.style.styleElement(...)
+// Access to solid-ui (v2.0: use UI directly, not panes.UI)
+UI.widgets.button(...)
+UI.forms.buildForm(...)
+UI.style.styleElement(...)
 
-// Access to the store
-panes.store           // The rdflib store
-panes.store.fetcher   // Fetcher
-panes.store.updater   // UpdateManager
+// Access to the store (v2.0: use SolidLogic)
+SolidLogic.store           // The rdflib store
+SolidLogic.store.fetcher   // Fetcher
+SolidLogic.store.updater   // UpdateManager
 
-// Authentication
-panes.authn.currentUser()
-panes.authn.login()
-panes.authn.logout()
+// Authentication (v2.0: use SolidLogic.authn)
+SolidLogic.authn.currentUser()
+SolidLogic.authn.login()
+SolidLogic.authn.logout()
+
+// RDF operations (v2.0: use $rdf directly)
+$rdf.sym('https://example.org/')
+$rdf.lit('Hello')
+$rdf.Namespace('http://xmlns.com/foaf/0.1/')
 
 // Pane registry
 panes.paneRegistry.register(myPane)
 panes.paneRegistry.byName('folder')
+
+// Version info (new in v2.0)
+console.log(mashlib.versionInfo)
 ```
 
 ## Configuration
@@ -81,7 +160,7 @@ panes.paneRegistry.byName('folder')
 Open a specific resource on load:
 
 ```javascript
-const subject = panes.UI.store.sym('https://alice.example/profile/card#me')
+const subject = $rdf.sym('https://alice.example/profile/card#me')
 panes.runDataBrowser(document, subject)
 ```
 
@@ -98,7 +177,7 @@ https://example.org/browse?uri=https://alice.example/profile/card
 const params = new URLSearchParams(window.location.search)
 const uri = params.get('uri')
 if (uri) {
-  panes.runDataBrowser(document, panes.UI.store.sym(uri))
+  panes.runDataBrowser(document, $rdf.sym(uri))
 }
 ```
 
@@ -149,7 +228,7 @@ function SolidOSBrowser({ uri }) {
 
   useEffect(() => {
     if (containerRef.current && window.panes) {
-      const subject = window.panes.UI.store.sym(uri)
+      const subject = window.$rdf.sym(uri)
       window.panes.runDataBrowser(document, subject)
     }
   }, [uri])
@@ -170,7 +249,7 @@ export default {
   props: ['uri'],
   mounted() {
     if (window.panes) {
-      const subject = window.panes.UI.store.sym(this.uri)
+      const subject = window.$rdf.sym(this.uri)
       window.panes.runDataBrowser(document, subject)
     }
   }
@@ -247,12 +326,12 @@ document.addEventListener('solid-navigate', (event) => {
   console.log('Navigated to:', event.detail.uri)
 })
 
-// Login/logout events
-panes.authn.onLogin((webId) => {
+// Login/logout events (v2.0: use SolidLogic.authn)
+SolidLogic.authn.onLogin((webId) => {
   console.log('User logged in:', webId)
 })
 
-panes.authn.onLogout(() => {
+SolidLogic.authn.onLogout(() => {
   console.log('User logged out')
 })
 ```
