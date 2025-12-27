@@ -459,8 +459,10 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
       const signupLinks = loginButtonArea.querySelectorAll('a')
       signupLinks.forEach(link => {
-        if (link.textContent.toLowerCase().includes('sign up')) {
+        const text = link.textContent.toLowerCase()
+        if (text.includes('sign') || text.includes('register') || text.includes('pod')) {
           link.href = 'https://solidproject.org/get_a_pod'
+          link.target = '_blank'
         }
       })
     }, 100)
