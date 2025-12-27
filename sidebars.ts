@@ -16,7 +16,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Architecture',
-      collapsed: false,
+      collapsed: true,
       items: [
         'architecture/overview',
       ],
@@ -24,17 +24,59 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Panes',
-      collapsed: false,
+      collapsed: true,
       items: [
         'panes/overview',
+        'panes/creating-panes',
+        {
+          type: 'category',
+          label: 'Built-in Panes',
+          collapsed: true,
+          items: [
+            'panes/folder-pane',
+            'panes/contacts-pane',
+            'panes/chat-pane',
+            'panes/profile-pane',
+            'panes/meeting-pane',
+            'panes/issue-pane',
+            'panes/source-pane',
+          ],
+        },
       ],
     },
     {
       type: 'category',
       label: 'Libraries',
-      collapsed: false,
+      collapsed: true,
       items: [
         'libraries/overview',
+        'libraries/rdflib',
+        'libraries/solid-logic',
+        'libraries/solid-ui',
+        'libraries/solid-panes',
+        'libraries/mashlib',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Cookbook',
+      collapsed: true,
+      items: [
+        'cookbook/overview',
+        'cookbook/authentication',
+        'cookbook/reading-data',
+        'cookbook/writing-data',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Reference',
+      collapsed: true,
+      items: [
+        'reference/troubleshooting',
+        'reference/faq',
+        'reference/deployment',
+        'reference/contributing',
       ],
     },
   ],
