@@ -66,19 +66,85 @@ const config: Config = {
       },
       items: [
         {
-          type: 'docSidebar',
-          sidebarId: 'mainSidebar',
+          to: '/docs/getting-started/what-is-solidos',
+          label: 'Getting Started',
           position: 'left',
-          label: 'Docs',
+        },
+        {
+          to: '/docs/architecture/overview',
+          label: 'Architecture',
+          position: 'left',
+        },
+        {
+          to: '/docs/panes/overview',
+          label: 'Panes',
+          position: 'left',
+        },
+        {
+          to: '/docs/libraries/overview',
+          label: 'Libraries',
+          position: 'left',
+        },
+        {
+          to: '/docs/cookbook/overview',
+          label: 'Cookbook',
+          position: 'left',
+        },
+        {
+          to: '/docs/reference/faq',
+          label: 'Reference',
+          position: 'left',
+        },
+        {
+          type: 'dropdown',
+          label: 'Ecosystem',
+          position: 'left',
+          items: [
+            {
+              label: 'SolidOS Monorepo',
+              href: 'https://github.com/SolidOS/solidos',
+            },
+            {
+              label: 'mashlib',
+              href: 'https://github.com/SolidOS/mashlib',
+            },
+            {
+              label: 'solid-panes',
+              href: 'https://github.com/SolidOS/solid-panes',
+            },
+            {
+              label: 'solid-ui',
+              href: 'https://github.com/SolidOS/solid-ui',
+            },
+            {
+              label: 'solid-logic',
+              href: 'https://github.com/SolidOS/solid-logic',
+            },
+            {
+              label: 'rdflib.js',
+              href: 'https://github.com/linkeddata/rdflib.js',
+            },
+            {
+              type: 'html',
+              value: '<hr style="margin: 0.5rem 0;">',
+            },
+            {
+              label: 'Solid Project',
+              href: 'https://solidproject.org/',
+            },
+            {
+              label: 'Community Solid Server',
+              href: 'https://github.com/CommunitySolidServer/CommunitySolidServer',
+            },
+            {
+              label: 'Data Kitchen (Desktop)',
+              href: 'https://github.com/SolidOS/data-kitchen',
+            },
+          ],
         },
         {
           href: 'https://github.com/SolidOS',
-          label: 'SolidOS GitHub',
-          position: 'right',
-        },
-        {
-          href: 'https://github.com/solid-docs/docs',
-          label: 'Contribute',
+          label: 'GitHub',
           position: 'right',
         },
       ],
@@ -91,15 +157,17 @@ const config: Config = {
           items: [
             {label: 'Getting Started', to: '/docs/getting-started/what-is-solidos'},
             {label: 'Architecture', to: '/docs/architecture/overview'},
-            {label: 'Panes', to: '/docs/panes/overview'},
+            {label: 'Building Panes', to: '/docs/panes/creating-panes'},
+            {label: 'Cookbook', to: '/docs/cookbook/overview'},
           ],
         },
         {
           title: 'Libraries',
           items: [
-            {label: 'Libraries Overview', to: '/docs/libraries/overview'},
-            {label: 'SolidOS Monorepo', href: 'https://github.com/SolidOS/solidos'},
-            {label: 'rdflib.js', href: 'https://github.com/linkeddata/rdflib.js'},
+            {label: 'rdflib.js', to: '/docs/libraries/rdflib'},
+            {label: 'solid-logic', to: '/docs/libraries/solid-logic'},
+            {label: 'solid-ui', to: '/docs/libraries/solid-ui'},
+            {label: 'mashlib', to: '/docs/libraries/mashlib'},
           ],
         },
         {
@@ -114,7 +182,8 @@ const config: Config = {
           title: 'More',
           items: [
             {label: 'SolidOS GitHub', href: 'https://github.com/SolidOS'},
-            {label: 'This Docs Repo', href: 'https://github.com/solid-docs/docs'},
+            {label: 'Contribute', href: 'https://github.com/solid-docs/docs'},
+            {label: 'FAQ', to: '/docs/reference/faq'},
           ],
         },
       ],
