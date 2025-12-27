@@ -117,6 +117,138 @@ The simplest way to run SolidOS:
 </html>
 ```
 
+### Complete Working Example
+
+A full standalone HTML file with login, URI navigation, and the data browser. Save this as `browse.html` and open in a browser:
+
+```html
+<!DOCTYPE html>
+<html id="docHTML">
+<head>
+  <meta charset="UTF-8">
+  <title>SolidOS Data Browser</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mashlib/dist/mash.css" />
+  <script src="https://cdn.jsdelivr.net/npm/mashlib/dist/mashlib.min.js"></script>
+  <style>
+    #inputArea {
+      width: 100%;
+      padding: 0.5em;
+      background-color: #d0d0d0;
+    }
+    #uriField {
+      width: 70%;
+      font-size: 100%;
+      min-width: 25em;
+      padding: 0.5em;
+    }
+    #loginButtonArea { display: inline-block; }
+    #loginButtonArea input { margin: 0.25em !important; padding: 0.25em !important; }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <div id="inputArea">
+    <div style="margin-bottom:0.6em"><strong>SolidOS Data Browser</strong></div>
+    <div style="margin-left:1em">
+      Viewing
+      <input id="uriField" type="text" placeholder="Enter a pod URL, e.g. https://you.solidcommunity.net/" />
+      <input type="button" id="goButton" value="Go" />
+    </div>
+    <div style="margin-top:0.5em; margin-left:1em">
+      As user <span id="webId">&lt;public user&gt;</span>
+      <span id="loginButtonArea"></span>
+    </div>
+  </div>
+
+  <!-- Data Browser Container -->
+  <div class="TabulatorOutline" id="DummyUUID" role="main">
+    <table id="outline"></table>
+    <div id="GlobalDashboard"></div>
+  </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const authn = SolidLogic.authn
+  const authSession = SolidLogic.authSession
+  const store = SolidLogic.store
+  const dom = document
+
+  const uriField = dom.getElementById('uriField')
+  const goButton = dom.getElementById('goButton')
+  const loginButtonArea = dom.getElementById('loginButtonArea')
+  const webIdArea = dom.getElementById('webId')
+  const banner = dom.getElementById('inputArea')
+
+  const outliner = panes.getOutliner(dom)
+
+  // Navigate to a URI
+  function go() {
+    const uri = $rdf.uri.join(uriField.value, window.location.href)
+    console.log('Navigating to:', uri)
+
+    // Update URL bar
+    const params = new URLSearchParams(location.search)
+    params.set('uri', uri)
+    window.history.replaceState({}, '', `${location.origin}${location.pathname}?${params}`)
+
+    // Load the resource
+    const subject = $rdf.sym(uri)
+    outliner.GotoSubject(subject, true, undefined, true, undefined)
+    updateLoginArea()
+  }
+
+  // Update login status display
+  async function updateLoginArea() {
+    loginButtonArea.innerHTML = ''
+    if (uriField.value) {
+      loginButtonArea.appendChild(UI.login.loginStatusBox(document, null, {}))
+    }
+
+    const me = authn.currentUser()
+    if (me) {
+      webIdArea.innerHTML = `&lt;${me.value}&gt;`
+      banner.style.backgroundColor = '#bbccbb'
+    } else {
+      webIdArea.innerHTML = '&lt;public user&gt;'
+      banner.style.backgroundColor = '#ccbbbb'
+    }
+  }
+
+  // Event listeners
+  uriField.addEventListener('keyup', (e) => { if (e.keyCode === 13) go() })
+  goButton.addEventListener('click', go)
+
+  // Handle auth events
+  if (authSession) {
+    authSession.events.on('login', () => { updateLoginArea(); go() })
+    authSession.events.on('logout', () => { updateLoginArea(); go() })
+    authSession.events.on('sessionRestore', () => { updateLoginArea(); go() })
+  }
+
+  // Check for URI in query string
+  const initial = new URLSearchParams(location.search).get('uri')
+  if (initial) {
+    uriField.value = initial
+    go()
+  }
+
+  updateLoginArea()
+})
+</script>
+</body>
+</html>
+```
+
+**Try it:** [Live demo on GitHub Pages](https://solidos.github.io/mashlib/dist/browse.html)
+
+**Usage:**
+1. Save the HTML file locally
+2. Open in a browser
+3. Enter a Solid pod URL (e.g., `https://solidcommunity.net/`)
+4. Click "Go" to browse
+5. Click the login button to authenticate with your WebID
+
 ## Global Objects
 
 mashlib 2.0 exposes several global objects:
