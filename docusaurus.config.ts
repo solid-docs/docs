@@ -31,6 +31,7 @@ const config: Config = {
         docs: {
           sidebarPath: './sidebars.ts',
           editUrl: 'https://github.com/solid-docs/docs/tree/gh-pages/',
+          routeBasePath: '/',
         },
         blog: false,
         theme: {
@@ -66,32 +67,32 @@ const config: Config = {
       },
       items: [
         {
-          to: '/docs/getting-started/what-is-solidos',
+          to: '/getting-started/what-is-solidos',
           label: 'Getting Started',
           position: 'left',
         },
         {
-          to: '/docs/architecture/overview',
+          to: '/architecture/overview',
           label: 'Architecture',
           position: 'left',
         },
         {
-          to: '/docs/panes/overview',
+          to: '/panes/overview',
           label: 'Panes',
           position: 'left',
         },
         {
-          to: '/docs/libraries/overview',
+          to: '/libraries/overview',
           label: 'Libraries',
           position: 'left',
         },
         {
-          to: '/docs/cookbook/overview',
+          to: '/cookbook/overview',
           label: 'Cookbook',
           position: 'left',
         },
         {
-          to: '/docs/reference/faq',
+          to: '/reference/faq',
           label: 'Reference',
           position: 'left',
         },
@@ -155,19 +156,19 @@ const config: Config = {
         {
           title: 'Learn',
           items: [
-            {label: 'Getting Started', to: '/docs/getting-started/what-is-solidos'},
-            {label: 'Architecture', to: '/docs/architecture/overview'},
-            {label: 'Building Panes', to: '/docs/panes/creating-panes'},
-            {label: 'Cookbook', to: '/docs/cookbook/overview'},
+            {label: 'Getting Started', to: '/getting-started/what-is-solidos'},
+            {label: 'Architecture', to: '/architecture/overview'},
+            {label: 'Building Panes', to: '/panes/creating-panes'},
+            {label: 'Cookbook', to: '/cookbook/overview'},
           ],
         },
         {
           title: 'Libraries',
           items: [
-            {label: 'rdflib.js', to: '/docs/libraries/rdflib'},
-            {label: 'solid-logic', to: '/docs/libraries/solid-logic'},
-            {label: 'solid-ui', to: '/docs/libraries/solid-ui'},
-            {label: 'mashlib', to: '/docs/libraries/mashlib'},
+            {label: 'rdflib.js', to: '/libraries/rdflib'},
+            {label: 'solid-logic', to: '/libraries/solid-logic'},
+            {label: 'solid-ui', to: '/libraries/solid-ui'},
+            {label: 'mashlib', to: '/libraries/mashlib'},
           ],
         },
         {
@@ -183,7 +184,7 @@ const config: Config = {
           items: [
             {label: 'SolidOS GitHub', href: 'https://github.com/SolidOS'},
             {label: 'Contribute', href: 'https://github.com/solid-docs/docs'},
-            {label: 'FAQ', to: '/docs/reference/faq'},
+            {label: 'FAQ', to: '/reference/faq'},
           ],
         },
       ],

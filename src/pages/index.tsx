@@ -19,7 +19,7 @@ function HomepageHeader() {
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/docs/getting-started/what-is-solidos">
+            to="/getting-started/what-is-solidos">
             Get Started
           </Link>
         </div>
@@ -48,17 +48,17 @@ function HomepageFeatures() {
           <Feature
             title="Pane System"
             description="Build modular UI components that render specific RDF data types. Each pane is a self-contained module."
-            link="/docs/panes/overview"
+            link="/panes/overview"
           />
           <Feature
             title="RDF Foundation"
             description="Built on rdflib.js, SolidOS provides powerful tools for working with linked data and the Solid ecosystem."
-            link="/docs/libraries/overview"
+            link="/libraries/overview"
           />
           <Feature
             title="Extensible"
             description="Add custom panes for your data types, integrate with the authentication system, and build on solid-ui widgets."
-            link="/docs/getting-started/your-first-pane"
+            link="/getting-started/your-first-pane"
           />
         </div>
       </div>
