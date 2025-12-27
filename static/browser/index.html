@@ -208,40 +208,49 @@
 
     #loginButtonArea input[type="button"],
     #loginButtonArea button {
-      padding: 0.5rem 1.25rem !important;
-      font-size: 0.9rem !important;
-      font-weight: 500 !important;
-      background: var(--primary) !important;
-      color: white !important;
-      border: none !important;
-      border-radius: 8px !important;
+      padding: 0.6rem 1.5rem !important;
+      font-size: 0.875rem !important;
+      font-weight: 600 !important;
+      background: white !important;
+      color: var(--primary) !important;
+      border: 2px solid var(--primary) !important;
+      border-radius: 50px !important;
       cursor: pointer !important;
       transition: all 0.2s ease;
       opacity: 1 !important;
-      margin: 0 0.25rem !important;
+      margin: 0 0.35rem !important;
+      text-transform: none !important;
+      letter-spacing: 0 !important;
+      box-shadow: 0 2px 8px rgba(124, 58, 237, 0.15);
     }
 
     #loginButtonArea input[type="button"]:hover,
     #loginButtonArea button:hover {
-      background: var(--primary-dark) !important;
+      background: var(--primary) !important;
+      color: white !important;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
     }
 
     #loginButtonArea a {
-      padding: 0.5rem 1.25rem !important;
-      font-size: 0.9rem !important;
-      font-weight: 500 !important;
-      background: #10b981 !important;
+      padding: 0.6rem 1.5rem !important;
+      font-size: 0.875rem !important;
+      font-weight: 600 !important;
+      background: linear-gradient(135deg, var(--primary), var(--secondary)) !important;
       color: white !important;
       border: none !important;
-      border-radius: 8px !important;
+      border-radius: 50px !important;
       cursor: pointer !important;
       text-decoration: none !important;
       display: inline-block;
-      margin: 0 0.25rem !important;
+      margin: 0 0.35rem !important;
+      box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+      transition: all 0.2s ease;
     }
 
     #loginButtonArea a:hover {
-      background: #059669 !important;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
     }
 
     .browser-container {
