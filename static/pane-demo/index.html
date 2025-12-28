@@ -395,7 +395,7 @@ panes.<span class="function">register</span>(<span class="property">myPane</span
           <input type="text" id="resourceUri" value="https://timbl.solidcommunity.net/profile/card#me" placeholder="Enter a Solid resource URI">
         </div>
 
-        <button class="btn btn-primary" id="loadBtn">Load Resource</button>
+        <button class="btn btn-primary" id="loadBtn">Render Pane</button>
         <button class="btn btn-secondary" id="registerBtn">Register Custom Pane</button>
 
         <div class="demo-area" id="demoArea">
@@ -554,7 +554,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Total panes:', getPaneList().length || 'unknown')
   })
 
-  // Load a resource
+  // Simulate rendering a pane for a resource
   loadBtn.addEventListener('click', function() {
     const uri = resourceUri.value.trim()
     if (!uri) {
@@ -562,45 +562,47 @@ document.addEventListener('DOMContentLoaded', function() {
       return
     }
 
-    // Clear demo area and show loading
-    demoArea.innerHTML = '<p style="text-align: center; color: #94a3b8;">Loading resource...</p>'
     demoArea.classList.add('active')
 
-    // Create the data browser view
+    // Create a simulated pane render to demonstrate the concept
     const subject = $rdf.sym(uri)
 
-    // Create a proper container for the browser
-    demoArea.innerHTML = ''
-    const container = document.createElement('div')
-    container.className = 'TabulatorOutline'
-    container.id = 'DemoOutline'
-    container.setAttribute('role', 'main')
+    // If custom pane is registered, show what it would render
+    if (customPaneRegistered) {
+      // Simulate the pane's render function
+      const context = { dom: document }
+      const div = document.createElement('div')
+      div.className = 'custom-pane-content'
+      div.innerHTML = `
+        <h3>Hello from Custom Pane!</h3>
+        <p>You are viewing: <strong>${subject.value}</strong></p>
+        <p style="margin-top: 1rem; font-size: 0.85rem;">
+          This pane was registered with plain JavaScript - no build step!
+        </p>
+      `
 
-    const table = document.createElement('table')
-    table.id = 'demoTable'
-    container.appendChild(table)
+      demoArea.innerHTML = ''
+      demoArea.appendChild(div)
 
-    const dashboard = document.createElement('div')
-    dashboard.id = 'DemoDashboard'
-    container.appendChild(dashboard)
-
-    demoArea.appendChild(container)
-
-    // Use setTimeout to let DOM settle
-    setTimeout(() => {
-      try {
-        const outliner = panes.getOutliner(document)
-        outliner.GotoSubject(subject, true, undefined, true, container)
-      } catch (err) {
-        console.error('Error loading resource:', err)
-        demoArea.innerHTML = `
-          <div style="padding: 2rem; text-align: center; color: #ef4444;">
-            <p><strong>Error loading resource</strong></p>
-            <p style="font-size: 0.9rem; color: #64748b;">${err.message}</p>
-          </div>
-        `
-      }
-    }, 200)
+      // Also show info about trying it in the full browser
+      const info = document.createElement('div')
+      info.style.cssText = 'margin-top: 1rem; padding: 1rem; background: #dbeafe; border-radius: 8px; font-size: 0.9rem;'
+      info.innerHTML = `
+        <strong>Try it live!</strong> Open the
+        <a href="../browser/?uri=${encodeURIComponent(uri)}" target="_blank" style="color: #2563eb;">SolidOS Browser</a>
+        to see all panes (including custom ones) for this resource.
+      `
+      demoArea.appendChild(info)
+    } else {
+      demoArea.innerHTML = `
+        <div style="padding: 2rem; text-align: center; color: #64748b;">
+          <p>Click "Register Custom Pane" first to see the custom pane render.</p>
+          <p style="margin-top: 0.5rem;">
+            Or try the <a href="../browser/?uri=${encodeURIComponent(uri)}" target="_blank" style="color: #2563eb;">full SolidOS Browser</a>
+          </p>
+        </div>
+      `
+    }
   })
 
   // Initialize pane list
