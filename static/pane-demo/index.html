@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Custom Pane Demo - No Build Step Required</title>
+  <link rel="icon" href="../img/logo.png" type="image/png">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mashlib/dist/mash.css" />
   <script src="https://cdn.jsdelivr.net/npm/mashlib/dist/mashlib.min.js"></script>
   <style>
@@ -467,10 +468,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
   let customPaneRegistered = false
 
+  // Get the pane list from various possible locations
+  function getPaneList() {
+    // Try different ways to access the pane list
+    if (panes.list && Array.isArray(panes.list)) return panes.list
+    if (panes.paneRegistry && panes.paneRegistry.list) return panes.paneRegistry.list
+    if (typeof panes.byName === 'function') {
+      // Collect known panes by trying common names
+      return []
+    }
+    return []
+  }
+
   // Update the pane list display
   function updatePaneList() {
-    const list = panes.paneRegistry ? panes.paneRegistry.list : []
+    const list = getPaneList()
     paneList.innerHTML = ''
+
+    if (list.length === 0) {
+      const li = document.createElement('li')
+      li.innerHTML = '<em style="color: #94a3b8;">Pane list not accessible (panes are still registered)</em>'
+      paneList.appendChild(li)
+      return
+    }
 
     // Show first 10 panes
     const displayList = list.slice(0, 10)
@@ -531,7 +551,7 @@ document.addEventListener('DOMContentLoaded', function() {
     updatePaneList()
 
     console.log('Custom pane registered:', helloPane.name)
-    console.log('Total panes:', panes.paneRegistry.list.length)
+    console.log('Total panes:', getPaneList().length || 'unknown')
   })
 
   // Load a resource
@@ -543,23 +563,44 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Clear demo area and show loading
-    demoArea.innerHTML = '<p style="text-align: center; color: #94a3b8;">Loading...</p>'
+    demoArea.innerHTML = '<p style="text-align: center; color: #94a3b8;">Loading resource...</p>'
     demoArea.classList.add('active')
 
     // Create the data browser view
     const subject = $rdf.sym(uri)
-    const outliner = panes.getOutliner(document)
 
-    // Create a container for the browser
-    demoArea.innerHTML = `
-      <div class="TabulatorOutline" id="DemoOutline" role="main">
-        <table id="demoTable"></table>
-      </div>
-    `
+    // Create a proper container for the browser
+    demoArea.innerHTML = ''
+    const container = document.createElement('div')
+    container.className = 'TabulatorOutline'
+    container.id = 'DemoOutline'
+    container.setAttribute('role', 'main')
 
+    const table = document.createElement('table')
+    table.id = 'demoTable'
+    container.appendChild(table)
+
+    const dashboard = document.createElement('div')
+    dashboard.id = 'DemoDashboard'
+    container.appendChild(dashboard)
+
+    demoArea.appendChild(container)
+
+    // Use setTimeout to let DOM settle
     setTimeout(() => {
-      outliner.GotoSubject(subject, true, undefined, true, document.getElementById('DemoOutline'))
-    }, 100)
+      try {
+        const outliner = panes.getOutliner(document)
+        outliner.GotoSubject(subject, true, undefined, true, container)
+      } catch (err) {
+        console.error('Error loading resource:', err)
+        demoArea.innerHTML = `
+          <div style="padding: 2rem; text-align: center; color: #ef4444;">
+            <p><strong>Error loading resource</strong></p>
+            <p style="font-size: 0.9rem; color: #64748b;">${err.message}</p>
+          </div>
+        `
+      }
+    }, 200)
   })
 
   // Initialize pane list
