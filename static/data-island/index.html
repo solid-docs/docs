@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Island Demo - Embedded RDF Profile</title>
+  <link rel="icon" href="../img/logo.png" type="image/png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mashlib/dist/mash.css" />
+  <script src="https://cdn.jsdelivr.net/npm/mashlib/dist/mashlib.min.js"></script>
+  <style>
+    :root {
+      --primary: #7C3AED;
+      --secondary: #2563EB;
+      --accent: #10B981;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f8fafc;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 1.5rem 2rem;
+    }
+
+    .header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+    }
+
+    .header p {
+      margin: 0;
+      opacity: 0.9;
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--accent);
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 0.5rem;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .container { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: #f1f5f9;
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .card-body {
+      padding: 1rem;
+    }
+
+    .turtle-source {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 1rem;
+      border-radius: 8px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 0.8rem;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .browser-area {
+      min-height: 300px;
+    }
+
+    .browser-area .TabulatorOutline {
+      padding: 0.5rem;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .info-box {
+      background: #dbeafe;
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .info-box code {
+      background: rgba(0,0,0,0.1);
+      padding: 0.1rem 0.3rem;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      color: #64748b;
+      font-size: 0.85rem;
+    }
+
+    .footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+<!-- The Data Island: RDF embedded directly in HTML -->
+<script type="text/turtle" id="profile-data">
+@prefix : <#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix solid: <http://www.w3.org/ns/solid/terms#> .
+@prefix space: <http://www.w3.org/ns/pim/space#> .
+@prefix vcard: <http://www.w3.org/2006/vcard/ns#> .
+
+:me
+    a foaf:Person, schema:Person ;
+    foaf:name "Tim Berners-Lee" ;
+    foaf:givenName "Timothy" ;
+    foaf:familyName "Berners-Lee" ;
+    foaf:nick "timbl" ;
+    foaf:title "Sir" ;
+    foaf:img <https://www.w3.org/People/Berners-Lee/Press/Stock/Berners-Lee_2001_sq.jpg> ;
+    foaf:homepage <https://www.w3.org/People/Berners-Lee/> ;
+    foaf:workplaceHomepage <https://www.w3.org/> ;
+    foaf:mbox <mailto:timbl@w3.org> ;
+    schema:jobTitle "Web Developer" ;
+    rdfs:comment "Inventor of the World Wide Web. Director of W3C." ;
+    foaf:knows :alice, :bob ;
+    space:preferencesFile <./settings/prefs.ttl> ;
+    solid:publicTypeIndex <./settings/publicTypeIndex.ttl> .
+
+:alice
+    a foaf:Person ;
+    foaf:name "Alice" ;
+    rdfs:comment "A friend" .
+
+:bob
+    a foaf:Person ;
+    foaf:name "Bob" ;
+    rdfs:comment "Another friend" .
+</script>
+
+<header class="header">
+  <h1>Data Island Demo <span class="badge">No Server Required</span></h1>
+  <p>RDF data embedded directly in HTML, rendered by SolidOS</p>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <div class="card-header">Embedded Turtle Data</div>
+    <div class="card-body">
+      <div class="turtle-source" id="sourceDisplay"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">SolidOS Rendered View</div>
+    <div class="card-body browser-area">
+      <div class="TabulatorOutline" id="DummyUUID" role="main">
+        <table id="outline"></table>
+        <div id="GlobalDashboard"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card full-width">
+    <div class="card-header">How It Works</div>
+    <div class="card-body">
+      <div class="info-box">
+        <p><strong>1. Embed data:</strong> Add a <code>&lt;script type="text/turtle"&gt;</code> tag with your RDF</p>
+        <p><strong>2. Parse it:</strong> <code>$rdf.parse(data, SolidLogic.store, baseURI, 'text/turtle')</code></p>
+        <p><strong>3. Render:</strong> SolidOS panes automatically display the data</p>
+        <p style="margin-bottom: 0;"><strong>Benefits:</strong> No CORS, no server, works offline, instant load</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="footer">
+  <a href="../browser/">SolidOS Browser</a> |
+  <a href="../pane-demo/">Custom Pane Demo</a> |
+  <a href="https://solid-docs.github.io/docs/libraries/mashlib">mashlib Docs</a>
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const store = SolidLogic.store
+  const dataIsland = document.getElementById('profile-data')
+  const sourceDisplay = document.getElementById('sourceDisplay')
+
+  // Display the source
+  sourceDisplay.textContent = dataIsland.textContent.trim()
+
+  // Parse the embedded Turtle into the store
+  const baseURI = window.location.href.split('?')[0].split('#')[0]
+  const profileURI = baseURI + '#me'
+
+  try {
+    $rdf.parse(dataIsland.textContent, store, baseURI, 'text/turtle')
+    console.log('Parsed data island. Statements:', store.statements.length)
+
+    // Navigate to the profile
+    const subject = $rdf.sym(profileURI)
+    const outliner = panes.getOutliner(document)
+    outliner.GotoSubject(subject, true, undefined, true, undefined)
+
+  } catch (err) {
+    console.error('Error parsing data island:', err)
+    document.getElementById('DummyUUID').innerHTML =
+      '<p style="color: #ef4444; padding: 1rem;">Error: ' + err.message + '</p>'
+  }
+})
+</script>
+</body>
+</html>
