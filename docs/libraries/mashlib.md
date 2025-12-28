@@ -8,7 +8,7 @@ description: The bundled SolidOS data browser
 
 mashlib is the complete SolidOS data browser bundle — it combines all libraries and panes into a single distributable package.
 
-**[Try the Live Browser Demo →](https://solid-docs.github.io/docs/browser/)**
+**[Try the Live Browser Demo →](https://solid-docs.github.io/docs/browser/)** | **[Custom Pane Demo →](https://solid-docs.github.io/docs/pane-demo/)**
 
 ## What's New in mashlib 2.0
 
@@ -393,22 +393,138 @@ export default {
 
 ## Registering Custom Panes
 
-Add custom panes before running the browser:
+One of mashlib's most powerful features is the ability to register custom panes with **plain JavaScript** — no build step, no transpiler, no npm required. Just edit and refresh!
+
+**[See the Custom Pane Demo →](https://solid-docs.github.io/docs/pane-demo/)**
+
+### Basic Registration
 
 ```javascript
-// Define your pane
+// Define your pane - pure JavaScript!
 const myPane = {
   name: 'my-custom-pane',
-  icon: '🎯',
-  label: (subject) => { /* ... */ },
-  render: (subject, dom, context) => { /* ... */ }
+  icon: 'https://example.org/icon.svg',
+
+  // When should this pane be shown? Return a label or null
+  label: function(subject, context) {
+    return "My Custom View"
+  },
+
+  // Render the pane content
+  render: function(subject, context) {
+    const div = context.dom.createElement('div')
+    div.innerHTML = '<h2>Hello from my pane!</h2>'
+    div.innerHTML += '<p>Viewing: ' + subject.value + '</p>'
+    return div
+  }
 }
 
-// Register it
-panes.paneRegistry.register(myPane)
+// Register it - that's it!
+panes.register(myPane)
+```
 
-// Then run the browser
-panes.runDataBrowser(document)
+### Conditional Display
+
+Show your pane only for specific resource types:
+
+```javascript
+const photoPane = {
+  name: 'photo-pane',
+
+  label: function(subject, context) {
+    // Only show for image files
+    const uri = subject.value
+    if (uri.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+      return "Photo View"
+    }
+    return null  // Don't show for other resources
+  },
+
+  render: function(subject, context) {
+    const img = context.dom.createElement('img')
+    img.src = subject.value
+    img.style.maxWidth = '100%'
+    return img
+  }
+}
+
+panes.register(photoPane)
+```
+
+### Dynamic Pane Loading
+
+Load panes from external URLs — perfect for hosting panes on your Pod or GitHub Pages:
+
+```javascript
+// Load a pane from an external ES module
+async function loadExternalPane(url) {
+  const module = await import(url)
+  panes.register(module.default)
+}
+
+// Load from your Pod
+loadExternalPane('https://you.solidcommunity.net/public/panes/weather-pane.js')
+
+// Or from GitHub Pages
+loadExternalPane('https://your-org.github.io/panes/chart-pane.js')
+```
+
+The external pane file (`weather-pane.js`):
+
+```javascript
+// weather-pane.js - an ES module
+export default {
+  name: 'weather-pane',
+  label: function(subject, context) {
+    // Check if subject has weather data
+    const store = SolidLogic.store
+    const WEATHER = $rdf.Namespace('http://example.org/weather#')
+    if (store.any(subject, WEATHER('temperature'))) {
+      return "Weather"
+    }
+    return null
+  },
+  render: function(subject, context) {
+    // Render weather data...
+  }
+}
+```
+
+### Accessing RDF Data in Panes
+
+Use the RDF store to read data about the subject:
+
+```javascript
+const profilePane = {
+  name: 'profile-summary',
+
+  label: function(subject, context) {
+    const store = SolidLogic.store
+    const FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/')
+    // Only show for resources with a name
+    if (store.any(subject, FOAF('name'))) {
+      return "Profile Summary"
+    }
+    return null
+  },
+
+  render: function(subject, context) {
+    const store = SolidLogic.store
+    const FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/')
+
+    const name = store.any(subject, FOAF('name'))
+    const img = store.any(subject, FOAF('img'))
+
+    const div = context.dom.createElement('div')
+    div.innerHTML = '<h2>' + (name ? name.value : 'Unknown') + '</h2>'
+    if (img) {
+      div.innerHTML += '<img src="' + img.value + '" style="max-width: 200px">'
+    }
+    return div
+  }
+}
+
+panes.register(profilePane)
 ```
 
 ## Styling
