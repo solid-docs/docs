@@ -39,22 +39,22 @@
   <rect x="100" y="240" width="180" height="100" rx="8" fill="url(#middleGradient)" stroke="#059669" stroke-width="2"/>
   <text x="190" y="275" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#059669" text-anchor="middle">solid-panes</text>
   <text x="190" y="298" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">Pane registry</text>
-  <text x="190" y="318" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">& built-in panes</text>
+  <text x="190" y="318" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">&amp; built-in panes</text>
 
   <rect x="310" y="240" width="180" height="100" rx="8" fill="url(#middleGradient)" stroke="#059669" stroke-width="2"/>
   <text x="400" y="275" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#059669" text-anchor="middle">solid-ui</text>
   <text x="400" y="298" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">UI widgets</text>
-  <text x="400" y="318" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">& forms</text>
+  <text x="400" y="318" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">&amp; forms</text>
 
   <rect x="520" y="240" width="180" height="100" rx="8" fill="url(#middleGradient)" stroke="#059669" stroke-width="2"/>
   <text x="610" y="275" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#059669" text-anchor="middle">solid-logic</text>
   <text x="610" y="298" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">Business logic</text>
-  <text x="610" y="318" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">& auth</text>
+  <text x="610" y="318" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">&amp; auth</text>
 
   <!-- RDFlib Layer -->
   <rect x="100" y="360" width="600" height="80" rx="8" fill="url(#rdflibGradient)" stroke="#DC2626" stroke-width="2"/>
   <text x="400" y="395" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="600" fill="#DC2626" text-anchor="middle">rdflib.js</text>
-  <text x="400" y="420" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#666" text-anchor="middle">RDF store, fetcher & query engine</text>
+  <text x="400" y="420" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#666" text-anchor="middle">RDF store, fetcher &amp; query engine</text>
 
   <!-- Solid Pod Layer -->
   <rect x="100" y="460" width="600" height="80" rx="8" fill="url(#podGradient)" stroke="#9333EA" stroke-width="2"/>

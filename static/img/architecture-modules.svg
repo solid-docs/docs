@@ -29,7 +29,7 @@
   <rect width="900" height="700" fill="#FAFAFA"/>
 
   <!-- Title -->
-  <text x="450" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="700" fill="#333" text-anchor="middle">Module Boundaries & Dependencies</text>
+  <text x="450" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="700" fill="#333" text-anchor="middle">Module Boundaries &amp; Dependencies</text>
 
   <!-- mashlib (top) -->
   <rect x="250" y="80" width="400" height="100" rx="8" fill="url(#mashlibMod)" stroke="#7C3AED" stroke-width="2.5"/>

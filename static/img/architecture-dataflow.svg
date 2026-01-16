@@ -53,7 +53,7 @@
 
   <!-- Step 4: Data added to store -->
   <rect x="50" y="340" width="400" height="60" rx="8" fill="url(#readGradient)" stroke="#2563EB" stroke-width="2"/>
-  <text x="250" y="365" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="600" fill="#2563EB" text-anchor="middle">Data parsed & added to store</text>
+  <text x="250" y="365" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="600" fill="#2563EB" text-anchor="middle">Data parsed &amp; added to store</text>
   <text x="250" y="385" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">In-memory RDF graph updated</text>
 
   <!-- Arrow down -->
