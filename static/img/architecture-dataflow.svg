@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" width="1000" height="700">
+  <defs>
+    <linearGradient id="readGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#2563EB;stop-opacity:0.1" />
+      <stop offset="100%" style="stop-color:#2563EB;stop-opacity:0.05" />
+    </linearGradient>
+    <linearGradient id="writeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#DC2626;stop-opacity:0.1" />
+      <stop offset="100%" style="stop-color:#DC2626;stop-opacity:0.05" />
+    </linearGradient>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#2563EB"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#DC2626"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="700" fill="#FAFAFA"/>
+
+  <!-- Title: Reading Data -->
+  <text x="250" y="35" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="700" fill="#2563EB" text-anchor="middle">Reading Data</text>
+
+  <!-- Title: Writing Data -->
+  <text x="750" y="35" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="700" fill="#DC2626" text-anchor="middle">Writing Data</text>
+
+  <!-- LEFT SIDE: READING DATA FLOW -->
+
+  <!-- Step 1: User navigates -->
+  <rect x="50" y="70" width="400" height="60" rx="8" fill="url(#readGradient)" stroke="#2563EB" stroke-width="2"/>
+  <text x="250" y="95" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="600" fill="#2563EB" text-anchor="middle">User navigates to URL</text>
+  <text x="250" y="115" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">/contacts/alice.ttl</text>
+
+  <!-- Arrow down -->
+  <line x1="250" y1="130" x2="250" y2="160" stroke="#2563EB" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+
+  <!-- Step 2: mashlib intercepts -->
+  <rect x="50" y="160" width="400" height="60" rx="8" fill="url(#readGradient)" stroke="#2563EB" stroke-width="2"/>
+  <text x="250" y="185" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="600" fill="#2563EB" text-anchor="middle">mashlib intercepts navigation</text>
+  <text x="250" y="205" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">Prevents full page reload</text>
+
+  <!-- Arrow down -->
+  <line x1="250" y1="220" x2="250" y2="250" stroke="#2563EB" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+
+  <!-- Step 3: Fetcher loads -->
+  <rect x="50" y="250" width="400" height="60" rx="8" fill="url(#readGradient)" stroke="#2563EB" stroke-width="2"/>
+  <text x="250" y="275" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="600" fill="#2563EB" text-anchor="middle">fetcher.load('/contacts/alice.ttl')</text>
+  <text x="250" y="295" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">HTTP GET request to pod</text>
+
+  <!-- Arrow down -->
+  <line x1="250" y1="310" x2="250" y2="340" stroke="#2563EB" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+
+  <!-- Step 4: Data added to store -->
+  <rect x="50" y="340" width="400" height="60" rx="8" fill="url(#readGradient)" stroke="#2563EB" stroke-width="2"/>
+  <text x="250" y="365" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="600" fill="#2563EB" text-anchor="middle">Data parsed & added to store</text>
+  <text x="250" y="385" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">In-memory RDF graph updated</text>
+
+  <!-- Arrow down -->
+  <line x1="250" y1="400" x2="250" y2="430" stroke="#2563EB" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+
+  <!-- Step 5: Pane registry -->
+  <rect x="50" y="430" width="400" height="60" rx="8" fill="url(#readGradient)" stroke="#2563EB" stroke-width="2"/>
+  <text x="250" y="455" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="600" fill="#2563EB" text-anchor="middle">Pane registry selects pane</text>
+  <text x="250" y="475" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">"Who handles vcard:Individual?"</text>
+
+  <!-- Arrow down -->
+  <line x1="250" y1="490" x2="250" y2="520" stroke="#2563EB" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+
+  <!-- Step 6: Pane renders -->
+  <rect x="50" y="520" width="400" height="60" rx="8" fill="url(#readGradient)" stroke="#2563EB" stroke-width="2"/>
+  <text x="250" y="545" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="600" fill="#2563EB" text-anchor="middle">contacts-pane.render()</text>
+  <text x="250" y="565" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">Generates HTML from RDF data</text>
+
+  <!-- Arrow down -->
+  <line x1="250" y1="580" x2="250" y2="610" stroke="#2563EB" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+
+  <!-- Step 7: DOM updated -->
+  <rect x="50" y="610" width="400" height="60" rx="8" fill="url(#readGradient)" stroke="#2563EB" stroke-width="2"/>
+  <text x="250" y="635" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="600" fill="#2563EB" text-anchor="middle">DOM updated with contact card</text>
+  <text x="250" y="655" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">User sees rendered contact</text>
+
+  <!-- RIGHT SIDE: WRITING DATA FLOW -->
+
+  <!-- Step 1: User edits -->
+  <rect x="550" y="70" width="400" height="60" rx="8" fill="url(#writeGradient)" stroke="#DC2626" stroke-width="2"/>
+  <text x="750" y="95" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="600" fill="#DC2626" text-anchor="middle">User edits contact name</text>
+  <text x="750" y="115" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">Types in editable field</text>
+
+  <!-- Arrow down -->
+  <line x1="750" y1="130" x2="750" y2="160" stroke="#DC2626" stroke-width="2.5" marker-end="url(#arrowRed)"/>
+
+  <!-- Step 2: Input onChange -->
+  <rect x="550" y="160" width="400" height="60" rx="8" fill="url(#writeGradient)" stroke="#DC2626" stroke-width="2"/>
+  <text x="750" y="185" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="600" fill="#DC2626" text-anchor="middle">solid-ui input onChange</text>
+  <text x="750" y="205" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">Event handler triggered</text>
+
+  <!-- Arrow down -->
+  <line x1="750" y1="220" x2="750" y2="250" stroke="#DC2626" stroke-width="2.5" marker-end="url(#arrowRed)"/>
+
+  <!-- Step 3: Update manager -->
+  <rect x="550" y="250" width="400" height="60" rx="8" fill="url(#writeGradient)" stroke="#DC2626" stroke-width="2"/>
+  <text x="750" y="275" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="600" fill="#DC2626" text-anchor="middle">updater.update(deletions, insertions)</text>
+  <text x="750" y="295" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">Calculates RDF diff</text>
+
+  <!-- Arrow down -->
+  <line x1="750" y1="310" x2="750" y2="340" stroke="#DC2626" stroke-width="2.5" marker-end="url(#arrowRed)"/>
+
+  <!-- Step 4: PATCH request -->
+  <rect x="550" y="340" width="400" height="60" rx="8" fill="url(#writeGradient)" stroke="#DC2626" stroke-width="2"/>
+  <text x="750" y="365" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="600" fill="#DC2626" text-anchor="middle">PATCH request to pod</text>
+  <text x="750" y="385" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">Sends N3 Patch to server</text>
+
+  <!-- Arrow down -->
+  <line x1="750" y1="400" x2="750" y2="430" stroke="#DC2626" stroke-width="2.5" marker-end="url(#arrowRed)"/>
+
+  <!-- Step 5: Store updated -->
+  <rect x="550" y="430" width="400" height="60" rx="8" fill="url(#writeGradient)" stroke="#DC2626" stroke-width="2"/>
+  <text x="750" y="455" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="600" fill="#DC2626" text-anchor="middle">Store updated locally</text>
+  <text x="750" y="475" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">In-memory graph reflects change</text>
+
+  <!-- Arrow down -->
+  <line x1="750" y1="490" x2="750" y2="520" stroke="#DC2626" stroke-width="2.5" marker-end="url(#arrowRed)"/>
+
+  <!-- Step 6: UI reflects change -->
+  <rect x="550" y="520" width="400" height="60" rx="8" fill="url(#writeGradient)" stroke="#DC2626" stroke-width="2"/>
+  <text x="750" y="545" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="600" fill="#DC2626" text-anchor="middle">UI reflects change</text>
+  <text x="750" y="565" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">All panes see updated data</text>
+</svg>

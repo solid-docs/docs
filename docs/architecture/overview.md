@@ -10,23 +10,7 @@ SolidOS is a modular system built from composable libraries.
 
 ## The Stack
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Your Application                        │
-├─────────────────────────────────────────────────────────────┤
-│                        mashlib                              │
-│              (bundles everything together)                  │
-├───────────────────┬───────────────────┬─────────────────────┤
-│   solid-panes     │    solid-ui       │    solid-logic      │
-│  (pane registry)  │   (UI widgets)    │  (business logic)   │
-├───────────────────┴───────────────────┴─────────────────────┤
-│                       rdflib.js                             │
-│                   (RDF store & fetcher)                     │
-├─────────────────────────────────────────────────────────────┤
-│                    Solid Pod (data)                         │
-│              (via LDP / Solid Protocol)                     │
-└─────────────────────────────────────────────────────────────┘
-```
+![SolidOS Architecture Stack](/img/architecture-stack.svg)
 
 ## Component Responsibilities
 
@@ -116,39 +100,7 @@ The final bundle that pulls it all together:
 
 ## Data Flow
 
-### Reading Data
-
-```
-User navigates to /contacts/alice.ttl
-            ↓
-mashlib intercepts navigation
-            ↓
-fetcher.load('/contacts/alice.ttl')
-            ↓
-Data added to store
-            ↓
-Pane registry: "Who handles vcard:Individual?"
-            ↓
-contacts-pane.render()
-            ↓
-DOM updated with contact card
-```
-
-### Writing Data
-
-```
-User edits contact name
-            ↓
-solid-ui input onChange
-            ↓
-updater.update(deletions, insertions)
-            ↓
-PATCH request to pod
-            ↓
-Store updated locally
-            ↓
-UI reflects change
-```
+![SolidOS Data Flow - Reading and Writing](/img/architecture-dataflow.svg)
 
 ## The Singleton Pattern
 
@@ -196,39 +148,7 @@ Electron
 
 ## Module Boundaries
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                                                                  │
-│  mashlib (entry point)                                           │
-│  - Depends on: solid-panes, solid-ui, solid-logic               │
-│  - Exports: panes global, runDataBrowser                         │
-│                                                                  │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  solid-panes (pane collection)                                   │
-│  - Depends on: solid-ui, solid-logic, pane-registry              │
-│  - Exports: registerPanes, individual panes                      │
-│                                                                  │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  solid-ui (widgets)                                              │
-│  - Depends on: solid-logic, rdflib                               │
-│  - Exports: UI.widgets, UI.forms, UI.style                       │
-│                                                                  │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  solid-logic (business logic)                                    │
-│  - Depends on: rdflib                                            │
-│  - Exports: store, authn, acl                                    │
-│                                                                  │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  rdflib (RDF core)                                               │
-│  - No Solid-specific dependencies                                │
-│  - Exports: graph, Fetcher, UpdateManager, etc.                  │
-│                                                                  │
-└──────────────────────────────────────────────────────────────────┘
-```
+![SolidOS Module Dependencies](/img/architecture-modules.svg)
 
 ## See Also
 
