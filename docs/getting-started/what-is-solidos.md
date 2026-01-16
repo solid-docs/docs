@@ -22,20 +22,7 @@ SolidOS makes this real.
 
 When you visit a Solid pod with SolidOS, you get an interactive data browser:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  SolidOS Data Browser                              [Login]  │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  📁 /public/                                                │
-│  ├── 📁 contacts/                                           │
-│  │   └── 👤 alice.ttl          ← Contacts pane renders this │
-│  ├── 📁 photos/                                             │
-│  │   └── 🖼️ vacation.jpg       ← Image pane renders this    │
-│  └── 📄 profile.ttl            ← Profile pane renders this  │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
+![SolidOS Data Browser Interface](/img/solidos-browser-preview.svg)
 
 ## Key Components
 
@@ -59,18 +46,7 @@ When you navigate to a resource:
 3. The most specific pane wins
 4. That pane renders the UI
 
-```
-User clicks /contacts/alice.ttl
-        ↓
-SolidOS: "Who can render a vcard:Individual?"
-        ↓
-Contacts Pane: "I can! I'm specialized for contacts."
-Generic Pane: "I can show any RDF as a table..."
-        ↓
-Contacts Pane wins (more specific)
-        ↓
-Beautiful contact card UI
-```
+![Pane Selection Process](/img/pane-selection-flow.svg)
 
 ## Where SolidOS Runs
 

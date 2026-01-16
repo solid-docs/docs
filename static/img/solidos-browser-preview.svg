@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <defs>
+    <linearGradient id="headerGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7C3AED;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563EB;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="500" fill="#F9FAFB"/>
+
+  <!-- Browser Window -->
+  <rect x="50" y="40" width="700" height="420" rx="12" fill="white" stroke="#E5E7EB" stroke-width="2" filter="url(#shadow)"/>
+
+  <!-- Header Bar -->
+  <rect x="50" y="40" width="700" height="60" rx="12" fill="url(#headerGradient)"/>
+  <rect x="50" y="88" width="700" height="12" fill="url(#headerGradient)"/>
+
+  <!-- SolidOS Title -->
+  <text x="80" y="78" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="700" fill="white">SolidOS Data Browser</text>
+
+  <!-- Login Button -->
+  <rect x="640" y="55" width="90" height="30" rx="6" fill="white" fill-opacity="0.2" stroke="white" stroke-width="1.5"/>
+  <text x="685" y="76" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="white" text-anchor="middle">Login</text>
+
+  <!-- Content Area Background -->
+  <rect x="50" y="100" width="700" height="360" fill="white"/>
+
+  <!-- File Browser Content -->
+
+  <!-- Folder: /public/ -->
+  <text x="90" y="145" font-family="system-ui, -apple-system, sans-serif" font-size="18" fill="#333">📁</text>
+  <text x="125" y="145" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="600" fill="#333">/public/</text>
+
+  <!-- Folder: contacts/ -->
+  <line x1="100" y1="160" x2="100" y2="185" stroke="#D1D5DB" stroke-width="2"/>
+  <line x1="100" y1="185" x2="115" y2="185" stroke="#D1D5DB" stroke-width="2"/>
+  <text x="120" y="190" font-family="system-ui, -apple-system, sans-serif" font-size="18" fill="#333">📁</text>
+  <text x="155" y="190" font-family="system-ui, -apple-system, sans-serif" font-size="15" fill="#555">contacts/</text>
+
+  <!-- File: alice.ttl -->
+  <line x1="100" y1="200" x2="100" y2="225" stroke="#D1D5DB" stroke-width="2"/>
+  <line x1="130" y1="210" x2="130" y2="225" stroke="#D1D5DB" stroke-width="2"/>
+  <line x1="130" y1="225" x2="145" y2="225" stroke="#D1D5DB" stroke-width="2"/>
+  <text x="150" y="230" font-family="system-ui, -apple-system, sans-serif" font-size="18" fill="#333">👤</text>
+  <text x="185" y="230" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#666">alice.ttl</text>
+
+  <!-- Annotation for alice.ttl -->
+  <line x1="280" y1="225" x2="380" y2="225" stroke="#2563EB" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <text x="390" y="230" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#2563EB" font-style="italic">← Contacts pane renders this</text>
+
+  <!-- Folder: photos/ -->
+  <line x1="100" y1="240" x2="100" y2="265" stroke="#D1D5DB" stroke-width="2"/>
+  <line x1="100" y1="265" x2="115" y2="265" stroke="#D1D5DB" stroke-width="2"/>
+  <text x="120" y="270" font-family="system-ui, -apple-system, sans-serif" font-size="18" fill="#333">📁</text>
+  <text x="155" y="270" font-family="system-ui, -apple-system, sans-serif" font-size="15" fill="#555">photos/</text>
+
+  <!-- File: vacation.jpg -->
+  <line x1="100" y1="280" x2="100" y2="305" stroke="#D1D5DB" stroke-width="2"/>
+  <line x1="130" y1="290" x2="130" y2="305" stroke="#D1D5DB" stroke-width="2"/>
+  <line x1="130" y1="305" x2="145" y2="305" stroke="#D1D5DB" stroke-width="2"/>
+  <text x="150" y="310" font-family="system-ui, -apple-system, sans-serif" font-size="18" fill="#333">🖼️</text>
+  <text x="185" y="310" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#666">vacation.jpg</text>
+
+  <!-- Annotation for vacation.jpg -->
+  <line x1="310" y1="305" x2="380" y2="305" stroke="#059669" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <text x="390" y="310" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#059669" font-style="italic">← Image pane renders this</text>
+
+  <!-- File: profile.ttl -->
+  <line x1="100" y1="320" x2="100" y2="345" stroke="#D1D5DB" stroke-width="2"/>
+  <line x1="100" y1="345" x2="115" y2="345" stroke="#D1D5DB" stroke-width="2"/>
+  <text x="120" y="350" font-family="system-ui, -apple-system, sans-serif" font-size="18" fill="#333">📄</text>
+  <text x="155" y="350" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#666">profile.ttl</text>
+
+  <!-- Annotation for profile.ttl -->
+  <line x1="270" y1="345" x2="380" y2="345" stroke="#7C3AED" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <text x="390" y="350" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#7C3AED" font-style="italic">← Profile pane renders this</text>
+</svg>

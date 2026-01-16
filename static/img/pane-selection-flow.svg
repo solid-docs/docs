@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 600" width="700" height="600">
+  <defs>
+    <linearGradient id="userAction" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C3AED;stop-opacity:0.15" />
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:0.05" />
+    </linearGradient>
+    <linearGradient id="systemAction" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563EB;stop-opacity:0.15" />
+      <stop offset="100%" style="stop-color:#2563EB;stop-opacity:0.05" />
+    </linearGradient>
+    <linearGradient id="paneResponse" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:0.15" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:0.05" />
+    </linearGradient>
+    <linearGradient id="result" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#DC2626;stop-opacity:0.15" />
+      <stop offset="100%" style="stop-color:#DC2626;stop-opacity:0.05" />
+    </linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#666"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="700" height="600" fill="#FAFAFA"/>
+
+  <!-- Title -->
+  <text x="350" y="35" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" fill="#333" text-anchor="middle">Pane Selection Process</text>
+
+  <!-- Step 1: User Action -->
+  <rect x="150" y="70" width="400" height="60" rx="8" fill="url(#userAction)" stroke="#7C3AED" stroke-width="2"/>
+  <text x="350" y="100" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="600" fill="#7C3AED" text-anchor="middle">User clicks /contacts/alice.ttl</text>
+  <text x="350" y="120" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">Navigation event triggered</text>
+
+  <!-- Arrow down -->
+  <line x1="350" y1="130" x2="350" y2="160" stroke="#666" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 2: System Query -->
+  <rect x="150" y="160" width="400" height="60" rx="8" fill="url(#systemAction)" stroke="#2563EB" stroke-width="2"/>
+  <text x="350" y="185" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="600" fill="#2563EB" text-anchor="middle">SolidOS asks all registered panes:</text>
+  <text x="350" y="205" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#666" text-anchor="middle" font-style="italic">"Who can render a vcard:Individual?"</text>
+
+  <!-- Arrow down splits into two -->
+  <line x1="350" y1="220" x2="350" y2="250" stroke="#666" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="350" y1="250" x2="200" y2="280" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="350" y1="250" x2="500" y2="280" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Step 3a: Contacts Pane Response -->
+  <rect x="50" y="280" width="250" height="80" rx="8" fill="url(#paneResponse)" stroke="#059669" stroke-width="2.5"/>
+  <text x="175" y="305" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="700" fill="#059669" text-anchor="middle">Contacts Pane</text>
+  <text x="175" y="325" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#555" text-anchor="middle">"I can! I'm specialized</text>
+  <text x="175" y="345" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#555" text-anchor="middle">for contacts."</text>
+
+  <!-- Step 3b: Generic Pane Response -->
+  <rect x="400" y="280" width="250" height="80" rx="8" fill="url(#paneResponse)" stroke="#059669" stroke-width="2.5" opacity="0.6"/>
+  <text x="525" y="305" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="700" fill="#059669" text-anchor="middle">Generic Pane</text>
+  <text x="525" y="325" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#555" text-anchor="middle">"I can show any RDF</text>
+  <text x="525" y="345" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#555" text-anchor="middle">as a table..."</text>
+
+  <!-- Arrows converge -->
+  <line x1="175" y1="360" x2="300" y2="410" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="525" y1="360" x2="400" y2="410" stroke="#666" stroke-width="1.5" opacity="0.4" marker-end="url(#arrow)"/>
+
+  <!-- Step 4: Winner Selection -->
+  <rect x="150" y="410" width="400" height="60" rx="8" fill="url(#systemAction)" stroke="#2563EB" stroke-width="2"/>
+  <text x="350" y="435" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="600" fill="#2563EB" text-anchor="middle">Contacts Pane wins!</text>
+  <text x="350" y="455" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">(More specific = higher priority)</text>
+
+  <!-- Arrow down -->
+  <line x1="350" y1="470" x2="350" y2="500" stroke="#666" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 5: Result -->
+  <rect x="150" y="500" width="400" height="60" rx="8" fill="url(#result)" stroke="#DC2626" stroke-width="2"/>
+  <text x="350" y="525" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="600" fill="#DC2626" text-anchor="middle">Beautiful contact card UI rendered ✨</text>
+  <text x="350" y="545" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">User sees fully interactive contact interface</text>
+
+  <!-- Visual emphasis on winner -->
+  <circle cx="75" cy="320" r="30" fill="none" stroke="#059669" stroke-width="3" opacity="0.4"/>
+  <text x="75" y="330" font-family="system-ui, -apple-system, sans-serif" font-size="24" fill="#059669" text-anchor="middle">✓</text>
+</svg>
