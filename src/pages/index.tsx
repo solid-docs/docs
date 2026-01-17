@@ -24,7 +24,7 @@ function HomepageHeader() {
           </Link>
           <a
             className="button button--primary button--lg"
-            href="/docs/browser/">
+            href="https://solid-docs.github.io/docs/browser/">
             Try Live Demo →
           </a>
         </div>
