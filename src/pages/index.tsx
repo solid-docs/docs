@@ -22,6 +22,11 @@ function HomepageHeader() {
             to="/getting-started/what-is-solidos">
             Get Started
           </Link>
+          <Link
+            className="button button--primary button--lg"
+            to="/browser/">
+            Try Live Demo →
+          </Link>
         </div>
       </div>
     </header>
