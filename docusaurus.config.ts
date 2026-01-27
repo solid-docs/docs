@@ -112,6 +112,14 @@ const config: Config = {
           position: 'left',
           items: [
             {
+              label: 'User Guide',
+              href: 'https://solid-docs.github.io/userguide/',
+            },
+            {
+              type: 'html',
+              value: '<hr style="margin: 0.5rem 0;">',
+            },
+            {
               label: 'SolidOS Monorepo',
               href: 'https://github.com/SolidOS/solidos',
             },
@@ -166,6 +174,7 @@ const config: Config = {
         {
           title: 'Learn',
           items: [
+            {label: 'User Guide', href: 'https://solid-docs.github.io/userguide/'},
             {label: 'Getting Started', to: '/getting-started/what-is-solidos'},
             {label: 'Architecture', to: '/architecture/overview'},
             {label: 'Building Panes', to: '/panes/creating-panes'},
