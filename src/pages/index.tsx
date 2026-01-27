@@ -46,16 +46,16 @@ function HomepageHeader() {
               control of their data.
             </p>
             <div className={styles.buttons}>
-              <Link
+              <a
                 className="button button--secondary button--lg"
-                to="/getting-started/what-is-solidos">
-                Get Started
-              </Link>
+                href="/docs/browser/">
+                Try Live Demo
+              </a>
               <Link
                 className="button button--outline button--lg"
                 style={{color: 'white', borderColor: 'white'}}
-                to="/panes/overview">
-                Browse Panes
+                to="/getting-started/what-is-solidos">
+                Get Started
               </Link>
             </div>
           </div>
