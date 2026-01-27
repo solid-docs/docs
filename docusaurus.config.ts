@@ -207,7 +207,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} SolidOS Docs Contributors. Licensed under MIT. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} SolidOS Docs Contributors. Licensed under CC BY-SA 4.0. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,
