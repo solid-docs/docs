@@ -27,29 +27,9 @@ The profile pane renders WebID profiles — the identity cards of the Solid ecos
 
 ## Screenshot
 
-```
-┌─────────────────────────────────────────────────┐
-│  ┌────────┐                                     │
-│  │  👤    │  Alice Smith                        │
-│  │        │  @alice                             │
-│  └────────┘                                     │
-│                                                 │
-│  Software developer passionate about            │
-│  decentralization and data sovereignty.         │
-│                                                 │
-├─────────────────────────────────────────────────┤
-│  📧 alice@example.org                           │
-│  🌐 https://alice.example                       │
-│  📍 San Francisco, CA                           │
-├─────────────────────────────────────────────────┤
-│  Friends (12)                                   │
-│  ┌────┐ ┌────┐ ┌────┐ ┌────┐                   │
-│  │Bob │ │Carol│ │Dave│ │Eve │ ...              │
-│  └────┘ └────┘ └────┘ └────┘                   │
-├─────────────────────────────────────────────────┤
-│  [Edit Profile] [Settings]                      │
-└─────────────────────────────────────────────────┘
-```
+![Profile Pane Mockup](/img/panes/profile-pane-mockup.svg)
+
+The QR code button (top-right) allows users to share their WebID by generating a scannable code — useful for in-person identity sharing.
 
 ## RDF Structure
 

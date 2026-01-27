@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 520" width="480" height="520">
+  <defs>
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C3AED"/>
+      <stop offset="100%" style="stop-color:#2563EB"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="480" height="520" rx="12" fill="#ffffff" filter="url(#shadow)"/>
+
+  <!-- Header gradient bar -->
+  <rect width="480" height="120" rx="12" fill="url(#headerGrad)"/>
+  <rect y="12" width="480" height="108" fill="url(#headerGrad)"/>
+
+  <!-- Avatar circle -->
+  <circle cx="80" cy="120" r="50" fill="#ffffff" stroke="#ffffff" stroke-width="4"/>
+  <circle cx="80" cy="120" r="46" fill="#E9D5FF"/>
+  <text x="80" y="128" text-anchor="middle" font-size="32" fill="#7C3AED">AS</text>
+
+  <!-- QR Code button -->
+  <g transform="translate(420, 20)" style="cursor: pointer;">
+    <rect width="40" height="40" rx="8" fill="rgba(255,255,255,0.2)"/>
+    <!-- QR code icon -->
+    <rect x="10" y="10" width="8" height="8" fill="#ffffff"/>
+    <rect x="22" y="10" width="8" height="8" fill="#ffffff"/>
+    <rect x="10" y="22" width="8" height="8" fill="#ffffff"/>
+    <rect x="22" y="22" width="4" height="4" fill="#ffffff"/>
+    <rect x="26" y="26" width="4" height="4" fill="#ffffff"/>
+  </g>
+
+  <!-- Name and handle -->
+  <text x="145" y="95" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#ffffff">Alice Smith</text>
+  <text x="145" y="115" font-family="system-ui, sans-serif" font-size="14" fill="rgba(255,255,255,0.9)">@alice · Software Developer</text>
+
+  <!-- Bio section -->
+  <text x="24" y="185" font-family="system-ui, sans-serif" font-size="14" fill="#374151">Software developer passionate about decentralization</text>
+  <text x="24" y="203" font-family="system-ui, sans-serif" font-size="14" fill="#374151">and data sovereignty on the open web.</text>
+
+  <!-- Divider -->
+  <line x1="24" y1="225" x2="456" y2="225" stroke="#E5E7EB" stroke-width="1"/>
+
+  <!-- Contact section -->
+  <text x="24" y="252" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#6B7280" letter-spacing="0.5">CONTACT</text>
+
+  <!-- Email -->
+  <g transform="translate(24, 268)">
+    <circle cx="10" cy="10" r="10" fill="#F3E8FF"/>
+    <text x="10" y="14" text-anchor="middle" font-size="10" fill="#7C3AED">✉</text>
+    <text x="28" y="14" font-family="system-ui, sans-serif" font-size="14" fill="#4B5563">alice@example.org</text>
+  </g>
+
+  <!-- Website -->
+  <g transform="translate(24, 298)">
+    <circle cx="10" cy="10" r="10" fill="#F3E8FF"/>
+    <text x="10" y="14" text-anchor="middle" font-size="10" fill="#7C3AED">🔗</text>
+    <text x="28" y="14" font-family="system-ui, sans-serif" font-size="14" fill="#2563EB">https://alice.example</text>
+  </g>
+
+  <!-- Pod -->
+  <g transform="translate(24, 328)">
+    <circle cx="10" cy="10" r="10" fill="#F3E8FF"/>
+    <text x="10" y="14" text-anchor="middle" font-size="10" fill="#7C3AED">🏠</text>
+    <text x="28" y="14" font-family="system-ui, sans-serif" font-size="14" fill="#4B5563">solidcommunity.net</text>
+  </g>
+
+  <!-- Divider -->
+  <line x1="24" y1="360" x2="456" y2="360" stroke="#E5E7EB" stroke-width="1"/>
+
+  <!-- Friends section -->
+  <text x="24" y="387" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#6B7280" letter-spacing="0.5">FRIENDS</text>
+  <text x="78" y="387" font-family="system-ui, sans-serif" font-size="12" fill="#9CA3AF">· 12</text>
+
+  <!-- Friend avatars -->
+  <g transform="translate(24, 400)">
+    <!-- Friend 1 -->
+    <circle cx="24" cy="24" r="24" fill="#DBEAFE"/>
+    <text x="24" y="30" text-anchor="middle" font-size="14" font-weight="500" fill="#2563EB">B</text>
+    <text x="24" y="60" text-anchor="middle" font-size="11" fill="#6B7280">Bob</text>
+
+    <!-- Friend 2 -->
+    <circle cx="84" cy="24" r="24" fill="#FCE7F3"/>
+    <text x="84" y="30" text-anchor="middle" font-size="14" font-weight="500" fill="#DB2777">C</text>
+    <text x="84" y="60" text-anchor="middle" font-size="11" fill="#6B7280">Carol</text>
+
+    <!-- Friend 3 -->
+    <circle cx="144" cy="24" r="24" fill="#D1FAE5"/>
+    <text x="144" y="30" text-anchor="middle" font-size="14" font-weight="500" fill="#059669">D</text>
+    <text x="144" y="60" text-anchor="middle" font-size="11" fill="#6B7280">Dave</text>
+
+    <!-- Friend 4 -->
+    <circle cx="204" cy="24" r="24" fill="#FEF3C7"/>
+    <text x="204" y="30" text-anchor="middle" font-size="14" font-weight="500" fill="#D97706">E</text>
+    <text x="204" y="60" text-anchor="middle" font-size="11" fill="#6B7280">Eve</text>
+
+    <!-- More indicator -->
+    <circle cx="264" cy="24" r="24" fill="#F3F4F6"/>
+    <text x="264" y="30" text-anchor="middle" font-size="12" font-weight="500" fill="#6B7280">+8</text>
+  </g>
+
+  <!-- Action buttons -->
+  <g transform="translate(24, 480)">
+    <!-- Edit Profile button -->
+    <rect width="140" height="36" rx="8" fill="#7C3AED"/>
+    <text x="70" y="23" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="500" fill="#ffffff">✎ Edit Profile</text>
+
+    <!-- Settings button -->
+    <rect x="152" width="100" height="36" rx="8" fill="#F3F4F6"/>
+    <text x="202" y="23" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="500" fill="#374151">⚙ Settings</text>
+  </g>
+</svg>
