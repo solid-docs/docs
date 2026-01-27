@@ -17,7 +17,7 @@ Practical recipes for common SolidOS development tasks.
 | [Writing Data](/docs/cookbook/writing-data) | Creating and updating resources |
 | [Access Control](/docs/cookbook/access-control) | Managing permissions |
 | [File Operations](/docs/cookbook/file-operations) | Upload, download, containers |
-| [Type Index](/docs/cookbook/type-index) | Finding user data locations |
+| Type Index | Finding user data locations |
 
 ## Common Patterns
 

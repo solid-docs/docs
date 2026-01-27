@@ -154,4 +154,4 @@ Electron
 
 - [Pane System](/docs/architecture/pane-system) — how panes work
 - [Data Flow](/docs/architecture/data-flow) — detailed data lifecycle
-- [Monorepo Structure](/docs/architecture/monorepo-structure) — code organization
+- [SolidOS GitHub](https://github.com/SolidOS) — code organization

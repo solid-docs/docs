@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 520" width="480" height="520">
+  <defs>
+    <linearGradient id="chatHeaderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C3AED"/>
+      <stop offset="100%" style="stop-color:#2563EB"/>
+    </linearGradient>
+    <filter id="chatShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="480" height="520" rx="12" fill="#ffffff" filter="url(#chatShadow)"/>
+
+  <!-- Header -->
+  <rect width="480" height="70" rx="12" fill="url(#chatHeaderGrad)"/>
+  <rect y="12" width="480" height="58" fill="url(#chatHeaderGrad)"/>
+
+  <!-- Chat title -->
+  <text x="24" y="35" font-family="system-ui, sans-serif" font-size="18" font-weight="600" fill="#ffffff">Team Discussion</text>
+  <text x="24" y="55" font-family="system-ui, sans-serif" font-size="12" fill="rgba(255,255,255,0.8)">4 participants · Started Jan 15</text>
+
+  <!-- Participants button -->
+  <g transform="translate(400, 20)">
+    <rect width="60" height="32" rx="6" fill="rgba(255,255,255,0.2)"/>
+    <circle cx="18" cy="16" r="10" fill="#DBEAFE"/>
+    <circle cx="30" cy="16" r="10" fill="#FCE7F3"/>
+    <circle cx="42" cy="16" r="10" fill="#D1FAE5"/>
+    <text x="42" y="20" text-anchor="middle" font-size="10" fill="#059669">+1</text>
+  </g>
+
+  <!-- Messages area -->
+  <rect x="0" y="70" width="480" height="380" fill="#f8fafc"/>
+
+  <!-- Message 1 - Other person -->
+  <g transform="translate(16, 90)">
+    <circle cx="16" cy="16" r="16" fill="#DBEAFE"/>
+    <text x="16" y="20" text-anchor="middle" font-size="12" font-weight="500" fill="#2563EB">B</text>
+    <rect x="40" y="0" width="260" height="60" rx="12" fill="#ffffff"/>
+    <text x="52" y="18" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#374151">Bob</text>
+    <text x="100" y="18" font-family="system-ui, sans-serif" font-size="10" fill="#9CA3AF">10:30 AM</text>
+    <text x="52" y="38" font-family="system-ui, sans-serif" font-size="13" fill="#4B5563">Has anyone reviewed the latest</text>
+    <text x="52" y="53" font-family="system-ui, sans-serif" font-size="13" fill="#4B5563">draft of the proposal?</text>
+  </g>
+
+  <!-- Message 2 - Me -->
+  <g transform="translate(140, 170)">
+    <rect x="0" y="0" width="260" height="45" rx="12" fill="#7C3AED"/>
+    <text x="12" y="18" font-family="system-ui, sans-serif" font-size="11" fill="rgba(255,255,255,0.8)">You · 10:32 AM</text>
+    <text x="12" y="36" font-family="system-ui, sans-serif" font-size="13" fill="#ffffff">Yes, looks good! Just a few minor edits.</text>
+    <circle cx="276" cy="22" r="16" fill="#F3E8FF"/>
+    <text x="276" y="27" text-anchor="middle" font-size="12" font-weight="500" fill="#7C3AED">A</text>
+  </g>
+
+  <!-- Message 3 - Other person -->
+  <g transform="translate(16, 235)">
+    <circle cx="16" cy="16" r="16" fill="#FCE7F3"/>
+    <text x="16" y="20" text-anchor="middle" font-size="12" font-weight="500" fill="#DB2777">C</text>
+    <rect x="40" y="0" width="220" height="45" rx="12" fill="#ffffff"/>
+    <text x="52" y="18" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#374151">Carol</text>
+    <text x="100" y="18" font-family="system-ui, sans-serif" font-size="10" fill="#9CA3AF">10:35 AM</text>
+    <text x="52" y="36" font-family="system-ui, sans-serif" font-size="13" fill="#4B5563">I'll send my feedback by EOD</text>
+  </g>
+
+  <!-- Message 4 - Me -->
+  <g transform="translate(180, 300)">
+    <rect x="0" y="0" width="220" height="30" rx="12" fill="#7C3AED"/>
+    <text x="12" y="20" font-family="system-ui, sans-serif" font-size="13" fill="#ffffff">Perfect, thanks everyone!</text>
+    <circle cx="236" cy="15" r="16" fill="#F3E8FF"/>
+    <text x="236" y="20" text-anchor="middle" font-size="12" font-weight="500" fill="#7C3AED">A</text>
+  </g>
+
+  <!-- Typing indicator -->
+  <g transform="translate(16, 350)">
+    <circle cx="16" cy="16" r="16" fill="#D1FAE5"/>
+    <text x="16" y="20" text-anchor="middle" font-size="12" font-weight="500" fill="#059669">D</text>
+    <rect x="40" y="6" width="80" height="20" rx="10" fill="#E5E7EB"/>
+    <circle cx="55" cy="16" r="3" fill="#9CA3AF">
+      <animate attributeName="opacity" values="0.4;1;0.4" dur="1s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="67" cy="16" r="3" fill="#9CA3AF">
+      <animate attributeName="opacity" values="0.4;1;0.4" dur="1s" repeatCount="indefinite" begin="0.2s"/>
+    </circle>
+    <circle cx="79" cy="16" r="3" fill="#9CA3AF">
+      <animate attributeName="opacity" values="0.4;1;0.4" dur="1s" repeatCount="indefinite" begin="0.4s"/>
+    </circle>
+    <text x="130" y="20" font-family="system-ui, sans-serif" font-size="11" fill="#9CA3AF">Dave is typing...</text>
+  </g>
+
+  <!-- Input area -->
+  <rect x="0" y="450" width="480" height="70" fill="#ffffff"/>
+  <line x1="0" y1="450" x2="480" y2="450" stroke="#E5E7EB" stroke-width="1"/>
+
+  <!-- Input field -->
+  <rect x="16" y="465" width="380" height="40" rx="20" fill="#F3F4F6" stroke="#E5E7EB" stroke-width="1"/>
+  <text x="36" y="490" font-family="system-ui, sans-serif" font-size="14" fill="#9CA3AF">Type a message...</text>
+
+  <!-- Send button -->
+  <circle cx="432" cy="485" r="24" fill="#7C3AED"/>
+  <path d="M424 485 L440 485 M432 477 L440 485 L432 493" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

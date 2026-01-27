@@ -27,19 +27,9 @@ The folder pane renders `ldp:Container` resources — the file browser for Solid
 
 ## Screenshot
 
-```
-┌─────────────────────────────────────────────────┐
-│ 📁 /documents/                                  │
-├─────────────────────────────────────────────────┤
-│ ⬆️ ..                                           │
-│ 📁 projects/                      Modified: 2d  │
-│ 📁 notes/                         Modified: 1w  │
-│ 📄 budget.ttl                     Modified: 3h  │
-│ 📄 readme.md                      Modified: 5d  │
-├─────────────────────────────────────────────────┤
-│ [New Folder] [Upload] [New File]                │
-└─────────────────────────────────────────────────┘
-```
+![Folder Pane Mockup](/img/panes/folder-pane-mockup.svg)
+
+The folder view displays containers and resources with icons, modification dates, and file sizes. Breadcrumb navigation shows the current path.
 
 ## RDF Structure
 

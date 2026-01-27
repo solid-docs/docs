@@ -27,24 +27,9 @@ The chat pane renders `meeting:LongChat` resources — real-time messaging for S
 
 ## Screenshot
 
-```
-┌─────────────────────────────────────────────────┐
-│ 💬 Project Discussion                           │
-│ Alice, Bob, Carol                               │
-├─────────────────────────────────────────────────┤
-│ Alice (10:30 AM)                                │
-│ Hey everyone, ready for the meeting?            │
-│                                                 │
-│ Bob (10:31 AM)                                  │
-│ Yes! I've uploaded the documents                │
-│ 📎 project-plan.pdf                             │
-│                                                 │
-│ Carol (10:32 AM)                                │
-│ Looking at them now 👍                          │
-├─────────────────────────────────────────────────┤
-│ [Type a message...                    ] [Send]  │
-└─────────────────────────────────────────────────┘
-```
+![Chat Pane Mockup](/img/panes/chat-pane-mockup.svg)
+
+Messages are displayed in real-time with typing indicators, participant avatars, and timestamps.
 
 ## RDF Structure
 

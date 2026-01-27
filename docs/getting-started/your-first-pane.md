@@ -232,6 +232,6 @@ render: (subject, dom, context) => {
 ## Next Steps
 
 - [Pane Anatomy](/docs/panes/pane-anatomy) — detailed structure
-- [solid-ui Widgets](/docs/libraries/solid-ui/widgets) — available components
-- [Data Binding](/docs/panes/data-binding) — reactive updates
-- [Testing Panes](/docs/panes/testing-panes) — write tests
+- [solid-ui](/libraries/solid-ui) — available UI components
+- [Pane Anatomy](/panes/pane-anatomy) — pane structure and reactive updates
+- [Creating Panes](/panes/creating-panes) — detailed pane development guide

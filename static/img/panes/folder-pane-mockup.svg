@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 440" width="480" height="440">
+  <defs>
+    <linearGradient id="folderHeaderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C3AED"/>
+      <stop offset="100%" style="stop-color:#2563EB"/>
+    </linearGradient>
+    <filter id="folderShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="480" height="440" rx="12" fill="#ffffff" filter="url(#folderShadow)"/>
+
+  <!-- Header -->
+  <rect width="480" height="60" rx="12" fill="url(#folderHeaderGrad)"/>
+  <rect y="12" width="480" height="48" fill="url(#folderHeaderGrad)"/>
+
+  <!-- Breadcrumb -->
+  <text x="24" y="38" font-family="system-ui, sans-serif" font-size="14" fill="rgba(255,255,255,0.8)">
+    <tspan>Pod</tspan>
+    <tspan fill="rgba(255,255,255,0.5)"> / </tspan>
+    <tspan>Documents</tspan>
+    <tspan fill="rgba(255,255,255,0.5)"> / </tspan>
+    <tspan font-weight="600" fill="#ffffff">Projects</tspan>
+  </text>
+
+  <!-- Action buttons -->
+  <g transform="translate(340, 20)">
+    <!-- New button -->
+    <rect width="60" height="28" rx="6" fill="rgba(255,255,255,0.2)"/>
+    <text x="30" y="19" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" fill="#ffffff">+ New</text>
+
+    <!-- Upload button -->
+    <rect x="70" width="60" height="28" rx="6" fill="rgba(255,255,255,0.2)"/>
+    <text x="100" y="19" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" fill="#ffffff">Upload</text>
+  </g>
+
+  <!-- Column headers -->
+  <rect x="0" y="60" width="480" height="36" fill="#F8FAFC"/>
+  <line x1="0" y1="96" x2="480" y2="96" stroke="#E5E7EB" stroke-width="1"/>
+  <text x="56" y="83" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#6B7280">Name</text>
+  <text x="300" y="83" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#6B7280">Modified</text>
+  <text x="410" y="83" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#6B7280">Size</text>
+
+  <!-- Folder 1 -->
+  <g transform="translate(0, 96)">
+    <rect width="480" height="48" fill="#ffffff"/>
+    <rect x="16" y="12" width="24" height="24" rx="4" fill="#FEF3C7"/>
+    <text x="28" y="30" text-anchor="middle" font-size="14">📁</text>
+    <text x="56" y="30" font-family="system-ui, sans-serif" font-size="14" fill="#374151">Research</text>
+    <text x="300" y="30" font-family="system-ui, sans-serif" font-size="13" fill="#6B7280">Jan 20, 2024</text>
+    <text x="410" y="30" font-family="system-ui, sans-serif" font-size="13" fill="#6B7280">--</text>
+    <line x1="16" y1="47" x2="464" y2="47" stroke="#F3F4F6" stroke-width="1"/>
+  </g>
+
+  <!-- Folder 2 -->
+  <g transform="translate(0, 144)">
+    <rect width="480" height="48" fill="#ffffff"/>
+    <rect x="16" y="12" width="24" height="24" rx="4" fill="#FEF3C7"/>
+    <text x="28" y="30" text-anchor="middle" font-size="14">📁</text>
+    <text x="56" y="30" font-family="system-ui, sans-serif" font-size="14" fill="#374151">Meetings</text>
+    <text x="300" y="30" font-family="system-ui, sans-serif" font-size="13" fill="#6B7280">Jan 18, 2024</text>
+    <text x="410" y="30" font-family="system-ui, sans-serif" font-size="13" fill="#6B7280">--</text>
+    <line x1="16" y1="47" x2="464" y2="47" stroke="#F3F4F6" stroke-width="1"/>
+  </g>
+
+  <!-- File 1 - Turtle -->
+  <g transform="translate(0, 192)">
+    <rect width="480" height="48" fill="#ffffff"/>
+    <rect x="16" y="12" width="24" height="24" rx="4" fill="#DBEAFE"/>
+    <text x="28" y="30" text-anchor="middle" font-size="14">🐢</text>
+    <text x="56" y="30" font-family="system-ui, sans-serif" font-size="14" fill="#374151">profile.ttl</text>
+    <text x="300" y="30" font-family="system-ui, sans-serif" font-size="13" fill="#6B7280">Jan 22, 2024</text>
+    <text x="410" y="30" font-family="system-ui, sans-serif" font-size="13" fill="#6B7280">2.4 KB</text>
+    <line x1="16" y1="47" x2="464" y2="47" stroke="#F3F4F6" stroke-width="1"/>
+  </g>
+
+  <!-- File 2 - Image -->
+  <g transform="translate(0, 240)">
+    <rect width="480" height="48" fill="#ffffff"/>
+    <rect x="16" y="12" width="24" height="24" rx="4" fill="#FCE7F3"/>
+    <text x="28" y="30" text-anchor="middle" font-size="14">🖼️</text>
+    <text x="56" y="30" font-family="system-ui, sans-serif" font-size="14" fill="#374151">photo.jpg</text>
+    <text x="300" y="30" font-family="system-ui, sans-serif" font-size="13" fill="#6B7280">Jan 15, 2024</text>
+    <text x="410" y="30" font-family="system-ui, sans-serif" font-size="13" fill="#6B7280">1.2 MB</text>
+    <line x1="16" y1="47" x2="464" y2="47" stroke="#F3F4F6" stroke-width="1"/>
+  </g>
+
+  <!-- File 3 - Document -->
+  <g transform="translate(0, 288)">
+    <rect width="480" height="48" fill="#ffffff"/>
+    <rect x="16" y="12" width="24" height="24" rx="4" fill="#D1FAE5"/>
+    <text x="28" y="30" text-anchor="middle" font-size="14">📄</text>
+    <text x="56" y="30" font-family="system-ui, sans-serif" font-size="14" fill="#374151">notes.md</text>
+    <text x="300" y="30" font-family="system-ui, sans-serif" font-size="13" fill="#6B7280">Jan 12, 2024</text>
+    <text x="410" y="30" font-family="system-ui, sans-serif" font-size="13" fill="#6B7280">856 B</text>
+    <line x1="16" y1="47" x2="464" y2="47" stroke="#F3F4F6" stroke-width="1"/>
+  </g>
+
+  <!-- File 4 - ACL -->
+  <g transform="translate(0, 336)">
+    <rect width="480" height="48" fill="#ffffff"/>
+    <rect x="16" y="12" width="24" height="24" rx="4" fill="#E9D5FF"/>
+    <text x="28" y="30" text-anchor="middle" font-size="14">🔒</text>
+    <text x="56" y="30" font-family="system-ui, sans-serif" font-size="14" fill="#9CA3AF">.acl</text>
+    <text x="300" y="30" font-family="system-ui, sans-serif" font-size="13" fill="#6B7280">Jan 10, 2024</text>
+    <text x="410" y="30" font-family="system-ui, sans-serif" font-size="13" fill="#6B7280">512 B</text>
+    <line x1="16" y1="47" x2="464" y2="47" stroke="#F3F4F6" stroke-width="1"/>
+  </g>
+
+  <!-- Footer -->
+  <rect x="0" y="392" width="480" height="48" rx="0" fill="#F8FAFC"/>
+  <rect x="0" y="428" width="480" height="12" rx="0" fill="#F8FAFC"/>
+  <rect x="0" y="428" width="16" height="12" fill="#F8FAFC"/>
+  <rect x="464" y="428" width="16" height="12" fill="#F8FAFC"/>
+  <rect x="0" y="432" width="480" height="8" rx="0 0 12 12" fill="#F8FAFC"/>
+  <text x="24" y="420" font-family="system-ui, sans-serif" font-size="12" fill="#6B7280">6 items · 1.5 MB total</text>
+
+  <!-- View toggle -->
+  <g transform="translate(400, 404)">
+    <rect width="32" height="24" rx="4" fill="#E5E7EB"/>
+    <rect x="2" y="2" width="12" height="20" rx="2" fill="#7C3AED"/>
+    <rect x="36" width="32" height="24" rx="4" fill="#E5E7EB"/>
+  </g>
+</svg>
