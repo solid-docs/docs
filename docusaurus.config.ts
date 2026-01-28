@@ -136,6 +136,10 @@ const config: Config = {
               href: 'https://github.com/SolidOS/solid-ui',
             },
             {
+              label: 'Storybook',
+              href: 'https://solidos.github.io/solid-ui/examples/storybook/',
+            },
+            {
               label: 'solid-logic',
               href: 'https://github.com/SolidOS/solid-logic',
             },
