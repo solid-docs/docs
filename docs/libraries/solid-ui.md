@@ -14,6 +14,20 @@ solid-ui provides reusable UI components for building Solid applications — wid
 npm install solid-ui
 ```
 
+## Interactive Component Gallery
+
+Explore all solid-ui components interactively in the **Storybook**:
+
+**[View Storybook →](https://solidos.github.io/solid-ui/examples/storybook/)**
+
+The Storybook provides:
+- Live component previews
+- Interactive property controls
+- Multiple state variations
+- Real-time behavior testing
+
+Use it alongside these docs to see components in action before implementing.
+
 ## Widgets
 
 ### Buttons
@@ -473,6 +487,7 @@ const personPane = {
 
 ## See Also
 
+- [Storybook](https://solidos.github.io/solid-ui/examples/storybook/) — interactive component gallery
 - [solid-ui GitHub](https://github.com/SolidOS/solid-ui)
-- [Creating Panes](/docs/panes/creating-panes) — use solid-ui in panes
-- [solid-logic](/docs/libraries/solid-logic) — data layer
+- [Creating Panes](/panes/creating-panes) — use solid-ui in panes
+- [solid-logic](/libraries/solid-logic) — data layer
