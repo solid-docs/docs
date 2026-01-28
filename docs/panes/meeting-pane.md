@@ -26,27 +26,9 @@ The meeting pane renders `meeting:Meeting` resources — collaborative meeting a
 
 ## Screenshot
 
-```
-┌─────────────────────────────────────────────────┐
-│ 📅 Weekly Team Sync                             │
-│ Monday, Jan 15, 2024 at 10:00 AM                │
-│ Participants: Alice, Bob, Carol                 │
-├─────────────────────────────────────────────────┤
-│ Agenda                                          │
-│ ┌─────────────────────────────────────────────┐ │
-│ │ 1. Review last week's action items      [✓] │ │
-│ │ 2. Project status updates               [ ] │ │
-│ │ 3. Discuss Q2 planning                  [ ] │ │
-│ │ 4. Any other business                   [ ] │ │
-│ └─────────────────────────────────────────────┘ │
-│                                                 │
-│ Action Items                                    │
-│ • Alice: Complete documentation     Due: Jan 20│
-│ • Bob: Review pull requests         Due: Jan 17│
-├─────────────────────────────────────────────────┤
-│ [Add Agenda Item] [Add Action Item]             │
-└─────────────────────────────────────────────────┘
-```
+![Meeting Pane Mockup](/img/panes/meeting-pane-mockup.svg)
+
+Meetings display with participants, agenda items (with checkboxes), and action items with assignees and due dates.
 
 ## RDF Structure
 

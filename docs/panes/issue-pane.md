@@ -26,30 +26,9 @@ The issue pane renders `wf:Issue` resources — a lightweight issue tracker buil
 
 ## Screenshot
 
-```
-┌─────────────────────────────────────────────────┐
-│ 🐛 #42: Fix login redirect bug                  │
-│ Status: Open  Priority: High  Assigned: Alice   │
-├─────────────────────────────────────────────────┤
-│ When logging in from the /settings page, users  │
-│ are redirected to the homepage instead of back  │
-│ to /settings.                                   │
-│                                                 │
-│ Steps to reproduce:                             │
-│ 1. Go to /settings while logged out             │
-│ 2. Click "Login"                                │
-│ 3. Complete login flow                          │
-│ 4. Observe redirect to / instead of /settings   │
-├─────────────────────────────────────────────────┤
-│ Comments (2)                                    │
-│ ┌─────────────────────────────────────────────┐ │
-│ │ Bob (Jan 14): I can reproduce this on Chrome│ │
-│ │ Alice (Jan 15): Working on a fix            │ │
-│ └─────────────────────────────────────────────┘ │
-│ [Add Comment]                                   │
-├─────────────────────────────────────────────────┤
-│ [Edit] [Close Issue] [Delete]                   │
-└─────────────────────────────────────────────────┘
+![Issue Pane Mockup](/img/panes/issue-pane-mockup.svg)
+
+Issues display with status badges, description, reproduction steps, and threaded comments.
 ```
 
 ## RDF Structure

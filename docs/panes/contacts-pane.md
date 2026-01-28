@@ -27,22 +27,9 @@ The contacts pane renders vCard data — individual contacts and address books.
 
 ## Screenshot
 
-```
-┌─────────────────────────────────────────────────┐
-│  ┌────┐                                         │
-│  │ 👤 │  Alice Smith                            │
-│  └────┘  Software Engineer at Acme Corp         │
-├─────────────────────────────────────────────────┤
-│  📧 alice@example.org                           │
-│  📱 +1 555-123-4567                             │
-│  🏠 123 Main St, City, Country                  │
-│                                                 │
-│  🔗 @alice@mastodon.social                      │
-│  🌐 https://alice.example                       │
-├─────────────────────────────────────────────────┤
-│  [Edit] [Share] [Delete]                        │
-└─────────────────────────────────────────────────┘
-```
+![Contacts Pane Mockup](/img/panes/contacts-pane-mockup.svg)
+
+Individual contacts display with avatar, contact details, and action buttons.
 
 ## RDF Structure
 

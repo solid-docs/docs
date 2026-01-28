@@ -528,11 +528,21 @@ document.addEventListener('DOMContentLoaded', function() {
     })
   }
 
-  // Check for URI in query string
+  // Default URI to load
+  const DEFAULT_URI = 'https://timbl.solidcommunity.net/profile/card#me'
+
+  // Check for URI in query string, or use default
   const initial = new URLSearchParams(location.search).get('uri')
-  if (initial) {
-    go(initial)
-  }
+
+  // Delay to ensure mashlib is fully initialized (avoid race condition)
+  setTimeout(() => {
+    if (initial) {
+      go(initial)
+    } else {
+      // Load default profile
+      go(DEFAULT_URI)
+    }
+  }, 500)
 
   updateLoginArea()
 })

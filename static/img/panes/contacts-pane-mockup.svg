@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 380" width="420" height="380">
+  <defs>
+    <linearGradient id="contactsHeaderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C3AED"/>
+      <stop offset="100%" style="stop-color:#2563EB"/>
+    </linearGradient>
+    <filter id="contactsShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="420" height="380" rx="12" fill="#ffffff" filter="url(#contactsShadow)"/>
+
+  <!-- Header with avatar -->
+  <rect width="420" height="100" rx="12" fill="url(#contactsHeaderGrad)"/>
+  <rect y="12" width="420" height="88" fill="url(#contactsHeaderGrad)"/>
+
+  <!-- Avatar -->
+  <circle cx="70" cy="100" r="45" fill="#ffffff" stroke="#ffffff" stroke-width="4"/>
+  <circle cx="70" cy="100" r="41" fill="#E9D5FF"/>
+  <text x="70" y="108" text-anchor="middle" font-size="28" font-weight="600" fill="#7C3AED">AS</text>
+
+  <!-- Name and title -->
+  <text x="130" y="75" font-family="system-ui, sans-serif" font-size="20" font-weight="600" fill="#ffffff">Alice Smith</text>
+  <text x="130" y="95" font-family="system-ui, sans-serif" font-size="13" fill="rgba(255,255,255,0.9)">Software Engineer at Acme Corp</text>
+
+  <!-- Contact details section -->
+  <text x="20" y="170" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#6B7280" letter-spacing="0.5">CONTACT DETAILS</text>
+
+  <!-- Email -->
+  <g transform="translate(20, 185)">
+    <circle cx="12" cy="12" r="12" fill="#F3E8FF"/>
+    <text x="12" y="17" text-anchor="middle" font-size="12" fill="#7C3AED">✉</text>
+    <text x="32" y="16" font-family="system-ui, sans-serif" font-size="14" fill="#374151">alice@example.org</text>
+  </g>
+
+  <!-- Phone -->
+  <g transform="translate(20, 220)">
+    <circle cx="12" cy="12" r="12" fill="#F3E8FF"/>
+    <text x="12" y="17" text-anchor="middle" font-size="12" fill="#7C3AED">📱</text>
+    <text x="32" y="16" font-family="system-ui, sans-serif" font-size="14" fill="#374151">+1 555-123-4567</text>
+  </g>
+
+  <!-- Address -->
+  <g transform="translate(20, 255)">
+    <circle cx="12" cy="12" r="12" fill="#F3E8FF"/>
+    <text x="12" y="17" text-anchor="middle" font-size="12" fill="#7C3AED">🏠</text>
+    <text x="32" y="16" font-family="system-ui, sans-serif" font-size="14" fill="#374151">123 Main St, San Francisco</text>
+  </g>
+
+  <!-- Website -->
+  <g transform="translate(20, 290)">
+    <circle cx="12" cy="12" r="12" fill="#F3E8FF"/>
+    <text x="12" y="17" text-anchor="middle" font-size="12" fill="#7C3AED">🔗</text>
+    <text x="32" y="16" font-family="system-ui, sans-serif" font-size="14" fill="#2563EB">https://alice.example</text>
+  </g>
+
+  <!-- Action buttons -->
+  <g transform="translate(20, 335)">
+    <rect width="80" height="32" rx="6" fill="#7C3AED"/>
+    <text x="40" y="21" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" font-weight="500" fill="#ffffff">✎ Edit</text>
+
+    <rect x="90" width="80" height="32" rx="6" fill="#F3F4F6"/>
+    <text x="130" y="21" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" font-weight="500" fill="#374151">Share</text>
+
+    <rect x="180" width="80" height="32" rx="6" fill="#FEE2E2"/>
+    <text x="220" y="21" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" font-weight="500" fill="#DC2626">Delete</text>
+  </g>
+</svg>

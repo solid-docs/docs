@@ -28,20 +28,9 @@ The source pane shows the raw source of any resource — useful for debugging an
 
 ## Screenshot
 
-```
-┌─────────────────────────────────────────────────┐
-│ Source: profile/card.ttl                        │
-│ [Turtle ▼] [Copy] [Download]                    │
-├─────────────────────────────────────────────────┤
-│  1 │ @prefix foaf: <http://xmlns.com/foaf/0.1/> │
-│  2 │ @prefix solid: <http://www.w3.org/ns/solid │
-│  3 │                                            │
-│  4 │ <#me>                                      │
-│  5 │     a foaf:Person ;                        │
-│  6 │     foaf:name "Alice Smith" ;              │
-│  7 │     foaf:knows <https://bob.example/#me> . │
-└─────────────────────────────────────────────────┘
-```
+![Source Pane Mockup](/img/panes/source-pane-mockup.svg)
+
+The source pane provides a code editor view with syntax highlighting for Turtle and other RDF formats.
 
 ## Usage
 
