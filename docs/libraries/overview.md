@@ -10,18 +10,7 @@ SolidOS is built from several interconnected libraries.
 
 ## Core Libraries
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        mashlib                              │
-│              "The bundled data browser"                     │
-├─────────────────────────────────────────────────────────────┤
-│   solid-panes    │    solid-ui      │    solid-logic       │
-│   "Pane apps"    │    "UI widgets"  │    "Business logic"  │
-├─────────────────────────────────────────────────────────────┤
-│                       rdflib.js                             │
-│                    "RDF foundation"                         │
-└─────────────────────────────────────────────────────────────┘
-```
+![SolidOS Library Stack](/img/architecture-stack.svg)
 
 ## Library Comparison
 
