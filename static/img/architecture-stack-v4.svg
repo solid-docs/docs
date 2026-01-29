@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 750" width="900" height="750">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="appGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C3AED;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6366F1;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="mashlibGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563EB;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3B82F6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="panesGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10B981;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="uiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0891B2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06B6D4;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="logicGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#D97706;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F59E0B;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="rdflibGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#DC2626;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EF4444;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="podGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9333EA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A855F7;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Shadows -->
+    <filter id="cardShadow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="0" dy="2" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.15"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#94A3B8"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="750" fill="#F8FAFC"/>
+
+  <!-- Title -->
+  <text x="450" y="35" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="700" fill="#1E293B" text-anchor="middle">SolidOS Technology Stack</text>
+  <text x="450" y="55" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#64748B" text-anchor="middle">Dependency hierarchy from foundation to application</text>
+
+  <!-- Layer 1: Your Application -->
+  <g filter="url(#cardShadow)">
+    <rect x="100" y="85" width="700" height="75" rx="12" fill="url(#appGrad)"/>
+    <rect x="100" y="85" width="700" height="75" rx="12" fill="white" opacity="0.1"/>
+  </g>
+  <text x="450" y="115" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" fill="white" text-anchor="middle">Your Application</text>
+  <text x="450" y="137" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="white" opacity="0.9" text-anchor="middle">Custom business logic and UI</text>
+
+  <!-- Arrow -->
+  <line x1="450" y1="165" x2="450" y2="190" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- Layer 2: mashlib -->
+  <g filter="url(#cardShadow)">
+    <rect x="100" y="190" width="700" height="75" rx="12" fill="url(#mashlibGrad)"/>
+    <rect x="100" y="190" width="700" height="75" rx="12" fill="white" opacity="0.1"/>
+  </g>
+  <text x="450" y="220" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" fill="white" text-anchor="middle">mashlib</text>
+  <text x="450" y="242" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="white" opacity="0.9" text-anchor="middle">Bundles everything together</text>
+
+  <!-- Arrows from mashlib to three components -->
+  <line x1="260" y1="270" x2="215" y2="305" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="450" y1="270" x2="450" y2="305" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="640" y1="270" x2="685" y2="305" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- Layer 3: Three components side by side -->
+
+  <!-- solid-logic (LEFT) -->
+  <g filter="url(#cardShadow)">
+    <rect x="60" y="305" width="220" height="110" rx="12" fill="url(#logicGrad)"/>
+    <rect x="60" y="305" width="220" height="110" rx="12" fill="white" opacity="0.1"/>
+  </g>
+  <text x="170" y="340" font-family="system-ui, -apple-system, sans-serif" font-size="19" font-weight="700" fill="white" text-anchor="middle">solid-logic</text>
+  <text x="170" y="361" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="white" opacity="0.9" text-anchor="middle">Business logic</text>
+  <text x="170" y="377" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="white" opacity="0.9" text-anchor="middle">&amp; authentication</text>
+  <rect x="95" y="385" width="150" height="16" rx="8" fill="white" opacity="0.25"/>
+  <text x="170" y="395" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="500" fill="white" opacity="0.95" text-anchor="middle">Foundation layer</text>
+
+  <!-- Arrow from solid-logic to solid-ui -->
+  <line x1="280" y1="360" x2="330" y2="360" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- solid-ui (MIDDLE) -->
+  <g filter="url(#cardShadow)">
+    <rect x="330" y="305" width="240" height="110" rx="12" fill="url(#uiGrad)"/>
+    <rect x="330" y="305" width="240" height="110" rx="12" fill="white" opacity="0.1"/>
+  </g>
+  <text x="450" y="340" font-family="system-ui, -apple-system, sans-serif" font-size="19" font-weight="700" fill="white" text-anchor="middle">solid-ui</text>
+  <text x="450" y="361" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="white" opacity="0.9" text-anchor="middle">UI widgets &amp; forms</text>
+  <rect x="360" y="370" width="180" height="16" rx="8" fill="white" opacity="0.25"/>
+  <text x="450" y="380" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="500" fill="white" opacity="0.95" text-anchor="middle">← solid-logic • pane-registry</text>
+  <rect x="365" y="390" width="170" height="14" rx="7" fill="white" opacity="0.2"/>
+  <text x="450" y="399" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="white" opacity="0.85" text-anchor="middle">Builds on logic layer</text>
+
+  <!-- Arrow from solid-ui to solid-panes -->
+  <line x1="570" y1="360" x2="620" y2="360" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- solid-panes (RIGHT) -->
+  <g filter="url(#cardShadow)">
+    <rect x="620" y="305" width="220" height="110" rx="12" fill="url(#panesGrad)"/>
+    <rect x="620" y="305" width="220" height="110" rx="12" fill="white" opacity="0.1"/>
+  </g>
+  <text x="730" y="340" font-family="system-ui, -apple-system, sans-serif" font-size="19" font-weight="700" fill="white" text-anchor="middle">solid-panes</text>
+  <text x="730" y="361" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="white" opacity="0.9" text-anchor="middle">Pane registry</text>
+  <text x="730" y="377" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="white" opacity="0.9" text-anchor="middle">&amp; built-in panes</text>
+  <rect x="650" y="385" width="160" height="16" rx="8" fill="white" opacity="0.25"/>
+  <text x="730" y="395" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="500" fill="white" opacity="0.95" text-anchor="middle">← solid-ui • solid-logic</text>
+
+  <!-- Arrows from three components down to rdflib -->
+  <line x1="170" y1="420" x2="350" y2="490" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="450" y1="420" x2="450" y2="490" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="730" y1="420" x2="550" y2="490" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Layer 4: rdflib.js -->
+  <g filter="url(#cardShadow)">
+    <rect x="100" y="490" width="700" height="75" rx="12" fill="url(#rdflibGrad)"/>
+    <rect x="100" y="490" width="700" height="75" rx="12" fill="white" opacity="0.1"/>
+  </g>
+  <text x="450" y="520" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" fill="white" text-anchor="middle">rdflib.js</text>
+  <text x="450" y="542" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="white" opacity="0.9" text-anchor="middle">RDF store, fetcher &amp; query engine • Foundation layer</text>
+
+  <!-- Arrow -->
+  <line x1="450" y1="570" x2="450" y2="595" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- Layer 5: Solid Pod -->
+  <g filter="url(#cardShadow)">
+    <rect x="100" y="595" width="700" height="75" rx="12" fill="url(#podGrad)"/>
+    <rect x="100" y="595" width="700" height="75" rx="12" fill="white" opacity="0.1"/>
+  </g>
+  <text x="450" y="625" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" fill="white" text-anchor="middle">Solid Pod (data)</text>
+  <text x="450" y="647" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="white" opacity="0.9" text-anchor="middle">via LDP / Solid Protocol</text>
+
+  <!-- Info box -->
+  <rect x="100" y="690" width="700" height="45" rx="8" fill="#E0E7FF" stroke="#6366F1" stroke-width="1" opacity="0.5"/>
+  <text x="120" y="712" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#4338CA" font-weight="600">💡 Dependency Flow:</text>
+  <text x="235" y="712" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#4338CA">solid-logic → solid-ui → solid-panes</text>
+  <text x="120" y="728" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#4338CA">Horizontal arrows show build dependencies • Each layer builds on the layers below it</text>
+</svg>

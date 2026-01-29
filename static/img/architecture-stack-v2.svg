@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 700" width="800" height="700">
+  <defs>
+    <linearGradient id="appGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C3AED;stop-opacity:0.15" />
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:0.05" />
+    </linearGradient>
+    <linearGradient id="mashlibGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563EB;stop-opacity:0.15" />
+      <stop offset="100%" style="stop-color:#2563EB;stop-opacity:0.05" />
+    </linearGradient>
+    <linearGradient id="panesGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:0.15" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:0.05" />
+    </linearGradient>
+    <linearGradient id="uiGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:0.15" />
+      <stop offset="100%" style="stop-color:#10B981;stop-opacity:0.05" />
+    </linearGradient>
+    <linearGradient id="logicGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#D97706;stop-opacity:0.15" />
+      <stop offset="100%" style="stop-color:#D97706;stop-opacity:0.05" />
+    </linearGradient>
+    <linearGradient id="rdflibGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#DC2626;stop-opacity:0.15" />
+      <stop offset="100%" style="stop-color:#DC2626;stop-opacity:0.05" />
+    </linearGradient>
+    <linearGradient id="podGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#9333EA;stop-opacity:0.15" />
+      <stop offset="100%" style="stop-color:#9333EA;stop-opacity:0.05" />
+    </linearGradient>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#666" opacity="0.5"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="700" fill="#FAFAFA"/>
+
+  <!-- Your Application Layer -->
+  <rect x="100" y="30" width="600" height="70" rx="8" fill="url(#appGradient)" stroke="#7C3AED" stroke-width="2"/>
+  <text x="400" y="60" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="600" fill="#7C3AED" text-anchor="middle">Your Application</text>
+  <text x="400" y="80" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">Custom business logic and UI</text>
+
+  <!-- Arrow -->
+  <line x1="400" y1="100" x2="400" y2="120" stroke="#666" stroke-width="2" opacity="0.3" marker-end="url(#arrowhead)"/>
+
+  <!-- Mashlib Layer -->
+  <rect x="100" y="120" width="600" height="70" rx="8" fill="url(#mashlibGradient)" stroke="#2563EB" stroke-width="2"/>
+  <text x="400" y="150" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="600" fill="#2563EB" text-anchor="middle">mashlib</text>
+  <text x="400" y="170" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">Bundles everything together</text>
+
+  <!-- Arrow -->
+  <line x1="400" y1="190" x2="400" y2="210" stroke="#666" stroke-width="2" opacity="0.3" marker-end="url(#arrowhead)"/>
+
+  <!-- solid-panes Layer -->
+  <rect x="150" y="210" width="500" height="70" rx="8" fill="url(#panesGradient)" stroke="#059669" stroke-width="2"/>
+  <text x="400" y="240" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#059669" text-anchor="middle">solid-panes</text>
+  <text x="400" y="258" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#555" text-anchor="middle">Pane registry &amp; built-in panes</text>
+  <text x="400" y="273" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#777" text-anchor="middle" font-style="italic">depends on: solid-ui, solid-logic, pane-registry</text>
+
+  <!-- Arrow -->
+  <line x1="400" y1="280" x2="400" y2="300" stroke="#666" stroke-width="2" opacity="0.3" marker-end="url(#arrowhead)"/>
+
+  <!-- solid-ui Layer -->
+  <rect x="175" y="300" width="450" height="70" rx="8" fill="url(#uiGradient)" stroke="#10B981" stroke-width="2"/>
+  <text x="400" y="330" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#10B981" text-anchor="middle">solid-ui</text>
+  <text x="400" y="348" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#555" text-anchor="middle">UI widgets &amp; forms</text>
+  <text x="400" y="363" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#777" text-anchor="middle" font-style="italic">depends on: solid-logic, rdflib, pane-registry</text>
+
+  <!-- Arrow -->
+  <line x1="400" y1="370" x2="400" y2="390" stroke="#666" stroke-width="2" opacity="0.3" marker-end="url(#arrowhead)"/>
+
+  <!-- solid-logic Layer -->
+  <rect x="200" y="390" width="400" height="70" rx="8" fill="url(#logicGradient)" stroke="#D97706" stroke-width="2"/>
+  <text x="400" y="420" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#D97706" text-anchor="middle">solid-logic</text>
+  <text x="400" y="438" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#555" text-anchor="middle">Business logic &amp; auth</text>
+  <text x="400" y="453" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#777" text-anchor="middle" font-style="italic">depends on: rdflib</text>
+
+  <!-- Arrow -->
+  <line x1="400" y1="460" x2="400" y2="480" stroke="#666" stroke-width="2" opacity="0.3" marker-end="url(#arrowhead)"/>
+
+  <!-- RDFlib Layer -->
+  <rect x="100" y="480" width="600" height="70" rx="8" fill="url(#rdflibGradient)" stroke="#DC2626" stroke-width="2"/>
+  <text x="400" y="510" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="600" fill="#DC2626" text-anchor="middle">rdflib.js</text>
+  <text x="400" y="530" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">RDF store, fetcher &amp; query engine</text>
+
+  <!-- Arrow -->
+  <line x1="400" y1="550" x2="400" y2="570" stroke="#666" stroke-width="2" opacity="0.3" marker-end="url(#arrowhead)"/>
+
+  <!-- Solid Pod Layer -->
+  <rect x="100" y="570" width="600" height="70" rx="8" fill="url(#podGradient)" stroke="#9333EA" stroke-width="2"/>
+  <text x="400" y="600" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="600" fill="#9333EA" text-anchor="middle">Solid Pod (data)</text>
+  <text x="400" y="620" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#666" text-anchor="middle">via LDP / Solid Protocol</text>
+
+  <!-- Legend: Dependency Note -->
+  <text x="50" y="670" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#999" font-style="italic">Note: Width indicates dependency scope (narrower = depends on layers below)</text>
+</svg>

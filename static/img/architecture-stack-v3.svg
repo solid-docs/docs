@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 750" width="900" height="750">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="appGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C3AED;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6366F1;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="mashlibGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563EB;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3B82F6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="panesGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10B981;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="uiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0891B2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06B6D4;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="logicGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#D97706;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F59E0B;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="rdflibGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#DC2626;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EF4444;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="podGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9333EA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A855F7;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Shadows -->
+    <filter id="cardShadow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="0" dy="2" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.15"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#94A3B8"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="750" fill="#F8FAFC"/>
+
+  <!-- Title -->
+  <text x="450" y="35" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="700" fill="#1E293B" text-anchor="middle">SolidOS Technology Stack</text>
+  <text x="450" y="55" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#64748B" text-anchor="middle">Dependency hierarchy from foundation to application</text>
+
+  <!-- Layer 1: Your Application -->
+  <g filter="url(#cardShadow)">
+    <rect x="100" y="85" width="700" height="75" rx="12" fill="url(#appGrad)"/>
+    <rect x="100" y="85" width="700" height="75" rx="12" fill="white" opacity="0.1"/>
+  </g>
+  <text x="450" y="115" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" fill="white" text-anchor="middle">Your Application</text>
+  <text x="450" y="137" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="white" opacity="0.9" text-anchor="middle">Custom business logic and UI</text>
+
+  <!-- Arrow -->
+  <line x1="450" y1="165" x2="450" y2="190" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- Layer 2: mashlib -->
+  <g filter="url(#cardShadow)">
+    <rect x="100" y="190" width="700" height="75" rx="12" fill="url(#mashlibGrad)"/>
+    <rect x="100" y="190" width="700" height="75" rx="12" fill="white" opacity="0.1"/>
+  </g>
+  <text x="450" y="220" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" fill="white" text-anchor="middle">mashlib</text>
+  <text x="450" y="242" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="white" opacity="0.9" text-anchor="middle">Bundles everything together</text>
+
+  <!-- Arrow -->
+  <line x1="450" y1="270" x2="450" y2="295" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- Layer 3: solid-panes -->
+  <g filter="url(#cardShadow)">
+    <rect x="150" y="295" width="600" height="75" rx="12" fill="url(#panesGrad)"/>
+    <rect x="150" y="295" width="600" height="75" rx="12" fill="white" opacity="0.1"/>
+  </g>
+  <text x="450" y="325" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="700" fill="white" text-anchor="middle">solid-panes</text>
+  <text x="450" y="345" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="white" opacity="0.9" text-anchor="middle">Pane registry &amp; built-in panes</text>
+  <!-- Dependencies badge -->
+  <rect x="285" y="352" width="330" height="16" rx="8" fill="white" opacity="0.25"/>
+  <text x="450" y="362" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="500" fill="white" opacity="0.95" text-anchor="middle">↓ solid-ui • solid-logic • pane-registry</text>
+
+  <!-- Arrow -->
+  <line x1="450" y1="375" x2="450" y2="400" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- Layer 4: solid-ui -->
+  <g filter="url(#cardShadow)">
+    <rect x="175" y="400" width="550" height="75" rx="12" fill="url(#uiGrad)"/>
+    <rect x="175" y="400" width="550" height="75" rx="12" fill="white" opacity="0.1"/>
+  </g>
+  <text x="450" y="430" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="700" fill="white" text-anchor="middle">solid-ui</text>
+  <text x="450" y="450" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="white" opacity="0.9" text-anchor="middle">UI widgets &amp; forms</text>
+  <!-- Dependencies badge -->
+  <rect x="310" y="457" width="280" height="16" rx="8" fill="white" opacity="0.25"/>
+  <text x="450" y="467" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="500" fill="white" opacity="0.95" text-anchor="middle">↓ solid-logic • rdflib • pane-registry</text>
+
+  <!-- Arrow -->
+  <line x1="450" y1="480" x2="450" y2="505" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- Layer 5: solid-logic -->
+  <g filter="url(#cardShadow)">
+    <rect x="200" y="505" width="500" height="75" rx="12" fill="url(#logicGrad)"/>
+    <rect x="200" y="505" width="500" height="75" rx="12" fill="white" opacity="0.1"/>
+  </g>
+  <text x="450" y="535" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="700" fill="white" text-anchor="middle">solid-logic</text>
+  <text x="450" y="555" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="white" opacity="0.9" text-anchor="middle">Business logic &amp; authentication</text>
+  <!-- Dependencies badge -->
+  <rect x="395" y="562" width="110" height="16" rx="8" fill="white" opacity="0.25"/>
+  <text x="450" y="572" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="500" fill="white" opacity="0.95" text-anchor="middle">↓ rdflib</text>
+
+  <!-- Arrow -->
+  <line x1="450" y1="585" x2="450" y2="610" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- Layer 6: rdflib.js -->
+  <g filter="url(#cardShadow)">
+    <rect x="100" y="610" width="700" height="75" rx="12" fill="url(#rdflibGrad)"/>
+    <rect x="100" y="610" width="700" height="75" rx="12" fill="white" opacity="0.1"/>
+  </g>
+  <text x="450" y="640" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" fill="white" text-anchor="middle">rdflib.js</text>
+  <text x="450" y="662" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="white" opacity="0.9" text-anchor="middle">RDF store, fetcher &amp; query engine • Foundation layer</text>
+
+  <!-- Info box -->
+  <rect x="100" y="700" width="700" height="35" rx="8" fill="#E0E7FF" stroke="#6366F1" stroke-width="1" opacity="0.5"/>
+  <text x="120" y="722" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#4338CA" font-weight="500">💡 Visual Guide:</text>
+  <text x="215" y="722" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#4338CA">Narrower layers depend on broader layers below • Arrows show build dependencies</text>
+</svg>
