@@ -62,7 +62,7 @@ const config: Config = {
     },
     announcementBar: {
       id: 'contribute',
-      content: 'Help build the SolidOS developer resource! <a href="https://github.com/solid-docs/docs">Contribute on GitHub</a>',
+      content: 'Community-maintained docs for SolidOS. Help improve them - <a href="https://github.com/solid-docs/docs">Contribute on GitHub</a>',
       backgroundColor: '#7C4DFF',
       textColor: '#fff',
       isCloseable: true,
