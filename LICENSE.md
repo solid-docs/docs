@@ -1,26 +1,44 @@
 # License
 
-This work is licensed under the **Creative Commons Attribution-ShareAlike 4.0 International License** (CC BY-SA 4.0).
+This repository uses dual licensing:
 
-## You are free to:
+- **Code** (HTML, JavaScript, CSS, TypeScript) — [GNU Affero General Public License v3.0 (AGPL-3.0)](https://www.gnu.org/licenses/agpl-3.0.html)
+- **Documentation** (Markdown, text, images) — [Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)](https://creativecommons.org/licenses/by-sa/4.0/)
 
+## Code License (AGPL-3.0)
+
+All code in this repository is licensed under the GNU Affero General Public License v3.0.
+
+This means you are free to:
+- Use, copy, and distribute the code
+- Modify and create derivative works
+- Use commercially
+
+Under these conditions:
+- **Disclose source** — Source code must be made available when distributing
+- **License and copyright notice** — Include the license and copyright notice
+- **Same license** — Modifications must be released under AGPL-3.0
+- **Network use is distribution** — Users interacting over a network get access to source
+
+Full text: https://www.gnu.org/licenses/agpl-3.0.html
+
+## Documentation License (CC BY-SA 4.0)
+
+All documentation (markdown files, guides, tutorials) is licensed under Creative Commons Attribution-ShareAlike 4.0 International.
+
+You are free to:
 - **Share** — copy and redistribute the material in any medium or format
 - **Adapt** — remix, transform, and build upon the material for any purpose, even commercially
 
-## Under the following terms:
+Under these terms:
+- **Attribution** — Give appropriate credit, provide a link to the license, and indicate if changes were made
+- **ShareAlike** — Distribute contributions under the same license as the original
 
-- **Attribution** — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+Full text: https://creativecommons.org/licenses/by-sa/4.0/legalcode
 
-- **ShareAlike** — If you remix, transform, or build upon the material, you must distribute your contributions under the same license as the original.
+## Summary
 
-- **No additional restrictions** — You may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
-
-## Notices:
-
-You do not have to comply with the license for elements of the material in the public domain or where your use is permitted by an applicable exception or limitation.
-
-No warranties are given. The license may not give you all of the permissions necessary for your intended use. For example, other rights such as publicity, privacy, or moral rights may limit how you use the material.
-
-## Full License Text
-
-The full license text is available at: https://creativecommons.org/licenses/by-sa/4.0/legalcode
+| Content Type | License | SPDX Identifier |
+|--------------|---------|-----------------|
+| Code (*.js, *.ts, *.html, *.css) | AGPL-3.0 | AGPL-3.0-or-later |
+| Documentation (*.md, docs/) | CC BY-SA 4.0 | CC-BY-SA-4.0 |
