@@ -35,9 +35,9 @@ Let's see it in action. No account needed.
 
 Click this link to open the SolidOS data browser:
 
-**[Open Demo →](https://solid-docs.github.io/browser/?uri=https://solidos.solidcommunity.net/profile/card#me)**
+**[Open Demo →](https://solid-docs.github.io/docs/browser/)**
 
-You're now looking at a public profile stored in a Solid Pod.
+You're now looking at the SolidOS data browser.
 
 ### Step 2: Look Around
 
