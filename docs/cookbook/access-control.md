@@ -246,5 +246,5 @@ const ownerWrite = [
 ## See Also
 
 - [WAC Specification](https://solid.github.io/web-access-control-spec/)
-- [Sharing View](https://solid-docs.github.io/userguide/views/sharing) - UI for managing permissions
+- [Sharing View](https://solidos.org/userguide/views/sharing) - UI for managing permissions
 - [Authentication](/cookbook/authentication) - User login

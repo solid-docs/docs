@@ -35,7 +35,7 @@ Let's see it in action. No account needed.
 
 Click this link to open the SolidOS data browser:
 
-**[Open Demo →](https://solid-docs.github.io/docs/browser/)**
+**[Open Demo →](https://solidos.org/docs/browser/)**
 
 You're now looking at the SolidOS data browser.
 

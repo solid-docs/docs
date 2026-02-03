@@ -8,7 +8,7 @@ description: The bundled SolidOS data browser
 
 mashlib is the complete SolidOS data browser bundle — it combines all libraries and panes into a single distributable package.
 
-**[Try the Live Browser Demo →](https://solid-docs.github.io/docs/browser/)** | **[Custom Pane Demo →](https://solid-docs.github.io/docs/pane-demo/)**
+**[Try the Live Browser Demo →](https://solidos.org/docs/browser/)** | **[Custom Pane Demo →](https://solidos.org/docs/pane-demo/)**
 
 ## What's New in mashlib 2.0
 
@@ -395,7 +395,7 @@ export default {
 
 One of mashlib's most powerful features is the ability to register custom panes with **plain JavaScript** — no build step, no transpiler, no npm required. Just edit and refresh!
 
-**[See the Custom Pane Demo →](https://solid-docs.github.io/docs/pane-demo/)**
+**[See the Custom Pane Demo →](https://solidos.org/docs/pane-demo/)**
 
 ### Basic Registration
 

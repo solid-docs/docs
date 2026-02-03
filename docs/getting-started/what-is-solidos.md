@@ -24,7 +24,7 @@ When you visit a Solid pod with SolidOS, you get an interactive data browser:
 
 ![SolidOS Data Browser Interface](/img/solidos-browser-preview.svg)
 
-**[Try the Live Browser Demo →](https://solid-docs.github.io/docs/browser/)** — Experience SolidOS in action with a fully functional data browser
+**[Try the Live Browser Demo →](https://solidos.org/docs/browser/)** — Experience SolidOS in action with a fully functional data browser
 
 ## Key Components
 
@@ -74,7 +74,7 @@ SolidOS can be deployed in multiple ways:
 
 ## Resources
 
-- **[Try Live Demo](https://solid-docs.github.io/docs/browser/)** — interactive data browser on this site
+- **[Try Live Demo](https://solidos.org/docs/browser/)** — interactive data browser on this site
 - **[SolidOS GitHub](https://github.com/SolidOS)** — source code
 - **[Solid Project](https://solidproject.org/)** — the Solid ecosystem
 - **[SolidOS Community](https://solidos.solidcommunity.net/)** — see SolidOS in production
