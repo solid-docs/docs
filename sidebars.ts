@@ -74,6 +74,7 @@ const sidebars: SidebarsConfig = {
       label: 'Reference',
       collapsed: true,
       items: [
+        'reference/glossary',
         'reference/troubleshooting',
         'reference/faq',
         'reference/deployment',
