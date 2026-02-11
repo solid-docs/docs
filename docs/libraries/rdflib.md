@@ -179,6 +179,54 @@ const fetcher = new Fetcher(store, {
 })
 ```
 
+### Authenticated and Alternate Fetches
+
+By default, rdflib's Fetcher uses `cross-fetch.fetch()` — a plain fetch without authentication. To work with private Solid data, you need to pass an authenticated fetch.
+
+#### Using `solidFetch`
+
+The simplest approach is to set a global `solidFetch` variable:
+
+1. Load your authentication library
+2. Log in to your identity provider
+3. Set `global.solidFetch` (Node) or `window.solidFetch` (browser) to the auth library's fetch
+4. All rdflib fetches will then be authenticated
+
+```javascript
+// Node.js example
+const auth = new (require("solid-node-client").SolidNodeClient)();
+await auth.login(credentials);
+global.solidFetch = auth.fetch;
+
+const store = graph();
+const fetcher = new Fetcher(store);
+await fetcher.load(privateUrl);  // authenticated
+```
+
+:::note
+Prior to rdflib version 2.2.9, this variable was named `solidFetcher`. Use `solidFetch` going forward.
+:::
+
+#### Using a Custom Fetcher
+
+To avoid global variables, pass the fetch directly when creating the Fetcher:
+
+```javascript
+const fetcher = new Fetcher(store, {
+  fetch: auth.fetch.bind(auth)
+});
+```
+
+This means changes need to be added every time you create a new Fetcher, but avoids polluting the global scope.
+
+#### Authentication Libraries
+
+| Library | Environment | Notes |
+|---------|------------|-------|
+| [solid-client-authn-browser](https://github.com/inrupt/solid-client-js) | Browser | Inrupt's browser auth |
+| [solid-client-authn-node](https://github.com/inrupt/solid-client-js) | Node.js | When you don't need local filesystem access |
+| [solid-node-client](https://github.com/solid/solid-node-client) | Node.js | When you need full filesystem access |
+
 ## UpdateManager
 
 The UpdateManager writes changes back to Solid pods:
@@ -223,6 +271,55 @@ await updater.put(
   store.statementsMatching(null, null, null, newDoc),
   'text/turtle'
 )
+```
+
+### How the UpdateManager Decides What to Do
+
+The UpdateManager reads HTTP response headers to determine whether a document is editable and which update method to use.
+
+#### Editability
+
+For **HTTP(S) URIs**, a document is editable when both:
+- The `WAC-Allow` header grants write access to the current user
+- The response includes an `Accept-Patch` or `MS-Author-Via` header (see below)
+
+For **non-HTTP URIs** (e.g. `file://`), a document is editable if either:
+- It declares itself `a ont:MachineEditableDocument`
+- The `WAC-Allow` header grants write access
+
+#### Update Method Priority
+
+The UpdateManager picks the first matching method:
+
+| Priority | Method | Condition |
+|----------|--------|-----------|
+| 1 | **N3 PATCH** | `Accept-Patch` header contains `text/n3` |
+| 2 | **SPARQL PATCH** | `Accept-Patch` is `application/sparql-update` or `application/sparql-update-single-match`, or `MS-Author-Via` contains `SPARQL` |
+| 3 | **PUT** | `MS-Author-Via` contains `DAV` |
+
+:::note
+When submitting a form, PATCH is used except when re-ordering elements in an ordered list, which requires PUT.
+:::
+
+#### WebSocket Updates
+
+Real-time updates use the `Updates-Via` header. If the server provides `Updates-Via: wss://example.org`, the UpdateManager can subscribe to live changes.
+
+#### Inspecting Server Headers
+
+You can see what a server supports with:
+
+```bash
+curl --head https://solidcommunity.net/
+```
+
+Key headers to look for:
+
+```
+WAC-Allow: user="read write", public="read"
+Accept-Patch: text/n3, application/sparql-update
+MS-Author-Via: SPARQL
+Updates-Via: wss://solidcommunity.net
 ```
 
 ## Serialization
