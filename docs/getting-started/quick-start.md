@@ -45,7 +45,7 @@ npm install -g javascript-solid-server
 jss start --conneg --mashlib-module https://mashlib.com/dynamic/mashlib/boot.js
 ```
 
-`--mashlib-cdn` serves the webpack bundle from unpkg instead (mashlib 2.0.0 unless you also pass `--mashlib-version`), and `--panes <module URL>` adds panes for every visitor. Ports, login, versions and the other options are in [Running SolidOS on JSS](../guides/running-on-jss.md).
+`--mashlib-cdn` serves the webpack bundle from unpkg instead (mashlib 3.1.0 from JSS 0.0.231; `--mashlib-version` picks another), and `--panes <module URL>` adds panes for every visitor. Ports, login, versions and the other options are in [Running SolidOS on JSS](../guides/running-on-jss.md).
 
 ## 4. In your own page
 

@@ -8,7 +8,7 @@ description: Serve the SolidOS data browser from a JavaScript Solid Server pod, 
 
 [JavaScript Solid Server](https://jss.live/) (JSS) can serve SolidOS as the face of a pod: when a browser opens a resource on the pod, JSS answers with a page that loads the data browser, and the data browser then fetches the resource as data and draws it. JSS can also load extra panes into that page at start-up.
 
-Everything here is for JSS 0.0.230.
+Everything here is for JSS 0.0.231.
 
 ## Install
 
@@ -21,12 +21,12 @@ The command is `jss`. Without options, `jss start` listens on port 4443.
 
 ## Choose the data browser
 
-JSS has two ways to serve SolidOS. Use module mode for SolidOS 3.1.
+JSS has two ways to serve SolidOS. Both serve SolidOS 3.1.
 
 | Flag | What the page loads | SolidOS version |
 |---|---|---|
 | `--mashlib-module <url>` | an ES module entry point from any URL | whatever the module is; SolidOS 3.1 with the URLs below |
-| `--mashlib-cdn` | `mashlib.min.js` and `mash.css` from unpkg | `--mashlib-version`, default `2.0.0` |
+| `--mashlib-cdn` | `mashlib.min.js` and `mash.css` from unpkg | `--mashlib-version`, default `3.1.0` (`2.0.0` before JSS 0.0.231) |
 
 Either flag turns on content negotiation (`--conneg`) as well, so the data browser can ask for Turtle.
 
@@ -57,10 +57,14 @@ You can also host the entry point on the pod itself and give its URL.
 
 ```bash
 jss start --mashlib-cdn
-jss start --mashlib-cdn --mashlib-version 3.1.0
+jss start --mashlib-cdn --mashlib-version 2.0.0
 ```
 
-The page JSS writes in this mode has the mashlib 2.x markup (`<table id="outline">`, no `<solid-ui-provider>`), and the default version is 2.0.0. mashlib 3.1 does not use that markup: it draws into an `#OutlineView` it adds at the end of the page, and the profile heading and navigation bar are missing. Use module mode for 3.1. JSS redirects the numbered parts the bundle fetches from the server root (`/841.js`, `/410.js`) to unpkg.
+From JSS 0.0.231 the default version is 3.1.0, and the page JSS writes matches the version: 3 or later gets the 3.x page (`<solid-ui-provider>` around an `#OutlineView`), an earlier version gets the 2.x page (`<table id="outline">`).
+
+Before JSS 0.0.231 the default was 2.0.0 and the page always had the 2.x markup. mashlib 3.1 does not use that markup, so with `--mashlib-version 3.1.0` on those versions the profile heading and navigation bar are missing: upgrade JSS, or use module mode.
+
+JSS redirects the numbered parts the bundle fetches from the server root (`/841.js`, `/410.js`) to unpkg.
 
 ## Add panes: `--panes`
 
