@@ -1,291 +1,85 @@
 ---
 sidebar_position: 6
 title: Profile Pane
-description: WebID profile viewer and editor
+description: A person's profile page, read from their WebID document and edited in place by its owner
 ---
 
 # Profile Pane
 
-The profile pane renders WebID profiles — the identity cards of the Solid ecosystem.
+The profile pane shows a person as a profile page: bio, resume, projects and communities, social accounts, skills, languages, contact details and a QR code for the WebID. When you look at your own profile and can write to it, every section has **Edit** or **Add** buttons and saves straight to your profile document.
 
-## What It Renders
+![The profile pane in SolidOS 3.1 showing the public test profile](/img/builtin-panes/profile-pane.png)
 
-- WebID profile documents
-- `foaf:Person` resources
-- `schema:Person` resources
+| | |
+|---|---|
+| Package | [profile-pane](https://github.com/SolidOS/profile-pane) 4.1.0 |
+| Pane name | `profile` |
+| Registered by | solid-panes 5.1.0, first of all panes |
 
-## Features
+The card at the top (name, photo, job title, and **Add as friend**) is not part of this pane. It is the profile heading from solid-panes (`src/mainPage/profileHeading.ts`), which the main page places above the pane. solid-panes exports its two entry points, `initializeProfileHeading` and `refreshProfileHeading`.
 
-- Avatar display
-- Name and bio
-- Contact information
-- Social links
-- Friends list (foaf:knows)
-- Trusted apps
-- Profile editing
-- Public key management
+## When it applies
 
-## Screenshot
+`label(subject, context)` returns `Profile` if the subject is a `vcard:Individual`, `foaf:Person` or `schema:Person`, and `null` otherwise. Because `profile` is registered first, it is the default view for any person, including a WebID opened from the address bar.
 
-![Profile Pane Mockup](/img/panes/profile-pane-mockup.svg)
+Before rendering, the pane loads every document the profile links with `rdfs:seeAlso`, so data kept in an extended profile is shown too.
 
-The QR code button (top-right) allows users to share their WebID by generating a scannable code — useful for in-person identity sharing.
+## Owner, visitor, anonymous
 
-## RDF Structure
+The pane decides how to render from who is looking (`src/viewerMode.ts`):
 
-A typical WebID profile:
+| Viewer | Mode | Sections |
+|---|---|---|
+| Not logged in | `anonymous` | Read only |
+| Logged in, someone else's profile | `authenticated` | Read only |
+| Logged in, own profile, and the profile document is editable | `owner` | Edit and Add buttons on each section |
+
+Editing is done in dialogs per section (for example the bio dialog). There is no separate edit page: profile-pane 4.1 does not export an editor pane, so `registerPanes.js` skips registering one.
+
+After a section saves, the pane dispatches a `profile-pane-saved` event (bubbling, composed) with `detail.subjectUri` and `detail.profileData`. If a host page edits the profile elsewhere, it can dispatch `profile-heading-saved` with `detail.subjectUri` and the pane re-renders from the store.
+
+## Data
+
+The pane reads the person's WebID document. A small profile with the fields most sections use:
 
 ```turtle
+@prefix : <#> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix vcard: <http://www.w3.org/2006/vcard/ns#> .
+@prefix schema: <http://schema.org/> .
 @prefix solid: <http://www.w3.org/ns/solid/terms#> .
-@prefix ldp: <http://www.w3.org/ns/ldp#> .
-@prefix space: <http://www.w3.org/ns/pim/space#> .
+@prefix org: <http://www.w3.org/ns/org#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-<#me>
-    a foaf:Person ;
-    foaf:name "Alice Smith" ;
-    foaf:nick "alice" ;
-    foaf:img <photo.jpg> ;
-    foaf:bio "Software developer passionate about decentralization." ;
-    foaf:mbox <mailto:alice@example.org> ;
-    foaf:homepage <https://alice.example> ;
+:me a foaf:Person, schema:Person ;
+    foaf:name "Alex Example" ;
+    vcard:note "Writes documentation for Solid apps." ;   # Bio
+    schema:skills :skill1 ;                              # Skills
+    schema:knowsLanguage :lang1 ;                        # Languages
+    vcard:hasEmail :email1 .                             # Contact Info
 
-    # Location
-    vcard:hasAddress [
-        vcard:locality "San Francisco" ;
-        vcard:region "CA"
-    ] ;
+:email1 a vcard:Work ; vcard:value <mailto:alex@example.org> .
 
-    # Friends
-    foaf:knows
-        <https://bob.example/profile/card#me>,
-        <https://carol.example/profile/card#me> ;
+:skill1 schema:name "Technical writing" .
 
-    # Solid-specific
-    solid:oidcIssuer <https://solidcommunity.net> ;
-    solid:publicTypeIndex </settings/publicTypeIndex.ttl> ;
-    solid:privateTypeIndex </settings/privateTypeIndex.ttl> ;
-    space:preferencesFile </settings/prefs.ttl> ;
-    space:storage </> ;
-    ldp:inbox </inbox/> .
+:lang1 solid:publicId <https://www.w3.org/ns/iana/language-code/en> .
+
+:role1 a solid:CurrentRole ;                             # Resume
+    org:member :me ;
+    vcard:role "Documentation lead" ;
+    org:organization :org1 ;
+    schema:startDate "2024-01-01"^^xsd:date .
+
+:org1 a schema:Organization ; schema:name "Example Org" .
 ```
 
-## Usage
-
-```javascript
-// Navigate to a profile
-panes.runDataBrowser(document, sym('https://alice.example/profile/card#me'))
-
-// Get the pane directly
-const profilePane = paneRegistry.byName('profile')
-```
-
-## Reading Profile Data
-
-```javascript
-import { store, sym } from 'solid-logic'
-
-const FOAF = Namespace('http://xmlns.com/foaf/0.1/')
-const SOLID = Namespace('http://www.w3.org/ns/solid/terms#')
-
-async function getProfile(webId) {
-  const person = sym(webId)
-  await store.fetcher.load(person.doc())
-
-  return {
-    name: store.any(person, FOAF('name'), null, null)?.value,
-    nick: store.any(person, FOAF('nick'), null, null)?.value,
-    photo: store.any(person, FOAF('img'), null, null)?.uri,
-    bio: store.any(person, FOAF('bio'), null, null)?.value,
-    email: store.any(person, FOAF('mbox'), null, null)?.uri?.replace('mailto:', ''),
-    homepage: store.any(person, FOAF('homepage'), null, null)?.uri,
-    storage: store.any(person, SPACE('storage'), null, null)?.uri,
-    inbox: store.any(person, LDP('inbox'), null, null)?.uri,
-  }
-}
-```
-
-## Editing Profiles
-
-```javascript
-import { store, sym, lit, st } from 'solid-logic'
-
-async function updateProfile(webId, updates) {
-  const person = sym(webId)
-  const doc = person.doc()
-
-  const deletions = []
-  const insertions = []
-
-  // Update name
-  if (updates.name !== undefined) {
-    const oldName = store.any(person, FOAF('name'), null, doc)
-    if (oldName) {
-      deletions.push(st(person, FOAF('name'), oldName, doc))
-    }
-    if (updates.name) {
-      insertions.push(st(person, FOAF('name'), lit(updates.name), doc))
-    }
-  }
-
-  // Update bio
-  if (updates.bio !== undefined) {
-    const oldBio = store.any(person, FOAF('bio'), null, doc)
-    if (oldBio) {
-      deletions.push(st(person, FOAF('bio'), oldBio, doc))
-    }
-    if (updates.bio) {
-      insertions.push(st(person, FOAF('bio'), lit(updates.bio), doc))
-    }
-  }
-
-  await store.updater.update(deletions, insertions)
-}
-```
-
-## Friends (foaf:knows)
-
-### Listing Friends
-
-```javascript
-async function getFriends(webId) {
-  const person = sym(webId)
-  await store.fetcher.load(person.doc())
-
-  const friends = store.each(person, FOAF('knows'), null, null)
-
-  // Load friend profiles
-  const friendProfiles = []
-  for (const friend of friends) {
-    try {
-      await store.fetcher.load(friend.doc())
-      friendProfiles.push({
-        webId: friend.uri,
-        name: store.any(friend, FOAF('name'), null, null)?.value,
-        photo: store.any(friend, FOAF('img'), null, null)?.uri
-      })
-    } catch (e) {
-      // Friend profile not accessible
-      friendProfiles.push({ webId: friend.uri, name: null, photo: null })
-    }
-  }
-
-  return friendProfiles
-}
-```
-
-### Adding Friends
-
-```javascript
-async function addFriend(myWebId, friendWebId) {
-  const me = sym(myWebId)
-  const friend = sym(friendWebId)
-  const doc = me.doc()
-
-  await store.updater.update([], [
-    st(me, FOAF('knows'), friend, doc)
-  ])
-}
-```
-
-### Removing Friends
-
-```javascript
-async function removeFriend(myWebId, friendWebId) {
-  const me = sym(myWebId)
-  const friend = sym(friendWebId)
-  const doc = me.doc()
-
-  await store.updater.update([
-    st(me, FOAF('knows'), friend, doc)
-  ], [])
-}
-```
-
-## Profile Photo
-
-### Uploading Photo
-
-```javascript
-async function uploadPhoto(webId, file) {
-  const person = sym(webId)
-  const photoUri = sym(`${person.doc().dir().uri}photo.${file.name.split('.').pop()}`)
-
-  // Upload the image
-  await store.fetcher.putResourceAs(photoUri, file, file.type)
-
-  // Update profile
-  const oldPhoto = store.any(person, FOAF('img'), null, person.doc())
-  await store.updater.update(
-    oldPhoto ? [st(person, FOAF('img'), oldPhoto, person.doc())] : [],
-    [st(person, FOAF('img'), photoUri, person.doc())]
-  )
-}
-```
-
-## Solid-Specific Properties
-
-### Storage
-
-```javascript
-// Get pod root
-const storage = store.any(person, SPACE('storage'), null, null)
-console.log('Pod root:', storage?.uri)  // https://alice.example/
-```
-
-### Inbox
-
-```javascript
-// Get inbox for notifications
-const inbox = store.any(person, LDP('inbox'), null, null)
-console.log('Inbox:', inbox?.uri)  // https://alice.example/inbox/
-```
-
-### Type Indexes
-
-```javascript
-// Get type indexes
-const publicTypeIndex = store.any(person, SOLID('publicTypeIndex'), null, null)
-const privateTypeIndex = store.any(person, SOLID('privateTypeIndex'), null, null)
-```
-
-### OIDC Issuer
-
-```javascript
-// Get identity provider
-const issuer = store.any(person, SOLID('oidcIssuer'), null, null)
-console.log('IDP:', issuer?.uri)  // https://solidcommunity.net
-```
-
-## Trusted Apps
-
-Manage which apps have access:
-
-```turtle
-<#me>
-    acl:trustedApp [
-        acl:mode acl:Read, acl:Write ;
-        acl:origin <https://trusted-app.example>
-    ] .
-```
-
-```javascript
-// List trusted apps
-const trustedApps = store.each(person, ACL('trustedApp'), null, null)
-trustedApps.forEach(app => {
-  const origin = store.any(app, ACL('origin'), null, null)
-  const modes = store.each(app, ACL('mode'), null, null)
-  console.log(`${origin?.uri}: ${modes.map(m => m.uri).join(', ')}`)
-})
-```
+The predicates are those in each section's `selectors.ts` under `src/sections/` (`bio`, `resume`, `projects`, `social`, `skills`, `languages`, `contactInfo`, `qrcode`). Projects and communities are `solid:community`; social accounts are `foaf:account` nodes with `foaf:accountName`. Each section's `mutations.ts` writes the same predicates back to the profile document.
 
 ## Source
 
-- [profile/profilePane.js in solid-panes](https://github.com/SolidOS/solid-panes/tree/main/src/profile)
+[github.com/SolidOS/profile-pane](https://github.com/SolidOS/profile-pane): `src/index.ts` is the pane object, `src/ProfileView.ts` lays out the sections, and `src/sections/` holds one folder per section.
 
-## See Also
+## See also
 
-- [WebID Specification](https://www.w3.org/2005/Incubator/webid/spec/identity/)
-- [FOAF Vocabulary](http://xmlns.com/foaf/spec/)
-- [Solid WebID Profile](https://solidproject.org/TR/protocol#webid-profile)
+- [Contacts Pane](./contacts-pane.md): people in an address book
+- [Other Panes](./other-panes.md): `social`, the Friends view of a person

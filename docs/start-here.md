@@ -5,104 +5,75 @@ title: Start Here
 
 # Start Here
 
-New to SolidOS? This page explains what it is, why it matters, and lets you try it — no coding required.
+This page explains what SolidOS is and lets you try it in your browser. You do not need an account or any code.
 
-## The Problem
+## The problem
 
-Think about all the apps you use: email, social media, notes, calendars, photos.
+Most apps keep your data on their own servers: your contacts in one place, your messages in another, your photos in a third. You cannot easily move that data, see it together, or decide who else can read it.
 
-Each app stores **your** data on **their** servers. You can't easily:
-- Move your contacts from one app to another
-- See all your data in one place
-- Delete your data when you leave a service
-- Control who sees what
+## The idea
 
-Your data is scattered across dozens of companies. They own it, not you.
+[Solid](https://solidproject.org/) is a set of open standards that lets you keep your data in a **pod**, a personal data store on the web. You choose who hosts your pod, or you host it yourself. Apps read and write the pod with your permission.
 
-## The Solution
+**SolidOS** is a data browser for pods. It shows what is in a pod (profiles, folders, address books, chats, documents) and lets you edit it and decide who can see it.
 
-What if **you** controlled where your data lived?
+## Try it
 
-That's the idea behind [Solid](https://solidproject.org/) — a set of standards that let you store your data in a **Pod** (Personal Online Datastore) that you control.
+### Step 1: Open SolidOS
 
-**SolidOS** is a web app that lets you view, edit, and manage everything in your Pod. Think of it as a file browser, but for your personal data — contacts, notes, chat, and more.
+Open **[mashlib.com](https://mashlib.com/?uri=https%3A%2F%2Ftestingsolidos.solidcommunity.net%2Fprofile%2Fcard%23me)**. It runs the official SolidOS 3.1 release and opens a public test profile.
 
-## Try It Now
+![mashlib.com showing the public test profile: name and role at the top, then Bio, Resume, Follow me on, Skills and Languages cards](/img/getting-started/mashlib-com-profile.png)
 
-Let's see it in action. No account needed.
+### Step 2: Look around
 
-### Step 1: Open the Demo
+- **The address bar** at the top holds a web address. That address is where the data lives.
+- **The page** below it is SolidOS showing that data, here as a profile.
+- Change the address to `https://testingsolidos.solidcommunity.net/public/` and press **Go**. The same data browser now shows a folder.
 
-Click this link to open the SolidOS data browser:
+![The folder view: a grid of folders and files, with a grid and list switch at the top right](/img/getting-started/mashlib-com-folder.png)
 
-**[Open Demo →](https://solidos.org/docs/browser/)**
+### Step 3: Follow links
 
-You're now looking at the SolidOS data browser.
+Open a folder or a file by clicking it. Each click loads data from a new web address, which may be on a different pod. SolidOS picks a suitable view for each kind of data. The **⋮** menu at the top right of a file lists the other views it can be shown in.
 
-### Step 2: Look Around
+Everything you see is ordinary data on the web, not rows in one company's database.
 
-Notice a few things:
-- **The address bar** shows a web address (URI) — this is where the data lives
-- **The main area** shows information about this profile
-- **Different views** — try clicking the icons to see the same data displayed differently
+## Words you will meet
 
-This is the core idea: data lives at web addresses, and SolidOS gives you different ways to view and edit it.
+**Pod**: a place on the web where your data lives. You choose who hosts it.
 
-### Step 3: Explore More Data
+**WebID**: a web address that identifies you, for example `https://alice.example/profile/card#me`. You log in with it.
 
-The profile links to other data. Try clicking on linked items to navigate. Each click loads data from a new address.
+**Linked data**: data that refers to other data by web address, so it can point to things on other pods.
 
-Everything you see is **real data** stored on the web — not in a database controlled by one company.
+**Pane**: a view for one kind of data. The contacts pane shows address books, the chat pane shows chats, the folder pane shows folders. SolidOS offers the panes that fit what you are looking at.
 
-## Key Concepts (Plain English)
+**RDF**: the format pods use for linked data. You do not need to know it to use SolidOS.
 
-Before diving deeper, here's what a few terms mean:
-
-### Pod
-A place on the web where your data lives. Like Dropbox, but you choose who hosts it — or host it yourself.
-
-### Linked Data
-A way of connecting information. Instead of data trapped in one app, linked data can reference data from anywhere on the web.
-
-### Pane
-A "view" for displaying a certain type of data. A contacts pane shows contacts. A chat pane shows messages. SolidOS automatically picks the right pane based on what you're looking at.
-
-### RDF
-The format used to store linked data. You don't need to understand RDF to use SolidOS — but if you want to build apps, you'll learn it along the way.
-
-## What Can You Do With SolidOS?
-
-With your own Pod, you can:
+## What you can do with your own pod
 
 | Feature | What it does |
 |---------|--------------|
-| **Contacts** | Store your address book in your Pod |
-| **Chat** | Send messages to other Solid users |
-| **Notes** | Write and organize personal notes |
-| **Files** | Upload and manage files |
-| **Sharing** | Control exactly who sees what |
+| **Profile** | Publish who you are and edit it |
+| **Files** | Browse folders, upload and open files |
+| **Contacts** | Keep address books and groups |
+| **Chat** | Talk with other people who use Solid |
+| **Sharing** | Decide who can read or change each file or folder |
 
-All your data stays in your Pod. Apps ask permission to access it — you decide.
+## Next steps
 
-## Next Steps
+**Get a pod.** [Get a Pod](https://solidproject.org/users/get-a-pod) lists providers. Then open your pod's address on [mashlib.com](https://mashlib.com/) and use **Log In** at the top right.
 
-Ready to go further? Here's where to go next:
+**Learn to use SolidOS.** The [SolidOS user guide](https://solidos.org/userguide/) covers logging in, folders, sharing and each view.
 
-### I want to get my own Pod
-→ [Get a Pod](https://solidproject.org/users/get-a-pod) — sign up for a free Pod
+**Understand how it works.** [What is SolidOS?](./getting-started/what-is-solidos.md) describes the parts.
 
-### I want to understand how SolidOS works
-→ [What is SolidOS?](./getting-started/what-is-solidos) — architecture overview
+**Run it yourself.** [Quick Start](./getting-started/quick-start.md) shows the ways to run SolidOS.
 
-### I want to build apps with SolidOS
-→ [Quick Start](./getting-started/quick-start) — set up a development environment
+**Write a view of your own.** [Your First Pane](./getting-started/your-first-pane.md) builds one, in one file, in a few minutes.
 
-### I want to create a custom view (pane)
-→ [Your First Pane](./tutorials/your-first-pane) — build something in 10 minutes
+## Questions
 
-## Questions?
-
-- **Something confusing?** — [Open an issue](https://github.com/solid-docs/docs/issues) and tell us what wasn't clear
-- **Want to chat?** — Join the [Solid community](https://solidproject.org/community)
-
-The best documentation comes from real questions. If you're stuck, others probably are too.
+- Something unclear on this site? [Open an issue](https://github.com/solid-docs/docs/issues).
+- To talk to other people working on Solid, see the [Solid community](https://solidproject.org/community) page.

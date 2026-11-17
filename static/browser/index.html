@@ -2,572 +2,198 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SolidOS Browser — Interactive Solid Pod Explorer</title>
-  <meta name="description" content="Browse and manage decentralized Solid pod data with SolidOS. View profiles, contacts, files, and more using linked data panes.">
-  <meta name="keywords" content="SolidOS, Solid, data browser, linked data, RDF, decentralized web, pod browser, mashlib">
-  <meta name="author" content="SolidOS Community">
-  <link rel="canonical" href="https://solid-docs.github.io/docs/browser/">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SolidOS Browser: mashlib 3.1.0 demo</title>
+  <meta name="description" content="Browse a Solid pod, a folder or a profile with SolidOS (mashlib 3.1.0), loaded from a CDN into one HTML page.">
+  <link rel="canonical" href="https://solidos.org/docs/browser/">
   <link rel="icon" href="logo.png" type="image/png">
 
-  <!-- Open Graph -->
-  <meta property="og:title" content="SolidOS Browser — Interactive Solid Pod Explorer">
-  <meta property="og:description" content="Browse and manage decentralized Solid pod data. View profiles, contacts, files, and more using linked data panes.">
-  <meta property="og:image" content="https://solid-docs.github.io/docs/img/solidos-social-card.png">
-  <meta property="og:url" content="https://solid-docs.github.io/docs/browser/">
+  <meta property="og:title" content="SolidOS Browser: mashlib 3.1.0 demo">
+  <meta property="og:description" content="Browse a Solid pod, a folder or a profile with SolidOS (mashlib 3.1.0).">
+  <meta property="og:image" content="https://solidos.org/docs/img/solidos-social-card.png">
+  <meta property="og:url" content="https://solidos.org/docs/browser/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="SolidOS Docs">
-  <meta property="og:locale" content="en">
-
-  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="SolidOS Browser — Interactive Solid Pod Explorer">
-  <meta name="twitter:description" content="Browse and manage decentralized Solid pod data. View profiles, contacts, files, and more using linked data panes.">
-  <meta name="twitter:image" content="https://solid-docs.github.io/docs/img/solidos-social-card.png">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mashlib-dev@0.0.2/dist/mash.css" />
-  <script src="https://cdn.jsdelivr.net/npm/mashlib-dev@0.0.2/dist/mashlib.min.js"></script>
+  <meta name="twitter:image" content="https://solidos.org/docs/img/solidos-social-card.png">
+
+  <script>
+    // This page is light. mashlib follows the system theme unless a choice is saved,
+    // so save "light" when nothing has been chosen yet.
+    try { if (!localStorage.getItem('mashlib-theme')) localStorage.setItem('mashlib-theme', 'light') } catch (e) {}
+  </script>
+  <!-- Must come before mashlib: sends the files mashlib asks for at the site root to the right place. -->
+  <script src="mashlib-files.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mashlib@3.1.0/dist/mash.css">
+  <script src="https://cdn.jsdelivr.net/npm/mashlib@3.1.0/dist/mashlib.min.js"></script>
   <style>
     :root {
       --primary: #7C3AED;
-      --primary-dark: #6D28D9;
       --secondary: #2563EB;
-      --bg-light: #f8fafc;
-      --bg-dark: #0f172a;
-      --text-light: #1e293b;
-      --text-dark: #e2e8f0;
-      --card-light: #ffffff;
-      --card-dark: #1e293b;
+      --text: #1e293b;
+      --muted: #64748b;
     }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
+    body#PageBody {
       margin: 0;
       font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg-light);
-      color: var(--text-light);
-      min-height: 100vh;
+      background: #f8fafc;
+      color: var(--text);
     }
-
-    @media (prefers-color-scheme: dark) {
-      body {
-        background: var(--bg-dark);
-        color: var(--text-dark);
-      }
-      .header { background: linear-gradient(135deg, #5B21B6, #1D4ED8); }
-      .card { background: var(--card-dark); border-color: #334155; }
-      #uriField { background: #1e293b; color: #e2e8f0; border-color: #475569; }
-      #uriField:focus { border-color: var(--primary); }
-      .quick-link { background: #334155; color: #e2e8f0; }
-      .quick-link:hover { background: #475569; }
-      .status-bar { background: var(--card-dark); border-color: #334155; }
-    }
-
-    .header {
+    .demo-header {
       background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: white;
-      padding: 1.5rem 2rem;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      color: #fff;
+      padding: 1.25rem 2rem 1rem;
     }
-
-    .header-content {
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    .header h1 {
-      margin: 0 0 0.5rem 0;
-      font-size: 1.75rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: white !important;
-    }
-
-    .header h1::before {
-      content: "";
-      display: inline-block;
-      width: 32px;
-      height: 32px;
-      background: url('logo.png') no-repeat center;
-      background-size: contain;
-    }
-
-    .header-subtitle {
-      opacity: 0.9;
-      font-size: 0.95rem;
-    }
-
-    .search-container {
-      margin-top: 1.25rem;
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-
+    .demo-header-inner { max-width: 1400px; margin: 0 auto; }
+    .demo-title { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .demo-title h1 { margin: 0; font-size: 1.5rem; font-weight: 600; color: #fff; display: flex; align-items: center; gap: .5rem; }
+    .demo-title h1 img { width: 30px; height: 30px; }
+    .demo-title .version { font-size: .8rem; opacity: .85; font-weight: 400; }
+    .search { margin-top: 1rem; display: flex; gap: .75rem; flex-wrap: wrap; }
     #uriField {
-      flex: 1;
-      min-width: 280px;
-      padding: 0.875rem 1.25rem;
-      font-size: 1rem;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.95);
-      color: var(--text-light);
-      outline: none;
-      transition: all 0.2s ease;
+      flex: 1; min-width: 260px; padding: .75rem 1.1rem; font-size: 1rem;
+      border: 2px solid rgba(255,255,255,.3); border-radius: 12px; background: #fff; color: var(--text); outline: none;
     }
-
-    #uriField:focus {
-      border-color: white;
-      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
-    }
-
-    #uriField::placeholder {
-      color: #94a3b8;
-    }
-
+    #uriField:focus { border-color: #fff; box-shadow: 0 0 0 4px rgba(255,255,255,.25); }
     #goButton {
-      padding: 0.875rem 2rem;
-      font-size: 1rem;
-      font-weight: 600;
-      background: white;
-      color: var(--primary);
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.2s ease;
+      padding: .75rem 1.75rem; font-size: 1rem; font-weight: 600; background: #fff; color: var(--primary);
+      border: 0; border-radius: 12px; cursor: pointer;
     }
-
-    #goButton:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    .quick { margin-top: .85rem; display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; font-size: .85rem; }
+    .quick span { opacity: .85; }
+    .quick a {
+      padding: .35rem .85rem; background: rgba(255,255,255,.18); color: #fff; text-decoration: none;
+      border-radius: 20px; border: 1px solid rgba(255,255,255,.3);
     }
-
-    #goButton:active {
-      transform: translateY(0);
-    }
-
-    .quick-links {
-      margin-top: 1rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      align-items: center;
-    }
-
-    .quick-links-label {
-      font-size: 0.85rem;
-      opacity: 0.8;
-      margin-right: 0.25rem;
-    }
-
-    .quick-link {
-      display: inline-block;
-      padding: 0.4rem 0.9rem;
-      font-size: 0.85rem;
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      text-decoration: none;
-      border-radius: 20px;
-      transition: all 0.2s ease;
-      cursor: pointer;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-    }
-
-    .quick-link:hover {
-      background: rgba(255, 255, 255, 0.35);
-      transform: translateY(-1px);
-    }
-
-    .status-bar {
-      background: var(--card-light);
-      border-bottom: 1px solid #e2e8f0;
-      padding: 0.75rem 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-
-    .status-bar-content {
-      max-width: 1400px;
-      margin: 0 auto;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.9rem;
-    }
-
-    .user-info .label {
-      color: #64748b;
-    }
-
-    #webId {
-      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
-      font-size: 0.85rem;
-      color: var(--primary);
-    }
-
-    #loginButtonArea {
-      display: flex;
-      align-items: center;
-    }
-
-    #loginButtonArea input[type="button"],
-    #loginButtonArea button {
-      padding: 0.6rem 1.5rem !important;
-      font-size: 0.875rem !important;
-      font-weight: 600 !important;
-      background: white !important;
-      color: var(--primary) !important;
-      border: 2px solid var(--primary) !important;
-      border-radius: 50px !important;
-      cursor: pointer !important;
-      transition: all 0.2s ease;
-      opacity: 1 !important;
-      margin: 0 0.35rem !important;
-      text-transform: none !important;
-      letter-spacing: 0 !important;
-      box-shadow: 0 2px 8px rgba(124, 58, 237, 0.15);
-    }
-
-    #loginButtonArea input[type="button"]:hover,
-    #loginButtonArea button:hover {
-      background: var(--primary) !important;
-      color: white !important;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
-    }
-
-    #loginButtonArea a {
-      padding: 0.6rem 1.5rem !important;
-      font-size: 0.875rem !important;
-      font-weight: 600 !important;
-      background: linear-gradient(135deg, var(--primary), var(--secondary)) !important;
-      color: white !important;
-      border: none !important;
-      border-radius: 50px !important;
-      cursor: pointer !important;
-      text-decoration: none !important;
-      display: inline-block;
-      margin: 0 0.35rem !important;
-      box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
-      transition: all 0.2s ease;
-    }
-
-    #loginButtonArea a:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
-    }
-
-    .browser-container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 1.5rem 2rem;
-    }
-
-    .card {
-      background: var(--card-light);
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-      border: 1px solid #e2e8f0;
-      overflow: hidden;
-    }
-
-    #DummyUUID {
-      min-height: 60vh;
-      padding: 1rem;
-    }
-
-    .loading {
-      display: none;
-      text-align: center;
-      padding: 3rem;
-      color: #64748b;
-    }
-
-    .loading.active {
-      display: block;
-    }
-
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid #e2e8f0;
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto 1rem;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .welcome-message {
-      text-align: center;
-      padding: 4rem 2rem;
-      color: #64748b;
-    }
-
-    .welcome-message h2 {
-      color: var(--text-light);
-      margin-bottom: 0.5rem;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      .welcome-message h2 { color: var(--text-dark); }
-    }
-
-    .footer {
-      text-align: center;
-      padding: 2rem;
-      color: #64748b;
-      font-size: 0.85rem;
-    }
-
-    .footer a {
-      color: var(--primary);
-      text-decoration: none;
-    }
-
-    .footer a:hover {
-      text-decoration: underline;
-    }
-
+    .quick a:hover { background: rgba(255,255,255,.32); }
+    .demo-main { max-width: 1400px; margin: 0 auto; padding: 1.25rem 2rem; }
+    .welcome { text-align: center; padding: 3rem 1rem; color: var(--muted); }
+    .welcome h2 { color: var(--text); margin: 0 0 .5rem; }
+    .welcome[hidden] { display: none; }
+    #OutlineView { width: 100%; }
+    .demo-footer { text-align: center; padding: 2rem 1rem; color: var(--muted); font-size: .85rem; }
+    .demo-footer a { color: var(--primary); text-decoration: none; }
     @media (max-width: 640px) {
-      .header { padding: 1rem; }
-      .browser-container { padding: 1rem; }
-      .status-bar { padding: 0.75rem 1rem; }
+      .demo-header { padding: 1rem; }
+      .demo-main { padding: 1rem; }
       #uriField { min-width: 100%; }
     }
   </style>
+  <script>
+  // The same steps as mashlib 3.1.0's own browse page (dist/browse.html).
+  document.addEventListener('DOMContentLoaded', function () {
+    const dom = document
+    const outliner = panes.getOutliner(dom)
+    const { store, resource } = SolidLogic.solidLogicSingleton
+    const uriField = dom.getElementById('uriField')
+    const welcome = dom.getElementById('welcome')
+    const shown = () => new URLSearchParams(location.search).get('uri') || ''
+    // The profile heading (name and picture above a person's pages) follows ?uri=, not this page's URL.
+    const ready = panes.initializeProfileHeading(() => shown() || location.href)
+    let request = 0
+
+    async function go (address) {
+      const mine = ++request
+      const target = new URL(address, location.href)
+      await ready
+      if (mine !== request) return
+
+      // Load the document first, so a folder is shown as a folder and a redirect is followed.
+      const subject = $rdf.sym(target.href)
+      let canonicalSubject = subject
+      let isContainer = false
+      try {
+        const response = await store.fetcher.load(subject.doc())
+        const canonical = new URL(response.url || target.href)
+        canonical.hash = target.hash
+        canonicalSubject = $rdf.sym(canonical.href)
+        isContainer = resource.isContainer(subject.doc()) || resource.isContainer(canonicalSubject.doc())
+        if (isContainer) {
+          if (!canonical.pathname.endsWith('/')) canonical.pathname += '/'
+          target.href = canonical.href
+        }
+      } catch (error) {
+        console.warn('Could not preload the resource; the outline shows why.', error)
+      }
+      if (mine !== request) return
+
+      uriField.value = target.href
+      const page = new URL(location.href)
+      page.searchParams.set('uri', target.href)
+      history.replaceState({}, '', page)
+      welcome.hidden = true
+      dom.title = 'SolidOS Browser: ' + target.href
+
+      const isStorageRoot = resource.isStorageRoot(subject) || resource.isStorageRoot(canonicalSubject)
+      const options = isContainer
+        ? { folderView: isStorageRoot ? 'explorer' : 'container', preserveUrl: true }
+        : { preserveUrl: true }
+      outliner.GotoSubject($rdf.sym(target.href), true, undefined, true, undefined, undefined, options)
+      await panes.refreshProfileHeading(true)
+    }
+
+    function navigate (address) {
+      address = (address || uriField.value).trim()
+      if (!address) return
+      if (!/^[a-z][a-z0-9+.-]*:/i.test(address)) address = 'https://' + address
+      go(address).catch(error => console.error('Failed to browse the resource.', error))
+    }
+
+    dom.getElementById('browseForm').addEventListener('submit', event => { event.preventDefault(); navigate() })
+    for (const link of dom.querySelectorAll('.quick a')) {
+      link.addEventListener('click', event => { event.preventDefault(); navigate(link.dataset.uri) })
+    }
+
+    // Logging in or out changes what can be seen: show the same resource again.
+    for (const name of ['login', 'sessionRestore', 'logout', 'sessionChange', 'identityReplaced']) {
+      SolidLogic.authn.authSession.events.on(name, () => { if (shown()) navigate(shown()) })
+    }
+
+    if (shown()) navigate(shown())
+    else welcome.hidden = false
+  })
+  </script>
 </head>
-<body>
-
-  <header class="header">
-    <div class="header-content">
-      <h1>SolidOS Browser</h1>
-      <p class="header-subtitle">Explore and manage your decentralized data</p>
-
-      <div class="search-container">
-        <input
-          type="text"
-          id="uriField"
-          placeholder="Enter a Solid pod URL or WebID..."
-          autocomplete="off"
-          spellcheck="false"
-        />
-        <button id="goButton">Browse</button>
+<body id="PageBody">
+  <solid-ui-provider>
+    <header class="demo-header" role="banner">
+      <div class="demo-header-inner">
+        <div class="demo-title">
+          <h1><img src="logo.png" alt="">SolidOS Browser <span class="version">mashlib 3.1.0</span></h1>
+          <solid-ui-account></solid-ui-account>
+        </div>
+        <form class="search" id="browseForm" role="search">
+          <input type="text" id="uriField" inputmode="url" autocomplete="off" spellcheck="false"
+                 aria-label="Address of a resource on a Solid pod"
+                 placeholder="Address of a pod, a folder or a profile, e.g. https://you.solidcommunity.net/">
+          <button id="goButton" type="submit">Browse</button>
+        </form>
+        <div class="quick">
+          <span>Try:</span>
+          <a href="?uri=https%3A%2F%2Ftestingsolidos.solidcommunity.net%2Fprofile%2Fcard%23me" data-uri="https://testingsolidos.solidcommunity.net/profile/card#me">A profile</a>
+          <a href="?uri=https%3A%2F%2Ftestingsolidos.solidcommunity.net%2Fpublic%2F" data-uri="https://testingsolidos.solidcommunity.net/public/">A folder</a>
+          <a href="?uri=https%3A%2F%2Fsolidos.solidcommunity.net%2Fpublic%2FRoadmap%2F" data-uri="https://solidos.solidcommunity.net/public/Roadmap/">SolidOS roadmap</a>
+          <a href="?uri=https%3A%2F%2Ftimbl.solidcommunity.net%2Fprofile%2Fcard%23me" data-uri="https://timbl.solidcommunity.net/profile/card#me">Tim Berners-Lee</a>
+        </div>
       </div>
+    </header>
 
-      <div class="quick-links">
-        <span class="quick-links-label">Try:</span>
-        <a class="quick-link" data-uri="https://timbl.solidcommunity.net/profile/card#me">Tim Berners-Lee</a>
-        <a class="quick-link" data-uri="https://solidos.solidcommunity.net/public/Roadmap/">Roadmap</a>
-        <a class="quick-link" data-uri="https://solidos.solidcommunity.net/public/SolidOS%20team%20meetings/">Team Meetings</a>
-        <a class="quick-link" data-uri="https://solidos.solidcommunity.net/public/">SolidOS Files</a>
-        <a class="quick-link" data-uri="https://melvin.me/public/test.jsonld#me">JSON-LD Demo</a>
-      </div>
-    </div>
-  </header>
+    <main id="MainContent" class="demo-main" tabindex="-1" aria-live="polite">
+      <section class="welcome" id="welcome" hidden>
+        <h2>Browse the Solid web</h2>
+        <p>Paste the address of a pod, a folder or a profile above, or pick one of the examples.</p>
+        <p>Log in to see and edit what your WebID has access to.</p>
+      </section>
+      <div id="OutlineView" class="outline-view" aria-label="Resource browser"></div>
+    </main>
+  </solid-ui-provider>
 
-  <div class="status-bar">
-    <div class="status-bar-content">
-      <div class="user-info">
-        <span class="label">Logged in as:</span>
-        <span id="webId">Not logged in</span>
-      </div>
-      <div id="loginButtonArea"></div>
-    </div>
-  </div>
-
-  <main class="browser-container">
-    <div class="card">
-      <div id="welcome" class="welcome-message">
-        <h2>Welcome to SolidOS Browser</h2>
-        <p>Enter a URL above or click one of the quick links to get started.</p>
-        <p>Log in with your WebID to access private data and edit resources.</p>
-      </div>
-
-      <div id="loading" class="loading">
-        <div class="spinner"></div>
-        <p>Loading resource...</p>
-      </div>
-
-      <div class="TabulatorOutline" id="DummyUUID" role="main" style="display: none;">
-        <table id="outline"></table>
-        <div id="GlobalDashboard"></div>
-      </div>
-    </div>
-  </main>
-
-  <footer class="footer">
-    <p>
-      Powered by <a href="https://github.com/SolidOS/mashlib" target="_blank">mashlib</a> |
-      <a href="https://solidos.org/docs/" target="_blank">Developer Docs</a> |
-      <a href="https://solidproject.org/" target="_blank">Solid Project</a>
-    </p>
+  <footer class="demo-footer">
+    mashlib 3.1.0 from jsDelivr |
+    <a href="/docs/guides/embedding-mashlib">How this page works</a> |
+    <a href="https://mashlib.com/">mashlib.com</a> |
+    <a href="../data-island/">Data island demo</a> |
+    <a href="../pane-demo/">Custom pane demo</a>
   </footer>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const authn = SolidLogic.authn
-  const authSession = SolidLogic.authSession
-  const store = SolidLogic.store
-  const dom = document
-
-  const uriField = dom.getElementById('uriField')
-  const goButton = dom.getElementById('goButton')
-  const loginButtonArea = dom.getElementById('loginButtonArea')
-  const webIdArea = dom.getElementById('webId')
-  const welcomeEl = dom.getElementById('welcome')
-  const loadingEl = dom.getElementById('loading')
-  const browserEl = dom.getElementById('DummyUUID')
-
-  const outliner = panes.getOutliner(dom)
-
-  // Navigate to a URI
-  function go(uri) {
-    if (!uri) uri = uriField.value.trim()
-    if (!uri) return
-
-    uriField.value = uri
-    console.log('Navigating to:', uri)
-
-    // Show loading state
-    welcomeEl.style.display = 'none'
-    loadingEl.classList.add('active')
-    browserEl.style.display = 'none'
-
-    // Update URL bar
-    const params = new URLSearchParams(location.search)
-    params.set('uri', uri)
-    window.history.replaceState({}, '', `${location.origin}${location.pathname}?${params}`)
-    document.title = `SolidOS Browser - ${uri}`
-
-    // Load the resource
-    const subject = $rdf.sym(uri)
-
-    setTimeout(() => {
-      loadingEl.classList.remove('active')
-      browserEl.style.display = 'block'
-      outliner.GotoSubject(subject, true, undefined, true, undefined)
-    }, 100)
-
-    updateLoginArea()
-  }
-
-  // Update login status display
-  async function updateLoginArea() {
-    loginButtonArea.innerHTML = ''
-    loginButtonArea.appendChild(UI.login.loginStatusBox(document, null, {}))
-
-    // Override signup button/link to point to correct URL
-    setTimeout(() => {
-      // Fix any anchor links
-      const signupLinks = loginButtonArea.querySelectorAll('a')
-      signupLinks.forEach(link => {
-        const text = link.textContent.toLowerCase()
-        if (text.includes('sign') || text.includes('register') || text.includes('pod')) {
-          link.href = 'https://solidproject.org/get_a_pod'
-          link.target = '_blank'
-        }
-      })
-
-      // Fix signup button (which opens broken popup)
-      const buttons = loginButtonArea.querySelectorAll('input[type="button"], button')
-      buttons.forEach(btn => {
-        const text = (btn.value || btn.textContent || '').toLowerCase()
-        if (text.includes('sign up')) {
-          // Clone to remove old event listeners
-          const newBtn = btn.cloneNode(true)
-          btn.parentNode.replaceChild(newBtn, btn)
-          newBtn.addEventListener('click', (e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            window.open('https://solidproject.org/get_a_pod', '_blank')
-          })
-        }
-      })
-    }, 100)
-
-    const me = authn.currentUser()
-    if (me) {
-      const shortId = me.value.length > 50
-        ? me.value.substring(0, 47) + '...'
-        : me.value
-      webIdArea.textContent = shortId
-      webIdArea.title = me.value
-    } else {
-      webIdArea.textContent = 'Not logged in'
-      webIdArea.title = ''
-    }
-  }
-
-  // Event listeners
-  uriField.addEventListener('keyup', (e) => {
-    if (e.keyCode === 13) go()
-  })
-  goButton.addEventListener('click', () => go())
-
-  // Quick links
-  document.querySelectorAll('.quick-link').forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault()
-      const uri = link.dataset.uri
-      go(uri)
-    })
-  })
-
-  // Handle auth events
-  if (authSession) {
-    authSession.events.on('login', () => {
-      updateLoginArea()
-      if (uriField.value) go()
-    })
-    authSession.events.on('logout', () => {
-      updateLoginArea()
-      if (uriField.value) go()
-    })
-    authSession.events.on('sessionRestore', () => {
-      updateLoginArea()
-      if (uriField.value) go()
-    })
-  }
-
-  // Default URI to load
-  const DEFAULT_URI = 'https://timbl.solidcommunity.net/profile/card#me'
-
-  // Check for URI in query string, or use default
-  const initial = new URLSearchParams(location.search).get('uri')
-
-  // Delay to ensure mashlib is fully initialized (avoid race condition)
-  setTimeout(() => {
-    if (initial) {
-      go(initial)
-    } else {
-      // Load default profile
-      go(DEFAULT_URI)
-    }
-  }, 500)
-
-  updateLoginArea()
-})
-</script>
 </body>
 </html>

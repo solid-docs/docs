@@ -1,157 +1,170 @@
 ---
 sidebar_position: 1
 title: Architecture Overview
-description: How SolidOS components fit together
+description: How the SolidOS 3.1 packages fit together, from rdflib to mashlib
 ---
 
 # Architecture Overview
 
-SolidOS is a modular system built from composable libraries.
+SolidOS 3.1 is six packages stacked on each other, plus the pane packages. Each layer uses the ones below it.
 
-## The Stack
-
-![SolidOS Architecture Stack](/img/architecture-stack.svg)
-
-## Component Responsibilities
-
-### rdflib.js
-
-The foundation. Handles all RDF operations:
-
-- **Store** — in-memory RDF graph database
-- **Fetcher** — loads data from URIs into the store
-- **UpdateManager** — writes changes back to pods
-- **Query** — SPARQL-like querying
-
-```javascript
-import { graph, Fetcher, UpdateManager } from 'rdflib'
-
-const store = graph()
-const fetcher = new Fetcher(store)
-const updater = new UpdateManager(store)
-
-await fetcher.load('https://alice.example/profile/card')
+```
+┌────────────────────────────────────────────────────────────────────┐
+│ mashlib 3.1.0        page globals, layout and theme, runDataBrowser │
+├────────────────────────────────────────────────────────────────────┤
+│ solid-panes 5.1.0    outline, header, navigation, built-in panes    │
+│   + folder-pane, profile-pane, contacts-pane, chat-pane, ...        │
+├──────────────────────────────────┬─────────────────────────────────┤
+│ solid-ui 5.1.0                   │ pane-registry 5.1.1             │
+│ web components (Lit), widgets    │ list of panes, pane types       │
+├──────────────────────────────────┴─────────────────────────────────┤
+│ solid-logic 6.2.0    shared store, login session, ACL, profiles     │
+├────────────────────────────────────────────────────────────────────┤
+│ rdflib 2.4.1         RDF store, parsers, fetcher, updater           │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
-### solid-logic
+The snippets below use the page globals that mashlib sets (`$rdf`, `SolidLogic`, `UI`, `panes`), so they run in the browser console on [mashlib.com](https://mashlib.com/).
 
-Business logic layer on top of rdflib:
+## rdflib
 
-- **Authentication** — Solid-OIDC login/logout
-- **ACL Logic** — permission checking
-- **Type Index** — resource type discovery
-- **Singleton store** — shared across the app
+The RDF layer:
 
-```javascript
-import { store, authn } from 'solid-logic'
+- **Store**: an in-memory graph of statements (`IndexedFormula`)
+- **Fetcher** (`store.fetcher`): loads a document over HTTP and parses it into the store
+- **UpdateManager** (`store.updater`): writes changes back with `PATCH`, or replaces a document with `PUT`
+- **Parsers and serializers**: Turtle, N3, JSON-LD, RDF/XML and others
 
-const user = authn.currentUser()
-await store.fetcher.load(user)
-```
+SolidOS does not create its own stores; it uses the one from solid-logic.
 
-### solid-ui
+## solid-logic
 
-Reusable UI components for Solid data:
+Shared state and Solid-specific logic on top of rdflib:
 
-- **Widgets** — buttons, fields, tables
-- **Forms** — auto-generated from ontologies
-- **Styles** — consistent theming
+- **`store`**: the one store every part of SolidOS uses
+- **`authn` and `authSession`**: the login session (Solid-OIDC through `@uvdsl/solid-oidc-client-browser`), `currentUser()` and `checkUser()`
+- **`solidLogicSingleton`**: the store plus `acl`, `resource`, `profile`, `inbox`, `typeIndex`, `chat` and `directory` logic
 
 ```javascript
-import * as UI from 'solid-ui'
-
-const button = UI.widgets.button(
-  document,
-  'Click me',
-  () => console.log('clicked')
-)
+const { store, resource } = SolidLogic.solidLogicSingleton
+store === SolidLogic.store                  // true
+SolidLogic.authn.currentUser()              // the logged-in WebID, or null
 ```
 
-### solid-panes
+Details: [solid-logic](../libraries/solid-logic.md).
 
-The pane registry and built-in panes:
+## pane-registry
 
-- **Pane Registry** — registers and selects panes
-- **Built-in Panes** — contacts, chat, folder, etc.
-- **Pane API** — standard interface for panes
+The list of registered panes, and the TypeScript types that describe a pane (`PaneDefinition`), the context it is rendered with (`DataBrowserContext`) and the render environment (`RenderEnvironment`). solid-panes re-exports its functions:
 
 ```javascript
-import { paneRegistry } from 'solid-panes'
-
-paneRegistry.register(myCustomPane)
-const pane = paneRegistry.byName('folder')
+panes.register(myPane)                      // add a pane at the end of the list
+panes.byName('folder')                      // a pane by name, or null
+panes.list.length                           // 36 built-in panes in mashlib 3.1.0
 ```
 
-### mashlib
+## solid-ui
 
-The final bundle that pulls it all together:
+The user interface building blocks:
 
-- Exports `panes` global
-- Includes all built-in panes
-- Provides `runDataBrowser()` entry point
-- Builds to `mashlib.js` + `mash.css`
+- **Web components**, written with [Lit](https://lit.dev/): `<solid-ui-provider>` (shared context for the others), `<solid-ui-account>`, `<solid-ui-login-button>`, the login modal, dialogs, menus, forms (`<solid-ui-rdf-form>`), the access-control modal, and the file explorer (`<solid-ui-file-explorer-provider>`, `<solid-ui-file-explorer-header>`). A page or pane imports one as `solid-ui/components/<name>`.
+- **The older widget library**, still used by many panes: `UI.widgets`, `UI.login`, `UI.acl`, `UI.aclControl`, `UI.tabs`, `UI.table`, `UI.style`, `UI.icons`.
+
+```javascript
+const button = UI.widgets.button(document, undefined, 'Click me', () => console.log('clicked'))
+document.body.appendChild(button)
+```
+
+`button(dom, iconURI, text, handler, options)` takes an icon URL or `undefined` as its second argument. Details: [solid-ui](../libraries/solid-ui.md).
+
+## solid-panes
+
+The data browser itself:
+
+- **The outline manager** (`panes.getOutliner(document)`): shows a resource. Its `GotoSubject` finds the panes whose `label` accepts the subject, picks one, and renders it inside a `<solid-ui-file-explorer-provider>` in `#OutlineView`, with the file-explorer header and its **⋮** pane menu above it.
+- **The main page** (`panes.initMainPage`): the header with the account menu, the navigation bar, and the profile heading at the top of a pod (`initializeProfileHeading`, `refreshProfileHeading`).
+- **Navigation**: keeps the browser address, history and back/forward in step with what is shown, and fires `solid-panes:navigated` on the document after each view. See [Navigation](../panes/navigation.md).
+- **The built-in panes**, registered when solid-panes is loaded. The earliest registered have priority.
+
+```javascript
+document.addEventListener('solid-panes:navigated', e => console.log(e.detail.url))
+
+const outliner = panes.getOutliner(document)
+outliner.GotoSubject($rdf.sym('https://testingsolidos.solidcommunity.net/profile/card'),
+  true, undefined, true, undefined, undefined, { preserveUrl: true })
+```
+
+Details: [solid-panes](../libraries/solid-panes.md).
+
+## mashlib
+
+The bundle that puts the rest on a page:
+
+- sets the globals `panes`, `UI`, `SolidLogic`, `$rdf` and `mashlib` (with `mashlib.versionInfo`)
+- ships its stylesheet as `mash.css`, and defines `<solid-ui-provider>`
+- keeps the **layout** (`data-layout` on `<html>`, desktop or mobile) and the **theme** (`data-theme="dark"` or none), stored in `localStorage` as `mashlib-layout` and `mashlib-theme`
+- adds `panes.runDataBrowser(uri?)`, which starts the full data browser
+
+Its `databrowser.html` is the page a pod server sends:
 
 ```html
-<script src="mashlib.min.js"></script>
-<script>
-  panes.runDataBrowser(document)
-</script>
+<body id="PageBody" data-app-shell="databrowser">
+  <solid-ui-provider>
+    <div class="app-main">
+      <div class="app-shell">
+        <main id="MainContent" class="app-view">
+          <div id="OutlineView" class="outline-view"></div>
+        </main>
+      </div>
+    </div>
+  </solid-ui-provider>
+</body>
 ```
 
-## Data Flow
+(trimmed: the full file also has a skip link and a script that calls `panes.runDataBrowser()` on `DOMContentLoaded`.) Details: [mashlib](../libraries/mashlib.md) and [Embedding mashlib](../guides/embedding-mashlib.md).
 
-![SolidOS Data Flow - Reading and Writing](/img/architecture-dataflow.svg)
+## Starting up
 
-## The Singleton Pattern
+What `panes.runDataBrowser(uri)` does in 3.1:
 
-SolidOS uses singletons for shared state:
+1. `SolidLogic.authn.checkUser()` restores a login session, if there is one.
+2. `panes.initMainPage(store, uri, environment)` creates `#MainContent` if the page lacks it, sets up the profile heading and navigation, and shows `uri` (or the page's own address when `uri` is not given). The outline manager picks a pane for it and renders it.
+3. It then builds the header and the navigation bar.
+
+## The render environment
+
+mashlib passes the current layout and theme to panes as `context.environment`:
 
 ```javascript
-// solid-logic exports a singleton store
-import { store } from 'solid-logic'
-
-// All panes use the same store
-// Changes in one pane are visible to others
+{
+  layout: 'desktop',            // or 'mobile' (768 px wide or less, unless the user chose)
+  layoutPreference: 'auto',     // 'auto', 'desktop' or 'mobile'
+  inputMode: 'pointer',         // or 'touch'
+  theme: 'light',               // or 'dark'
+  viewport: { width: 1300, height: 900 }
+}
 ```
 
-This enables:
-- Shared authentication state
-- Single cache for fetched data
-- Coordinated updates
+When the layout or theme changes, mashlib fires `mashlib:layoutchange` or `mashlib:themechange` on `window` and updates the environment; on the main page started by `runDataBrowser` it also redraws the view. On a page that loads mashlib without calling `runDataBrowser`, `context.environment` can be missing, so a pane must treat it as optional.
 
-## Deployment Models
+## Pane packages
 
-### Embedded in Solid Server
+The larger panes are separate packages that solid-panes imports and registers: folder-pane, profile-pane, contacts-pane, issue-pane, meeting-pane and source-pane (4.1.0), chat-pane (4.0.0) and activitystreams-pane (2.1.0). Panes can also be loaded at run time, from a URL, without changing any package. See [Dynamic Panes](../panes/dynamic-panes.md).
 
-```
-Solid Server (CSS, NSS)
-├── serves pod data
-└── serves SolidOS UI
-    └── mashlib.js intercepts navigation
-```
+## Where it runs
 
-### Standalone Web App
+| Setup | What serves the page | Read more |
+|-------|----------------------|-----------|
+| mashlib.com | the official bundle with an address bar; `/dynamic/` is the no-build version | [mashlib.com and no-build SolidOS](../guides/mashlib-com.md) |
+| A pod server | the server answers a browser's request for a resource with `databrowser.html` | [Running SolidOS on JSS](../guides/running-on-jss.md) |
+| Your own page | a page that loads mashlib and points it at a resource | [Embedding mashlib](../guides/embedding-mashlib.md) |
+| Desktop | [Data Kitchen](https://github.com/SolidOS/data-kitchen), mashlib in Electron | |
 
-```
-Static Host (GitHub Pages, Netlify)
-├── index.html loads mashlib
-└── Accesses remote pods via CORS
-```
+In every case SolidOS runs in the browser and talks to pods directly over HTTP. A pod on another site must allow cross-origin requests, which Solid servers do.
 
-### Desktop App (Data Kitchen)
+## See also
 
-```
-Electron
-├── Chromium renders mashlib
-└── Node.js handles system integration
-```
-
-## Module Boundaries
-
-![SolidOS Module Dependencies](/img/architecture-modules.svg)
-
-## See Also
-
-- [Pane System](/docs/architecture/pane-system) — how panes work
-- [Data Flow](/docs/architecture/data-flow) — detailed data lifecycle
-- [SolidOS GitHub](https://github.com/SolidOS) — code organization
+- [Data Flow](./data-flow.md): how data is loaded, changed and kept up to date
+- [Core Concepts](../getting-started/core-concepts.md): pods, panes and login
+- [Pane Anatomy](../panes/pane-anatomy.md): the pane contract
+- [SolidOS on GitHub](https://github.com/SolidOS)

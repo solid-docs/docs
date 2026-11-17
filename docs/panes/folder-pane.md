@@ -1,212 +1,82 @@
 ---
 sidebar_position: 3
 title: Folder Pane
-description: File and container browser
+description: Browse a container, open what is in it, and add folders, files and apps
 ---
 
 # Folder Pane
 
-The folder pane renders `ldp:Container` resources — the file browser for Solid pods.
+The folder pane shows the contents of a Solid container (a folder). It lists what the folder holds as a grid or a list, opens an item when you double-click it, and has an **Add** menu for new folders, files, uploads and app resources.
 
-## What It Renders
+![The folder pane in SolidOS 3.1: a grid of folders and files, with the Add menu open](/img/builtin-panes/folder-pane.png)
 
-- `ldp:Container`
-- `ldp:BasicContainer`
-- Any resource with container-like behavior
+| | |
+|---|---|
+| Package | [folder-pane](https://github.com/SolidOS/folder-pane) 4.1.0 |
+| Pane name | `folder` |
+| Registered by | solid-panes 5.1.0, after the media panes and before `slideshow` |
+| Creates | folders (`mintNew` makes an empty container with `PUT`) |
 
-## Features
+## When it applies
 
-- File and folder listing
-- Create new files/folders
-- Upload files
-- Delete resources
-- Drag and drop
-- Breadcrumb navigation
-- Sort by name, date, size
-- Grid and list views
+`label(subject, context)` returns `Contents (n)`, where `n` is the number of members, when:
 
-## Screenshot
+- `context.session.logic.resource.isContainer(subject)` is true, and
+- the address does not end in `.js` or `.json` (some servers wrongly report those files as containers).
 
-![Folder Pane Mockup](/img/panes/folder-pane-mockup.svg)
+Otherwise it returns `null`.
 
-The folder view displays containers and resources with icons, modification dates, and file sizes. Breadcrumb navigation shows the current path.
+When you open a container that holds an `index.ttl`, SolidOS shows the thing described in `index.ttl#this` instead of the listing. Opening `chat/` on a pod shows the chat, not a folder with one file in it.
 
-## RDF Structure
+## What you see
 
-A container in Solid looks like:
+- **Breadcrumb** of the folder's path, and a menu for the folder itself.
+- **Grid view and list view**, switched with the two buttons beside **Add**.
+- **A card per item** with its name, its size or item count, and a globe (public) or lock (private).
+- **A menu on each card** listing the panes that can show that item. It is the same pane menu as in the header; see [Panes Overview](./overview.md).
+- **Add**: one entry for each registered pane that has `mintNew` and whose audience matches the user (in the screenshot: New Tracker, New Address Book, New Long Chat, New Dokieli Document, New Folder, New File), plus **Upload**.
+- **Sidebar tree** with Home, in the storage layouts. Items in the grid, list and tree can be dragged onto anything that accepts a link. Dragging shares the address; it does not move or copy the resource.
+
+To delete a file or folder, open its **Under The Hood** view ([Internal Pane](./internal-pane.md)).
+
+The view is made of Lit components in `src/components/`: `folder-pane-view`, `folder-pane-container`, `folder-pane-content`, `folder-pane-provider`, `folder-pane-sidebar` and `folder-pane-storage-header`.
+
+### Three layouts
+
+`render(subject, context, options)` takes a third argument. `options.folderView` picks the layout:
+
+| `folderView` | Shows |
+|---|---|
+| `explorer` | Storage header, sidebar and content: the viewer's own storage, or the server root |
+| `storage` | Storage header, sidebar and content, under the navbar of someone else's pod |
+| `container` | Storage header and contents, no sidebar: a container opened on its own |
+
+Without `folderView`, `fullView: true` or `solo: true` gives `container`, and anything else gives `explorer`. `GotoSubject(..., options)` passes `folderView` through; see [Navigation](./navigation.md).
+
+## Data
+
+The pane reads the container listing the server returns. From the test pod used for the screenshot:
 
 ```turtle
 @prefix ldp: <http://www.w3.org/ns/ldp#> .
 @prefix dct: <http://purl.org/dc/terms/> .
 @prefix stat: <http://www.w3.org/ns/posix/stat#> .
 
-<>
-    a ldp:Container, ldp:BasicContainer ;
-    dct:modified "2024-01-15T10:30:00Z"^^xsd:dateTime ;
-    ldp:contains
-        <projects/>,
-        <notes/>,
-        <budget.ttl>,
-        <readme.md> .
+<photos/> a ldp:Container, ldp:BasicContainer, ldp:Resource ;
+    ldp:contains <photos/one.png>, <photos/two.png>, <photos/three.png> .
 
-<projects/>
-    a ldp:Container ;
-    dct:modified "2024-01-13T08:00:00Z"^^xsd:dateTime .
-
-<budget.ttl>
-    a ldp:Resource ;
-    stat:size 2048 ;
-    dct:modified "2024-01-15T07:00:00Z"^^xsd:dateTime .
+<photos/one.png> a ldp:Resource ;
+    stat:size 14679 ;
+    dct:modified "2026-11-17T20:49:51.522Z" .
 ```
 
-## Usage
-
-The folder pane is automatically selected for containers:
-
-```javascript
-// Navigate to a container
-panes.runDataBrowser(document, sym('https://alice.example/documents/'))
-
-// Or get the pane directly
-const folderPane = paneRegistry.byName('folder')
-const element = folderPane.render(
-  sym('https://alice.example/documents/'),
-  document,
-  { solo: true }
-)
-```
-
-## Actions
-
-### Create Folder
-
-```javascript
-// The pane provides a UI, but programmatically:
-await store.fetcher.createContainer(
-  sym('https://alice.example/documents/'),
-  'new-folder'
-)
-```
-
-### Upload File
-
-```javascript
-// PUT a new file
-const content = 'Hello, World!'
-await store.fetcher.putResourceAs(
-  sym('https://alice.example/documents/hello.txt'),
-  content,
-  'text/plain'
-)
-```
-
-### Delete Resource
-
-```javascript
-// DELETE a resource
-await store.fetcher.delete(
-  sym('https://alice.example/documents/old-file.txt')
-)
-```
-
-## Customization
-
-### Filter Hidden Files
-
-The folder pane can hide certain files:
-
-```javascript
-// Resources starting with . are hidden by default
-// ACL files (.acl) are hidden by default
-```
-
-### Custom Icons
-
-The pane uses icons based on file type:
-
-| Type | Icon |
-|------|------|
-| Container | 📁 |
-| Turtle | 🐢 |
-| JSON-LD | 📋 |
-| Image | 🖼️ |
-| Video | 🎬 |
-| Audio | 🎵 |
-| Text | 📄 |
-| Unknown | 📎 |
-
-## Events
-
-The folder pane emits navigation events:
-
-```javascript
-// Listen for navigation
-document.addEventListener('solid-navigate', (event) => {
-  console.log('Navigated to:', event.detail.uri)
-})
-```
-
-## Context Menu
-
-Right-click options:
-
-- **Open** — Navigate to resource
-- **Open in new tab** — Open in browser tab
-- **Download** — Download the file
-- **Rename** — Rename the resource
-- **Delete** — Delete the resource
-- **Properties** — View resource metadata
-- **Sharing** — Edit ACL permissions
-
-## Permissions
-
-The folder pane respects ACL:
-
-- **Read** — Can see contents
-- **Write** — Can create/modify/delete
-- **Control** — Can edit sharing settings
-
-Without Read access, the container contents are hidden.
-
-## Integration
-
-### Embedding in Custom Panes
-
-```javascript
-import { paneRegistry } from 'solid-panes'
-
-const myPane = {
-  name: 'project',
-
-  render: (subject, dom, context) => {
-    const container = dom.createElement('div')
-
-    // Show project info
-    const header = dom.createElement('h2')
-    header.textContent = 'Project Files'
-    container.appendChild(header)
-
-    // Embed folder pane for the files container
-    const filesContainer = store.any(subject, EX('filesLocation'), null, null)
-    if (filesContainer) {
-      const folderPane = paneRegistry.byName('folder')
-      const filesElement = folderPane.render(filesContainer, dom, {
-        ...context,
-        solo: false
-      })
-      container.appendChild(filesElement)
-    }
-
-    return container
-  }
-}
-```
+It writes with plain HTTP: `PUT` to create a folder or upload a file. **Add** entries for apps call that pane's `mintNew`, which writes the app's own files.
 
 ## Source
 
-- [folder.js in solid-panes](https://github.com/SolidOS/solid-panes/blob/main/src/folder/folder.js)
+[github.com/SolidOS/folder-pane](https://github.com/SolidOS/folder-pane): `src/folderPane.ts` is the pane object, `src/components/` the view, and `src/resourceActionItems.ts` builds the per-item pane menu.
 
-## See Also
+## See also
 
-- [LDP Containers](https://www.w3.org/TR/ldp/#ldpc) — W3C specification
-- [Solid Protocol](https://solidproject.org/TR/protocol) — container behavior
+- [Internal Pane](./internal-pane.md): inspect and delete a resource
+- [Source Pane](./source-pane.md): what **New File** opens

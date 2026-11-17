@@ -2,630 +2,167 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Custom Pane Demo — Build SolidOS Panes with Plain JavaScript</title>
-  <meta name="description" content="Learn to build custom SolidOS panes with plain JavaScript — no build step required. Register panes, render RDF data, and extend the Solid data browser.">
-  <meta name="keywords" content="SolidOS, pane, custom pane, Solid, JavaScript, RDF, linked data, mashlib, tutorial, demo">
-  <meta name="author" content="SolidOS Community">
-  <link rel="canonical" href="https://solid-docs.github.io/docs/pane-demo/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Custom Pane Demo: add a SolidOS pane with plain JavaScript</title>
+  <meta name="description" content="Register a SolidOS pane at run time with panes.register and see it drawn for a real resource. mashlib 3.1.0, no build step.">
+  <link rel="canonical" href="https://solidos.org/docs/pane-demo/">
   <link rel="icon" href="../img/logo.png" type="image/png">
-
-  <!-- Open Graph -->
-  <meta property="og:title" content="Custom Pane Demo — Build SolidOS Panes with Plain JavaScript">
-  <meta property="og:description" content="Learn to build custom SolidOS panes with plain JavaScript — no build step required. Register panes, render RDF data, and extend the Solid data browser.">
-  <meta property="og:image" content="https://solid-docs.github.io/docs/img/solidos-social-card.png">
-  <meta property="og:url" content="https://solid-docs.github.io/docs/pane-demo/">
+  <meta property="og:title" content="Custom Pane Demo: add a SolidOS pane with plain JavaScript">
+  <meta property="og:description" content="Register a SolidOS pane at run time with panes.register and see it drawn for a real resource (mashlib 3.1.0).">
+  <meta property="og:image" content="https://solidos.org/docs/img/solidos-social-card.png">
+  <meta property="og:url" content="https://solidos.org/docs/pane-demo/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="SolidOS Docs">
-  <meta property="og:locale" content="en">
-
-  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Custom Pane Demo — Build SolidOS Panes with Plain JavaScript">
-  <meta name="twitter:description" content="Learn to build custom SolidOS panes with plain JavaScript — no build step required.">
-  <meta name="twitter:image" content="https://solid-docs.github.io/docs/img/solidos-social-card.png">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mashlib/dist/mash.css" />
-  <script src="https://cdn.jsdelivr.net/npm/mashlib/dist/mashlib.min.js"></script>
+
+  <script>
+    try { if (!localStorage.getItem('mashlib-theme')) localStorage.setItem('mashlib-theme', 'light') } catch (e) {}
+  </script>
+  <!-- Must come before mashlib: sends the files mashlib asks for at the site root to the right place. -->
+  <script src="../browser/mashlib-files.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mashlib@3.1.0/dist/mash.css">
+  <script src="https://cdn.jsdelivr.net/npm/mashlib@3.1.0/dist/mashlib.min.js"></script>
   <style>
-    :root {
-      --primary: #7C3AED;
-      --primary-dark: #6D28D9;
-      --secondary: #2563EB;
-      --accent: #10B981;
-      --bg-light: #f8fafc;
-      --text-light: #1e293b;
-      --card-light: #ffffff;
-    }
-
+    :root { --primary: #7C3AED; --secondary: #2563EB; --accent: #10B981; --text: #1e293b; --muted: #64748b; }
     * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg-light);
-      color: var(--text-light);
-      min-height: 100vh;
-    }
-
-    .header {
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: white;
-      padding: 1.5rem 2rem;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    }
-
-    .header-content {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .header h1 {
-      margin: 0 0 0.5rem 0;
-      font-size: 1.75rem;
-      font-weight: 600;
-    }
-
-    .header-subtitle {
-      opacity: 0.9;
-      font-size: 0.95rem;
-    }
-
-    .badge {
-      display: inline-block;
-      background: var(--accent);
-      color: white;
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      margin-left: 0.5rem;
-      vertical-align: middle;
-    }
-
-    .main-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-    }
-
-    @media (max-width: 900px) {
-      .main-container {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .card {
-      background: var(--card-light);
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-      border: 1px solid #e2e8f0;
-      overflow: hidden;
-    }
-
-    .card-header {
-      background: #f1f5f9;
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid #e2e8f0;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .card-body {
-      padding: 1.5rem;
-    }
-
-    .code-block {
-      background: #1e293b;
-      color: #e2e8f0;
-      padding: 1rem;
-      border-radius: 8px;
-      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
-      font-size: 0.85rem;
-      overflow-x: auto;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    .code-block .comment { color: #6b7280; }
-    .code-block .keyword { color: #c084fc; }
-    .code-block .string { color: #86efac; }
-    .code-block .function { color: #60a5fa; }
-    .code-block .property { color: #fbbf24; }
-
-    .demo-area {
-      min-height: 200px;
-      border: 2px dashed #cbd5e1;
-      border-radius: 8px;
-      padding: 1rem;
-      margin-top: 1rem;
-    }
-
-    .demo-area.active {
-      border-color: var(--accent);
-      border-style: solid;
-    }
-
-    .input-group {
-      margin-bottom: 1rem;
-    }
-
-    .input-group label {
-      display: block;
-      font-weight: 500;
-      margin-bottom: 0.5rem;
-    }
-
-    .input-group input {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      font-size: 1rem;
-      border: 2px solid #e2e8f0;
-      border-radius: 8px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .input-group input:focus {
-      border-color: var(--primary);
-    }
-
-    .btn {
-      padding: 0.75rem 1.5rem;
-      font-size: 1rem;
-      font-weight: 600;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-dark);
-      transform: translateY(-1px);
-    }
-
-    .btn-secondary {
-      background: #e2e8f0;
-      color: var(--text-light);
-    }
-
-    .btn-secondary:hover {
-      background: #cbd5e1;
-    }
-
-    .pane-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .pane-list li {
-      padding: 0.75rem;
-      border-bottom: 1px solid #e2e8f0;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .pane-list li:last-child {
-      border-bottom: none;
-    }
-
-    .pane-list .icon {
-      font-size: 1.25rem;
-    }
-
-    .pane-list .name {
-      font-weight: 500;
-    }
-
-    .pane-list .custom {
-      color: var(--accent);
-    }
-
-    .status {
-      padding: 0.5rem 1rem;
-      border-radius: 8px;
-      margin-top: 1rem;
-      font-size: 0.9rem;
-    }
-
-    .status.success {
-      background: #d1fae5;
-      color: #065f46;
-    }
-
-    .status.info {
-      background: #dbeafe;
-      color: #1e40af;
-    }
-
-    .how-it-works {
-      grid-column: 1 / -1;
-    }
-
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-      margin-top: 1rem;
-    }
-
-    .step {
-      text-align: center;
-      padding: 1.5rem;
-    }
-
-    .step-number {
-      width: 40px;
-      height: 40px;
-      background: var(--primary);
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      margin: 0 auto 1rem;
-    }
-
-    .step h3 {
-      margin: 0 0 0.5rem 0;
-      font-size: 1rem;
-    }
-
-    .step p {
-      margin: 0;
-      color: #64748b;
-      font-size: 0.9rem;
-    }
-
-    .footer {
-      text-align: center;
-      padding: 2rem;
-      color: #64748b;
-      font-size: 0.85rem;
-    }
-
-    .footer a {
-      color: var(--primary);
-      text-decoration: none;
-    }
-
-    .footer a:hover {
-      text-decoration: underline;
-    }
-
-    /* Custom pane styling */
-    .custom-pane-content {
-      padding: 1rem;
-      background: linear-gradient(135deg, #fef3c7, #fde68a);
-      border-radius: 8px;
-      text-align: center;
-    }
-
-    .custom-pane-content h3 {
-      margin: 0 0 0.5rem 0;
-      color: #92400e;
-    }
-
-    .custom-pane-content p {
-      margin: 0;
-      color: #a16207;
-    }
+    body#PageBody { margin: 0; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; color: var(--text); }
+    .pd-header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; padding: 1.5rem 2rem; }
+    .pd-header h1 { margin: 0 0 .5rem; font-size: 1.6rem; font-weight: 600; color: #fff; }
+    .pd-header p { margin: 0; opacity: .9; }
+    .pd-badge { display: inline-block; background: var(--accent); padding: .2rem .7rem; border-radius: 20px; font-size: .75rem; font-weight: 600; margin-left: .5rem; vertical-align: middle; }
+    .pd-grid { max-width: 1200px; margin: 0 auto; padding: 2rem; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.5rem; }
+    @media (max-width: 900px) { .pd-grid { grid-template-columns: minmax(0, 1fr); padding: 1rem; } }
+    .pd-card { background: #fff; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,.06); border: 1px solid #e2e8f0; overflow: hidden; }
+    .pd-card-header { background: #f1f5f9; padding: .85rem 1.25rem; border-bottom: 1px solid #e2e8f0; font-weight: 600; }
+    .pd-card-body { padding: 1.25rem; }
+    .pd-code { background: #f1f5f9; color: #0f172a; border: 1px solid #e2e8f0; padding: 1rem; border-radius: 8px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: .8rem; white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
+    .pd-row { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+    .pd-row input { flex: 1; min-width: 220px; padding: .6rem .9rem; font-size: .95rem; border: 2px solid #e2e8f0; border-radius: 8px; }
+    .pd-btn { padding: .6rem 1.1rem; font-size: .95rem; font-weight: 600; border: 0; border-radius: 8px; cursor: pointer; }
+    .pd-btn-primary { background: var(--primary); color: #fff; }
+    .pd-btn-secondary { background: #e2e8f0; color: var(--text); }
+    .pd-btn:disabled { opacity: .5; cursor: default; }
+    .pd-status { font-size: .9rem; color: var(--muted); margin: 0 0 1rem; }
+    .pd-status strong { color: var(--text); }
+    #OutlineView { min-height: 200px; border: 2px dashed #cbd5e1; border-radius: 8px; padding: .5rem; }
+    .pd-wide { grid-column: 1 / -1; }
+    .pd-wide p { line-height: 1.55; margin: 0 0 .6rem; }
+    .pd-wide code { background: #eef2ff; padding: .1rem .3rem; border-radius: 4px; font-size: .85em; }
+    .hello-demo { padding: 1rem 1.25rem; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; }
+    .hello-demo h3 { margin: 0 0 .4rem; color: #065f46; }
+    .hello-demo p { margin: 0; color: #065f46; overflow-wrap: anywhere; }
+    .pd-footer { text-align: center; padding: 2rem; color: var(--muted); font-size: .85rem; }
+    .pd-footer a { color: var(--primary); text-decoration: none; }
   </style>
-</head>
-<body>
 
-  <header class="header">
-    <div class="header-content">
-      <h1>Custom Pane Demo <span class="badge">No Build Step</span></h1>
-      <p class="header-subtitle">Register custom SolidOS panes with plain JavaScript - just edit and refresh!</p>
-    </div>
-  </header>
+  <!-- The pane. This script's own text is what the page shows under "The pane". -->
+  <script id="paneCode">
+const helloPane = {
+  name: 'hello-demo',
+  icon: new URL('../img/logo.png', location.href).href,
 
-  <main class="main-container">
-
-    <!-- How It Works -->
-    <div class="card how-it-works">
-      <div class="card-header">
-        How It Works
-      </div>
-      <div class="card-body">
-        <div class="steps">
-          <div class="step">
-            <div class="step-number">1</div>
-            <h3>Load mashlib</h3>
-            <p>Include mashlib.min.js from CDN - no npm or bundler needed</p>
-          </div>
-          <div class="step">
-            <div class="step-number">2</div>
-            <h3>Define Your Pane</h3>
-            <p>Write a plain JS object with name, label, and render functions</p>
-          </div>
-          <div class="step">
-            <div class="step-number">3</div>
-            <h3>Register It</h3>
-            <p>Call panes.register(yourPane) - that's it!</p>
-          </div>
-          <div class="step">
-            <div class="step-number">4</div>
-            <h3>Browse Data</h3>
-            <p>Your pane appears as a view option for matching resources</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Code Example -->
-    <div class="card">
-      <div class="card-header">
-        The Code
-      </div>
-      <div class="card-body">
-        <div class="code-block"><span class="comment">// Define a custom pane - pure JavaScript!</span>
-<span class="keyword">const</span> <span class="property">myPane</span> = {
-  <span class="property">name</span>: <span class="string">'hello-pane'</span>,
-  <span class="property">icon</span>: <span class="string">'https://solidos.github.io/solid-ui/src/icons/noun_547570.svg'</span>,
-
-  <span class="comment">// When should this pane be shown?</span>
-  <span class="function">label</span>: <span class="keyword">function</span>(subject, context) {
-    <span class="keyword">return</span> <span class="string">"Hello View"</span>
+  // Offered for anything: return a label to be offered, null not to be.
+  label (subject, context) {
+    return 'Hello'
   },
 
-  <span class="comment">// Render the pane content</span>
-  <span class="function">render</span>: <span class="keyword">function</span>(subject, context) {
-    <span class="keyword">const</span> div = context.dom.<span class="function">createElement</span>(<span class="string">'div'</span>)
-    div.innerHTML = <span class="string">`
-      &lt;h3&gt;Hello from Custom Pane!&lt;/h3&gt;
-      &lt;p&gt;Viewing: ${subject.value}&lt;/p&gt;
-    `</span>
-    <span class="keyword">return</span> div
+  // Build the view and return one element.
+  render (subject, context) {
+    const store = context.session.store
+    const dom = context.dom
+    const count = store.statementsMatching(subject, null, null, subject.doc()).length
+
+    const div = dom.createElement('div')
+    div.className = 'hello-demo'
+    const heading = dom.createElement('h3')
+    heading.textContent = 'Hello from a pane added at run time'
+    const text = dom.createElement('p')
+    text.textContent = subject.uri + ' has ' + count + ' statements about it in ' + subject.doc().uri
+    div.append(heading, text)
+    return div
   }
 }
+  </script>
+</head>
+<body id="PageBody">
+<solid-ui-provider>
+  <header class="pd-header">
+    <h1>Custom Pane Demo <span class="pd-badge">mashlib 3.1.0</span></h1>
+    <p>A pane written as a plain JavaScript object, registered with <code>panes.register</code>, drawn by SolidOS for a real resource</p>
+  </header>
 
-<span class="comment">// Register it - no build step!</span>
-panes.<span class="function">register</span>(<span class="property">myPane</span>)</div>
+  <div class="pd-grid">
+    <div class="pd-card">
+      <div class="pd-card-header">The pane</div>
+      <div class="pd-card-body"><pre class="pd-code" id="paneSource"></pre></div>
+    </div>
 
-        <div class="status success" id="registrationStatus" style="display: none;">
-          Custom pane registered successfully!
+    <div class="pd-card">
+      <div class="pd-card-header">Try it</div>
+      <div class="pd-card-body">
+        <div class="pd-row">
+          <input type="text" id="resourceUri" aria-label="Resource address" value="https://testingsolidos.solidcommunity.net/profile/card#me">
         </div>
+        <div class="pd-row">
+          <button class="pd-btn pd-btn-secondary" id="defaultBtn" type="button">Show with the default pane</button>
+          <button class="pd-btn pd-btn-primary" id="registerBtn" type="button">panes.register(helloPane)</button>
+          <button class="pd-btn pd-btn-secondary" id="helloBtn" type="button" disabled>Show with the Hello pane</button>
+        </div>
+        <p class="pd-status" id="status"></p>
+        <main id="MainContent"><div id="OutlineView" class="outline-view" aria-label="Resource browser"></div></main>
       </div>
     </div>
 
-    <!-- Live Demo -->
-    <div class="card">
-      <div class="card-header">
-        Live Demo
-      </div>
-      <div class="card-body">
-        <div class="input-group">
-          <label for="resourceUri">Resource URI</label>
-          <input type="text" id="resourceUri" value="https://timbl.solidcommunity.net/profile/card#me" placeholder="Enter a Solid resource URI">
-        </div>
-
-        <button class="btn btn-primary" id="loadBtn">Render Pane</button>
-        <button class="btn btn-secondary" id="registerBtn">Register Custom Pane</button>
-
-        <div class="demo-area" id="demoArea">
-          <p style="color: #94a3b8; text-align: center; margin: 2rem 0;">
-            Click "Register Custom Pane" then "Load Resource" to see it in action
-          </p>
-        </div>
+    <div class="pd-card pd-wide">
+      <div class="pd-card-header">What happens</div>
+      <div class="pd-card-body">
+        <p><code>panes.register(helloPane)</code> adds the pane to the registry after the built-in ones. From then on SolidOS calls its <code>label</code> for every resource it shows, and offers it wherever <code>label</code> returns a string.</p>
+        <p>"Show with the Hello pane" asks for this pane by passing it to <code>GotoSubject</code>: <code>panes.getOutliner(document).GotoSubject(subject, true, helloPane, true, undefined, undefined, { preserveUrl: true })</code>.</p>
+        <p>To load a pane from its own file, export it as the default export of an ES module and <code>import()</code> it. Read <a href="/docs/guides/embedding-mashlib">Embedding mashlib</a>, and for writing panes the <a href="/docs/panes/creating-panes">pane guide</a>.</p>
       </div>
     </div>
+  </div>
+</solid-ui-provider>
 
-    <!-- Registered Panes -->
-    <div class="card">
-      <div class="card-header">
-        Registered Panes
-      </div>
-      <div class="card-body">
-        <ul class="pane-list" id="paneList">
-          <!-- Populated dynamically -->
-        </ul>
-        <div class="status info">
-          <strong>Tip:</strong> Custom panes appear alongside built-in panes. Users can switch between views!
-        </div>
-      </div>
-    </div>
-
-    <!-- Advanced Example -->
-    <div class="card" style="grid-column: 1 / -1;">
-      <div class="card-header">
-        Advanced: Dynamic Pane Loading
-      </div>
-      <div class="card-body">
-        <p>You can even load panes dynamically from external files:</p>
-        <div class="code-block"><span class="comment">// Load a pane from an external URL</span>
-<span class="keyword">async function</span> <span class="function">loadExternalPane</span>(url) {
-  <span class="keyword">const</span> module = <span class="keyword">await</span> <span class="function">import</span>(url)
-  panes.<span class="function">register</span>(module.default)
-}
-
-<span class="comment">// Example: Load from your Pod!</span>
-<span class="function">loadExternalPane</span>(<span class="string">'https://you.solidcommunity.net/public/panes/weather-pane.js'</span>)
-
-<span class="comment">// Or from GitHub Pages</span>
-<span class="function">loadExternalPane</span>(<span class="string">'https://your-org.github.io/custom-panes/chart-pane.js'</span>)</div>
-
-        <p style="margin-top: 1rem; color: #64748b;">
-          This means you can develop panes separately, host them anywhere, and load them on demand -
-          all without any build step or transpiler!
-        </p>
-      </div>
-    </div>
-
-  </main>
-
-  <footer class="footer">
-    <p>
-      <a href="https://solidos.org/docs/browser/">SolidOS Browser</a> |
-      <a href="https://solidos.org/docs/libraries/mashlib">mashlib Docs</a> |
-      <a href="https://github.com/SolidOS/pane-registry">pane-registry Source</a>
-    </p>
-  </footer>
+<footer class="pd-footer">
+  <a href="../browser/">SolidOS Browser</a> |
+  <a href="../data-island/">Data island demo</a> |
+  <a href="https://github.com/SolidOS/pane-registry">pane-registry</a>
+</footer>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const demoArea = document.getElementById('demoArea')
-  const paneList = document.getElementById('paneList')
+document.addEventListener('DOMContentLoaded', function () {
+  document.getElementById('paneSource').textContent = document.getElementById('paneCode').textContent.trim()
+  const outliner = panes.getOutliner(document)
+  const status = document.getElementById('status')
+  const input = document.getElementById('resourceUri')
+  const helloBtn = document.getElementById('helloBtn')
   const registerBtn = document.getElementById('registerBtn')
-  const loadBtn = document.getElementById('loadBtn')
-  const resourceUri = document.getElementById('resourceUri')
-  const registrationStatus = document.getElementById('registrationStatus')
 
-  let customPaneRegistered = false
-
-  // Get the pane list from various possible locations
-  function getPaneList() {
-    // Try different ways to access the pane list
-    if (panes.list && Array.isArray(panes.list)) return panes.list
-    if (panes.paneRegistry && panes.paneRegistry.list) return panes.paneRegistry.list
-    if (typeof panes.byName === 'function') {
-      // Collect known panes by trying common names
-      return []
-    }
-    return []
+  function report (extra) {
+    const registered = !!panes.byName('hello-demo')
+    status.innerHTML = ''
+    const b = document.createElement('strong')
+    b.textContent = panes.list.length + ' panes registered'
+    status.append(b, registered ? ', including hello-demo. ' : '. ', extra || '')
   }
 
-  // Update the pane list display
-  function updatePaneList() {
-    const list = getPaneList()
-    paneList.innerHTML = ''
-
-    if (list.length === 0) {
-      const li = document.createElement('li')
-      li.innerHTML = '<em style="color: #94a3b8;">Pane list not accessible (panes are still registered)</em>'
-      paneList.appendChild(li)
-      return
-    }
-
-    // Show first 10 panes
-    const displayList = list.slice(0, 10)
-    displayList.forEach(pane => {
-      const li = document.createElement('li')
-      const isCustom = pane.name === 'hello-pane'
-      li.innerHTML = `
-        <span class="icon">${pane.icon ? '<img src="' + pane.icon + '" width="20" height="20">' : '📄'}</span>
-        <span class="name ${isCustom ? 'custom' : ''}">${pane.name}</span>
-        ${isCustom ? '<span class="badge" style="margin-left: auto;">Custom</span>' : ''}
-      `
-      paneList.appendChild(li)
-    })
-
-    if (list.length > 10) {
-      const li = document.createElement('li')
-      li.innerHTML = `<em style="color: #94a3b8;">...and ${list.length - 10} more panes</em>`
-      paneList.appendChild(li)
-    }
+  function show (pane) {
+    const subject = $rdf.sym(input.value.trim())
+    outliner.GotoSubject(subject, true, pane, true, undefined, undefined, { preserveUrl: true })
   }
 
-  // Register the custom pane
-  registerBtn.addEventListener('click', function() {
-    if (customPaneRegistered) {
-      alert('Custom pane already registered!')
-      return
-    }
-
-    // Define our custom pane
-    const helloPane = {
-      name: 'hello-pane',
-      icon: 'https://solidos.github.io/solid-ui/src/icons/noun_547570.svg',
-
-      label: function(subject, context) {
-        // This pane can display any resource
-        return "Hello View"
-      },
-
-      render: function(subject, context) {
-        const div = context.dom.createElement('div')
-        div.className = 'custom-pane-content'
-        div.innerHTML = `
-          <h3>Hello from Custom Pane!</h3>
-          <p>You are viewing: <strong>${subject.value}</strong></p>
-          <p style="margin-top: 1rem; font-size: 0.85rem;">
-            This pane was registered with plain JavaScript - no build step!
-          </p>
-        `
-        return div
-      }
-    }
-
-    // Register it!
-    panes.register(helloPane)
-    customPaneRegistered = true
-
-    registrationStatus.style.display = 'block'
-    updatePaneList()
-
-    console.log('Custom pane registered:', helloPane.name)
-    console.log('Total panes:', getPaneList().length || 'unknown')
+  document.getElementById('defaultBtn').addEventListener('click', () => show(undefined))
+  registerBtn.addEventListener('click', () => {
+    if (!panes.byName('hello-demo')) panes.register(helloPane)
+    registerBtn.disabled = true
+    helloBtn.disabled = false
+    report('Now show the resource with it.')
   })
+  helloBtn.addEventListener('click', () => show(helloPane))
 
-  // Simulate rendering a pane for a resource
-  loadBtn.addEventListener('click', function() {
-    const uri = resourceUri.value.trim()
-    if (!uri) {
-      alert('Please enter a resource URI')
-      return
-    }
-
-    demoArea.classList.add('active')
-
-    // Create a simulated pane render to demonstrate the concept
-    const subject = $rdf.sym(uri)
-
-    // If custom pane is registered, show what it would render
-    if (customPaneRegistered) {
-      // Simulate the pane's render function
-      const context = { dom: document }
-      const div = document.createElement('div')
-      div.className = 'custom-pane-content'
-      div.innerHTML = `
-        <h3>Hello from Custom Pane!</h3>
-        <p>You are viewing: <strong>${subject.value}</strong></p>
-        <p style="margin-top: 1rem; font-size: 0.85rem;">
-          This pane was registered with plain JavaScript - no build step!
-        </p>
-      `
-
-      demoArea.innerHTML = ''
-      demoArea.appendChild(div)
-
-      // Also show info about trying it in the full browser
-      const info = document.createElement('div')
-      info.style.cssText = 'margin-top: 1rem; padding: 1rem; background: #dbeafe; border-radius: 8px; font-size: 0.9rem;'
-      info.innerHTML = `
-        <strong>Try it live!</strong> Open the
-        <a href="../browser/?uri=${encodeURIComponent(uri)}" target="_blank" style="color: #2563eb;">SolidOS Browser</a>
-        to see all panes (including custom ones) for this resource.
-      `
-      demoArea.appendChild(info)
-    } else {
-      demoArea.innerHTML = `
-        <div style="padding: 2rem; text-align: center; color: #64748b;">
-          <p>Click "Register Custom Pane" first to see the custom pane render.</p>
-          <p style="margin-top: 0.5rem;">
-            Or try the <a href="../browser/?uri=${encodeURIComponent(uri)}" target="_blank" style="color: #2563eb;">full SolidOS Browser</a>
-          </p>
-        </div>
-      `
-    }
-  })
-
-  // Initialize pane list
-  updatePaneList()
+  report()
+  show(undefined)
 })
 </script>
 </body>

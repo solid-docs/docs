@@ -1,251 +1,72 @@
 ---
 sidebar_position: 7
 title: Source Pane
-description: Raw data viewer
+description: View and edit the text of a file in a CodeMirror editor
 ---
 
 # Source Pane
 
-The source pane shows the raw source of any resource — useful for debugging and understanding data structures.
+The source pane shows the text of a file in a code editor with line numbers and syntax highlighting. The pencil button in the header switches it to editing; **Save Changes** writes the file back, **Cancel** drops the edit. For Turtle, N3 and JSON-LD files a **Prettify** button reformats the text.
 
-## What It Renders
+![The source pane in SolidOS 3.1 showing a Turtle file, with the Prettify button](/img/builtin-panes/source-pane.png)
 
-- Any RDF resource (Turtle, JSON-LD, RDF/XML)
-- Plain text files
-- JSON files
-- HTML documents
-- Any fetchable resource
+| | |
+|---|---|
+| Package | [source-pane](https://github.com/SolidOS/source-pane) 4.1.0 |
+| Pane name | `source` |
+| Registered by | solid-panes 5.1.0, after `dataContents` and before `n3` |
+| Creates | text files (**New File** in the folder pane) |
 
-## Features
+## When it applies
 
-- Syntax highlighting
-- Multiple serialization formats
-- Copy to clipboard
-- Download source
-- Line numbers
-- Search within source
-- Format switching
+`label(subject, context)` returns:
 
-## Screenshot
+| Condition | Label |
+|---|---|
+| the path ends in `.js`, `.mjs` or `.cjs` | `Javascript Source` |
+| a type of the subject is a `text/*` media type | `Source` |
+| a type contains `xml` | `XML Source` |
+| a type contains `json` (for example `application/ld+json`) | `JSON Source` |
+| a type contains `javascript` | `Javascript Source` |
+| anything else | `null` |
 
-![Source Pane Mockup](/img/panes/source-pane-mockup.svg)
+The types checked are the media-type classes rdflib records from the response's `Content-Type`. The `.js` test comes first because some servers send no media type for scripts, or report them as containers.
 
-The source pane provides a code editor view with syntax highlighting for Turtle and other RDF formats.
+`shouldGetFocus(subject)` is true for `.js`, `.mjs` and `.cjs` files, so those open in the source pane straight away. Other text files open in their own pane (a Turtle file in the data view, a Markdown file rendered) and offer **Source** in the pane menu.
 
-## Usage
+## What you see
 
-The source pane is always available as a fallback:
+- **The editor**: solid-ui's `CodeEditor` (CodeMirror 6), loaded only when the pane is shown. It is read-only until you select **Edit** (the pencil in the header).
+- **Save Changes** checks the syntax first. Turtle, N3, RDF/XML, JSON-LD, XHTML and HTML data islands are parsed with rdflib; JSON is parsed with `JSON.parse`; other types are not checked. Only if the check passes is the file sent with `PUT`, with `If-Match` set to the ETag it was loaded with, so a file changed by someone else in the meantime is not overwritten (the server answers 412).
+- **Prettify** (not while editing) parses the text and writes it back serialized by rdflib, for `text/turtle`, `text/n3` and `application/ld+json`.
+- If the editor fails to load, the pane shows an error with **Try again**. The file is not changed.
 
-```javascript
-// Force source view for any resource
-const sourcePane = paneRegistry.byName('source')
-const element = sourcePane.render(subject, document, context)
+The pane returns a headless `source-pane-source-provider` element and adds the `source-pane-source-editor-card` component inside it. It sits under solid-ui's `solid-ui-file-explorer-provider`, which supplies the store, the resource address and the header's edit button.
+
+## Data
+
+The pane reads and writes the whole file as text; it saves with HTTP `PUT`. **New File** (`mintNew`) asks for a name with an extension that has a text media type (`.txt`, `.ttl`, `.json` and so on) and creates the file with `PUT`. A new JSON file starts as `{}`, a new RDF/XML file as an empty `rdf:RDF` element, anything else as an empty line.
+
+The file in the screenshot, as uploaded:
+
+```turtle
+@prefix schema: <http://schema.org/> .
+@prefix dct: <http://purl.org/dc/terms/> .
+
+<#recipe> a schema:Recipe ;
+    schema:name "Pancakes" ;
+    schema:recipeYield "4 servings" ;
+    schema:recipeIngredient "200 g flour", "2 eggs", "300 ml milk" ;
+    dct:created "2026-11-17"^^<http://www.w3.org/2001/XMLSchema#date> .
 ```
 
-### URL Parameter
-
-Add `&view=source` to force source view:
-
-```
-https://example.org/browse?uri=https://alice.example/data.ttl&view=source
-```
-
-## Serialization Formats
-
-Switch between formats for RDF resources:
-
-| Format | MIME Type |
-|--------|-----------|
-| Turtle | text/turtle |
-| JSON-LD | application/ld+json |
-| N-Triples | application/n-triples |
-| RDF/XML | application/rdf+xml |
-| N3 | text/n3 |
-
-```javascript
-import { serialize } from 'rdflib'
-
-// Get source in different formats
-const turtle = serialize(doc, store, null, 'text/turtle')
-const jsonld = serialize(doc, store, null, 'application/ld+json')
-const ntriples = serialize(doc, store, null, 'application/n-triples')
-```
-
-## Syntax Highlighting
-
-The source pane uses syntax highlighting for:
-
-- **Turtle/N3** — prefixes, URIs, literals
-- **JSON-LD** — keys, values, @context
-- **JavaScript** — keywords, strings, numbers
-- **HTML** — tags, attributes
-- **CSS** — selectors, properties
-- **Plain text** — no highlighting
-
-## Editing Mode
-
-For resources you have write access to:
-
-```javascript
-// The pane provides an edit toggle
-// When editing:
-// 1. Source becomes editable textarea
-// 2. Save button appears
-// 3. Changes are validated before save
-```
-
-### Programmatic Edit
-
-```javascript
-import { store, parse, serialize } from 'rdflib'
-
-async function updateSource(docUri, newTurtle) {
-  const doc = sym(docUri)
-
-  // Parse the new content
-  const tempStore = graph()
-  parse(newTurtle, tempStore, docUri, 'text/turtle')
-
-  // Get old and new statements
-  const oldStatements = store.statementsMatching(null, null, null, doc)
-  const newStatements = tempStore.statementsMatching(null, null, null, doc)
-
-  // Apply the update
-  await store.updater.update(oldStatements, newStatements)
-}
-```
-
-## Raw HTTP Response
-
-View HTTP headers and response details:
-
-```javascript
-// The pane can show HTTP metadata
-const response = store.fetcher.requested[docUri]
-console.log('Status:', response.status)
-console.log('Content-Type:', response.headers.get('content-type'))
-console.log('Last-Modified:', response.headers.get('last-modified'))
-```
-
-## Integration
-
-### Embedding Source View
-
-```javascript
-const myPane = {
-  render: (subject, dom, context) => {
-    const container = dom.createElement('div')
-
-    // Main content
-    // ...
-
-    // Add source view toggle
-    const toggleBtn = UI.widgets.button(dom, 'View Source', () => {
-      const sourcePane = paneRegistry.byName('source')
-      const sourceView = sourcePane.render(subject, dom, {
-        ...context,
-        solo: false
-      })
-      container.appendChild(sourceView)
-    })
-    container.appendChild(toggleBtn)
-
-    return container
-  }
-}
-```
-
-### Debug Panel
-
-```javascript
-// Show source for debugging
-function showDebugSource(subject) {
-  const sourcePane = paneRegistry.byName('source')
-
-  const debugPanel = document.createElement('div')
-  debugPanel.className = 'debug-panel'
-  debugPanel.style.cssText = `
-    position: fixed;
-    bottom: 0;
-    right: 0;
-    width: 400px;
-    height: 300px;
-    overflow: auto;
-    background: #1e1e1e;
-    color: #d4d4d4;
-    font-family: monospace;
-    padding: 10px;
-    z-index: 9999;
-  `
-
-  const sourceElement = sourcePane.render(subject, document, {
-    options: { readOnly: true }
-  })
-  debugPanel.appendChild(sourceElement)
-
-  document.body.appendChild(debugPanel)
-}
-```
-
-## Copy and Download
-
-### Copy to Clipboard
-
-```javascript
-async function copySource(docUri, format = 'text/turtle') {
-  const doc = sym(docUri)
-  const source = serialize(doc, store, null, format)
-
-  await navigator.clipboard.writeText(source)
-}
-```
-
-### Download File
-
-```javascript
-function downloadSource(docUri, format = 'text/turtle') {
-  const doc = sym(docUri)
-  const source = serialize(doc, store, null, format)
-
-  const ext = format === 'application/ld+json' ? 'jsonld' : 'ttl'
-  const filename = `${doc.uri.split('/').pop()}.${ext}`
-
-  const blob = new Blob([source], { type: format })
-  const url = URL.createObjectURL(blob)
-
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-
-  URL.revokeObjectURL(url)
-}
-```
-
-## Validation
-
-The source pane validates RDF before saving:
-
-```javascript
-import { parse, graph } from 'rdflib'
-
-function validateTurtle(turtle, baseUri) {
-  try {
-    const tempStore = graph()
-    parse(turtle, tempStore, baseUri, 'text/turtle')
-    return { valid: true, statements: tempStore.length }
-  } catch (error) {
-    return { valid: false, error: error.message }
-  }
-}
-```
+The screenshot shows it as the test server returns it: with its own prefixes and full addresses.
 
 ## Source
 
-- [source.js in solid-panes](https://github.com/SolidOS/solid-panes/blob/main/src/source/source.js)
+[github.com/SolidOS/source-pane](https://github.com/SolidOS/source-pane): `src/sourcePane.ts` is the pane object; `src/components/source-editor-card/SourceEditorCard.ts` is the editor, save and Prettify; `src/helpers.ts` has the syntax check.
 
-## See Also
+## See also
 
-- [rdflib.js](/docs/libraries/rdflib) — serialization functions
-- [Turtle Syntax](https://www.w3.org/TR/turtle/) — W3C specification
-- [JSON-LD](https://json-ld.org/) — JSON for Linking Data
+- [Folder Pane](./folder-pane.md): **New File** and **Upload**
+- [Human-Readable Pane](./human-readable-pane.md): rendered Markdown and HTML

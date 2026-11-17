@@ -23,13 +23,13 @@ Example:
 <https://alice.example/profile/card#me> <http://xmlns.com/foaf/0.1/name> "Alice Smith" .
 ```
 
-This says: "Alice's profile has the name 'Alice Smith'"
+This says that the thing named `https://alice.example/profile/card#me`, Alice, has the name "Alice Smith".
 
 ### URIs
 
 Resources are identified by URIs (Uniform Resource Identifiers):
 
-```turtle
+```text
 <https://alice.example/profile/card#me>   # A person
 <http://xmlns.com/foaf/0.1/name>          # The "name" property
 <https://alice.example/photo.jpg>          # An image
@@ -39,7 +39,7 @@ Resources are identified by URIs (Uniform Resource Identifiers):
 
 Values like strings, numbers, and dates:
 
-```turtle
+```text
 "Alice Smith"                              # Plain string
 "Alice Smith"@en                           # String with language tag
 "42"^^<http://www.w3.org/2001/XMLSchema#integer>  # Typed literal
@@ -143,6 +143,7 @@ Use comma for multiple values of same property:
 
 ```turtle
 @prefix schema: <http://schema.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <#event> a schema:Event ;
     schema:name "Team Meeting" ;
@@ -150,95 +151,57 @@ Use comma for multiple values of same property:
     schema:location "Conference Room A" .
 ```
 
+## JSON-LD
+
+The same data can be written as JSON-LD. A server can offer one document in several formats: a JavaScript Solid Server, for example, keeps profiles as JSON-LD (`/profile/card.jsonld`) and returns Turtle to a client that asks for Turtle, as rdflib does. In code you work with the triples and rarely see the format.
+
+```json
+{
+  "@context": { "foaf": "http://xmlns.com/foaf/0.1/" },
+  "@id": "https://alice.example/profile/card#me",
+  "@type": "foaf:Person",
+  "foaf:name": "Alice"
+}
+```
+
 ## Working with RDF in JavaScript
 
-### Using rdflib.js
+SolidOS uses [rdflib.js](../libraries/rdflib.md). In a pane it is the global `$rdf`, and the shared store is `context.session.store`.
 
 ```javascript
-import { graph, sym, lit, Namespace, parse } from 'rdflib'
+const FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/')
 
-// Create a store
-const store = graph()
-
-// Define namespaces
-const FOAF = Namespace('http://xmlns.com/foaf/0.1/')
-const RDF = Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#')
-
-// Create nodes
-const alice = sym('https://alice.example/profile/card#me')
-const name = lit('Alice Smith')
-
-// Add triple
-store.add(alice, FOAF('name'), name, alice.doc())
-
-// Query
-const aliceName = store.any(alice, FOAF('name'))
-console.log(aliceName.value)  // "Alice Smith"
+const kb = $rdf.graph()
+const alice = $rdf.sym('https://alice.example/profile/card#me')
+kb.add(alice, FOAF('name'), $rdf.lit('Alice Smith'), alice.doc())   // the 4th term is the document
+kb.any(alice, FOAF('name')).value                                   // 'Alice Smith'
+kb.any(alice, FOAF('name'), null, alice.doc()).value                // the same, only from that document
 ```
 
-### Parsing Turtle
+The fourth term of each statement is the graph: in Solid, the document the statement is stored in. Passing it to a query limits the answer to that document.
+
+### Documents and the things in them
+
+A document can describe several things, each named by a fragment:
+
+```
+https://alice.example/profile/card      # the document
+https://alice.example/profile/card#me   # Alice
+https://alice.example/profile/card#key  # her public key
+```
+
+You fetch the document and then ask about the thing:
 
 ```javascript
-const turtle = `
-  @prefix foaf: <http://xmlns.com/foaf/0.1/> .
-  <#me> a foaf:Person ; foaf:name "Alice" .
-`
-
-const store = graph()
-parse(turtle, store, 'https://alice.example/profile/card', 'text/turtle')
+const me = $rdf.sym('https://testingsolidos.solidcommunity.net/profile/card#me')
+await store.fetcher.load(me.doc())                    // fetch the document ...
+store.anyValue(me, FOAF('name'), null, me.doc())       // ... then ask about the thing in it
 ```
 
-### Querying
-
-```javascript
-// Single value
-const name = store.any(subject, FOAF('name'), null, doc)
-
-// All values
-const friends = store.each(subject, FOAF('knows'), null, doc)
-
-// Check existence
-const isPerson = store.holds(subject, RDF('type'), FOAF('Person'))
-
-// Match patterns
-const statements = store.match(subject, null, null, doc)
-```
-
-## Named Graphs
-
-RDF statements can be organized into named graphs:
-
-```javascript
-// Fourth element is the graph (document)
-store.add(alice, FOAF('name'), lit('Alice'), alice.doc())
-
-// Query within a specific graph
-const name = store.any(alice, FOAF('name'), null, alice.doc())
-```
-
-## Document vs Fragment
-
-In Solid, a document can contain multiple subjects:
-
-```
-https://alice.example/profile/card      # The document
-https://alice.example/profile/card#me   # Alice (fragment)
-https://alice.example/profile/card#key  # Her public key (fragment)
-```
-
-```javascript
-const doc = sym('https://alice.example/profile/card')
-const alice = sym('https://alice.example/profile/card#me')
-
-// Load the document
-await store.fetcher.load(doc)
-
-// Query Alice's data
-const name = store.any(alice, FOAF('name'), null, doc)
-```
+Here `store` is `context.session.store`. More in [Reading Data](../cookbook/reading-data.md).
 
 ## See Also
 
-- [rdflib.js Documentation](/libraries/rdflib)
+- [rdflib.js](../libraries/rdflib.md)
 - [W3C RDF Primer](https://www.w3.org/TR/rdf11-primer/)
 - [Turtle Specification](https://www.w3.org/TR/turtle/)

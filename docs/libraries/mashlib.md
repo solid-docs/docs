@@ -1,682 +1,210 @@
 ---
 sidebar_position: 6
 title: mashlib
-description: The bundled SolidOS data browser
+description: The SolidOS data browser in one script - versions, files, globals, entry points, events and building it
 ---
 
 # mashlib
 
-mashlib is the complete SolidOS data browser bundle — it combines all libraries and panes into a single distributable package.
+mashlib is the SolidOS data browser as one webpack bundle. It contains rdflib, solid-logic, solid-ui, pane-registry and solid-panes with all the built-in panes, and puts them on the page as globals. A Solid server sends a page that loads it in place of RDF data, and the page then shows that data and lets the user edit it.
 
-**[Try the Live Browser Demo →](https://solidos.org/docs/browser/)** | **[Custom Pane Demo →](https://solidos.org/docs/pane-demo/)**
+This page is the reference. For walk-throughs, see:
 
-## What's New in mashlib 2.0
+- [Embedding mashlib](/docs/guides/embedding-mashlib): your own page with the data browser in it
+- [Migrating to 3.1](/docs/guides/migrating-to-3.1): what changed since 2.x
+- [mashlib.com and the no-build data browser](/docs/guides/mashlib-com)
+- [Running SolidOS on JSS](/docs/guides/running-on-jss)
 
-**Released:** November 29, 2025 ([v2.0.0](https://github.com/SolidOS/mashlib/releases/tag/v2.0.0))
+Try it: [mashlib.com](https://mashlib.com/) runs the 3.1.0 bundle. The [SolidOS Browser](https://solidos.org/docs/browser/), [Data island](https://solidos.org/docs/data-island/) and [Custom pane](https://solidos.org/docs/pane-demo/) demos on this site load it from jsDelivr.
 
-mashlib 2.0 is a major release with breaking API changes. See [PR #220](https://github.com/SolidOS/mashlib/pull/220) for full details.
+## Version 3.1.0
 
-### Breaking Changes
+Released 16 Nov 2026 ([release notes](https://github.com/SolidOS/mashlib/releases/tag/v3.1.0)). It pins:
 
-#### New `SolidLogic` Global
+| Package | Version | Global |
+|---|---|---|
+| rdflib | 2.4.1 | `$rdf` |
+| solid-logic | 6.2.0 | `SolidLogic` |
+| solid-ui | 5.1.0 | `UI` |
+| pane-registry | 5.1.1 | (through `panes`) |
+| solid-panes | 5.1.0 | `panes` |
 
-The way you access core functionality has changed:
+The source is [SolidOS/mashlib](https://github.com/SolidOS/mashlib). The package is MIT licensed.
 
-| v1.x (Old) | v2.0 (New) |
-|------------|------------|
-| `panes.UI` | `UI` |
-| `store` / `UI.store` / `panes.UI.store` | `SolidLogic.store` |
-| `authSession` / `UI.authn.authSession` | `SolidLogic.authSession` |
-| `UI.rdf` / `panes.UI.rdf` | `$rdf` |
-| `authn.currentUser()` / `UI.authn.currentUser()` | `SolidLogic.authn.currentUser()` |
+## Install
 
-#### Node.js Requirements
+From a CDN, pinned:
 
-- **Dropped:** Node 18
-- **Required:** Node 20.x or 22.x
-
-### New Features
-
-- **`SolidLogic` global** — consolidated access to store, authentication, and session
-- **`mashlib.versionInfo`** — runtime version information
-- **Dual bundles** — both `mashlib.js` (development) and `mashlib.min.js` (production)
-- **rdflib 2.3.0** — updated RDF library
-
-### Migration Example
-
-**Before (v1.x):**
-```javascript
-// Accessing the store
-const store = panes.UI.store
-// Or
-const store = UI.store
-
-// Authentication
-const user = panes.UI.authn.currentUser()
-
-// RDF operations
-const sym = panes.UI.rdf.sym('https://example.org/')
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mashlib@3.1.0/dist/mash.css">
+<script src="https://cdn.jsdelivr.net/npm/mashlib@3.1.0/dist/mashlib.min.js"></script>
 ```
 
-**After (v2.0):**
-```javascript
-// Accessing the store
-const store = SolidLogic.store
-
-// Authentication
-const user = SolidLogic.authn.currentUser()
-
-// RDF operations
-const sym = $rdf.sym('https://example.org/')
-```
-
-### Quick Check
-
-Verify your mashlib version at runtime:
-
-```javascript
-console.log(mashlib.versionInfo)
-// { version: '2.0.0', ... }
-```
-
----
-
-## Installation
-
-### npm
+From npm:
 
 ```bash
-npm install mashlib
+npm install mashlib@3.1.0
 ```
 
-### CDN
+The files you serve are in `node_modules/mashlib/dist/`.
 
-```html
-<script src="https://cdn.jsdelivr.net/npm/mashlib/dist/mashlib.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/mashlib/dist/mash.css" rel="stylesheet">
+## Files in `dist/`
+
+| File | What it is |
+|---|---|
+| `mashlib.min.js` | the bundle, minified: 4,209 KB, 1,169 KB gzip |
+| `mashlib.js` | the bundle, not minified |
+| `mash.css` | the stylesheet: 122 KB, 22 KB gzip |
+| `databrowser.html` | the page a Solid server sends for an RDF resource; loads `/mashlib.min.js` and `/mash.css` and calls `panes.runDataBrowser()` |
+| `browse.html` | a stand-alone page with an address bar; loads `mashlib.js` and `mash.css` from beside itself |
+| `841.js` | loaded on demand: the JSON-LD parser |
+| `410.js` | loaded on demand: the source editor |
+| `5fb2ef310e691f59285b.js` | the login client's worker, used by `mashlib.min.js` |
+| `a9c30b64ceaae48b72f0.js` | the same worker, used by `mashlib.js` |
+
+The bundle asks for the last four at the **root of the site** that serves the page (`/841.js` and so on), wherever the script itself came from. Serve them there, or see [Files at the site root](/docs/guides/embedding-mashlib#files-at-the-site-root).
+
+## Globals
+
+After `mashlib.min.js` has run:
+
+| Global | Contents |
+|---|---|
+| `panes` | solid-panes: `getOutliner`, `register`, `byName`, `list`, `paneForIcon`, `paneForPredicate`, `initMainPage`, `initializeProfileHeading`, `refreshProfileHeading`, `refreshUI`, `updateEnvironment`, `isHandlingBrowserNavigation`, `OutlineManager`, `versionInfo`, plus `runDataBrowser` |
+| `UI` | solid-ui: `widgets`, `login`, `acl`, `aclControl`, `tabs`, `table`, `style`, `icons`, `ns`, `utils`, the web component classes and more |
+| `SolidLogic` | solid-logic: `store`, `authn`, `authSession`, `solidLogicSingleton`, `getSuggestedIssuers`, `performServerSideLogout` and more |
+| `$rdf` | rdflib |
+| `mashlib` | `{ versionInfo }` |
+
+```javascript
+mashlib.versionInfo.npmInfo.mashlib            // '3.1.0'
+mashlib.versionInfo.commit                     // the mashlib commit it was built from
+SolidLogic.store === SolidLogic.solidLogicSingleton.store   // true
+SolidLogic.authn.currentUser()                 // NamedNode of the logged-in WebID, or null
 ```
 
-## Quick Start
+The library pages describe each one: [solid-panes](/docs/libraries/solid-panes), [solid-ui](/docs/libraries/solid-ui), [solid-logic](/docs/libraries/solid-logic), [rdflib](/docs/libraries/rdflib), [pane-registry](/docs/libraries/pane-registry).
 
-The simplest way to run SolidOS:
+## Entry points
 
-```html
-<!DOCTYPE html>
-<html>
-<head>
-  <title>SolidOS Data Browser</title>
-  <script src="https://cdn.jsdelivr.net/npm/mashlib/dist/mashlib.min.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/mashlib/dist/mash.css" rel="stylesheet">
-</head>
-<body>
-  <div id="PageBody"></div>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      panes.runDataBrowser(document)
-    })
-  </script>
-</body>
-</html>
-```
+### `panes.runDataBrowser(uri?)`
 
-### Complete Working Example
+Starts the full data browser on the page: checks the login, builds the header, the profile heading and the navigation bar, and shows `uri`, or the page's own URL when `uri` is left out. It also sets `$rdf.Fetcher.crossSiteProxyTemplate` to `<page origin>/xss/?uri={uri}`.
 
-A full standalone HTML file with login, URI navigation, and the data browser. Save this as `browse.html` and open in a browser:
+It is meant for the page a server sends for a resource, where the page's URL is the resource. The profile heading and navigation bar follow the page's URL even when you pass `uri`.
 
 ```html
-<!DOCTYPE html>
-<html id="docHTML">
-<head>
-  <meta charset="UTF-8">
-  <title>SolidOS Data Browser</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mashlib/dist/mash.css" />
-  <script src="https://cdn.jsdelivr.net/npm/mashlib/dist/mashlib.min.js"></script>
-  <style>
-    #inputArea {
-      width: 100%;
-      padding: 0.5em;
-      background-color: #d0d0d0;
-    }
-    #uriField {
-      width: 70%;
-      font-size: 100%;
-      min-width: 25em;
-      padding: 0.5em;
-    }
-    #loginButtonArea { display: inline-block; }
-    #loginButtonArea input { margin: 0.25em !important; padding: 0.25em !important; }
-  </style>
-</head>
-<body>
-
-  <!-- Navigation Bar -->
-  <div id="inputArea">
-    <div style="margin-bottom:0.6em"><strong>SolidOS Data Browser</strong></div>
-    <div style="margin-left:1em">
-      Viewing
-      <input id="uriField" type="text" placeholder="Enter a pod URL, e.g. https://you.solidcommunity.net/" />
-      <input type="button" id="goButton" value="Go" />
-    </div>
-    <div style="margin-top:0.5em; margin-left:1em">
-      As user <span id="webId">&lt;public user&gt;</span>
-      <span id="loginButtonArea"></span>
-    </div>
-  </div>
-
-  <!-- Data Browser Container -->
-  <div class="TabulatorOutline" id="DummyUUID" role="main">
-    <table id="outline"></table>
-    <div id="GlobalDashboard"></div>
-  </div>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const authn = SolidLogic.authn
-  const authSession = SolidLogic.authSession
-  const store = SolidLogic.store
-  const dom = document
-
-  const uriField = dom.getElementById('uriField')
-  const goButton = dom.getElementById('goButton')
-  const loginButtonArea = dom.getElementById('loginButtonArea')
-  const webIdArea = dom.getElementById('webId')
-  const banner = dom.getElementById('inputArea')
-
-  const outliner = panes.getOutliner(dom)
-
-  // Navigate to a URI
-  function go() {
-    const uri = $rdf.uri.join(uriField.value, window.location.href)
-    console.log('Navigating to:', uri)
-
-    // Update URL bar
-    const params = new URLSearchParams(location.search)
-    params.set('uri', uri)
-    window.history.replaceState({}, '', `${location.origin}${location.pathname}?${params}`)
-
-    // Load the resource
-    const subject = $rdf.sym(uri)
-    outliner.GotoSubject(subject, true, undefined, true, undefined)
-    updateLoginArea()
-  }
-
-  // Update login status display
-  async function updateLoginArea() {
-    loginButtonArea.innerHTML = ''
-    if (uriField.value) {
-      loginButtonArea.appendChild(UI.login.loginStatusBox(document, null, {}))
-    }
-
-    const me = authn.currentUser()
-    if (me) {
-      webIdArea.innerHTML = `&lt;${me.value}&gt;`
-      banner.style.backgroundColor = '#bbccbb'
-    } else {
-      webIdArea.innerHTML = '&lt;public user&gt;'
-      banner.style.backgroundColor = '#ccbbbb'
-    }
-  }
-
-  // Event listeners
-  uriField.addEventListener('keyup', (e) => { if (e.keyCode === 13) go() })
-  goButton.addEventListener('click', go)
-
-  // Handle auth events
-  if (authSession) {
-    authSession.events.on('login', () => { updateLoginArea(); go() })
-    authSession.events.on('logout', () => { updateLoginArea(); go() })
-    authSession.events.on('sessionRestore', () => { updateLoginArea(); go() })
-  }
-
-  // Check for URI in query string
-  const initial = new URLSearchParams(location.search).get('uri')
-  if (initial) {
-    uriField.value = initial
-    go()
-  }
-
-  updateLoginArea()
-})
-</script>
-</body>
-</html>
-```
-
-**Try it:** [Live demo on GitHub Pages](https://solidos.github.io/mashlib/dist/browse.html)
-
-**Usage:**
-1. Save the HTML file locally
-2. Open in a browser
-3. Enter a Solid pod URL (e.g., `https://solidcommunity.net/`)
-4. Click "Go" to browse
-5. Click the login button to authenticate with your WebID
-
-## Global Objects
-
-mashlib 2.0 exposes several global objects:
-
-```javascript
-// The main entry point
-panes.runDataBrowser(document)
-
-// Access to solid-ui (v2.0: use UI directly, not panes.UI)
-UI.widgets.button(...)
-UI.forms.buildForm(...)
-UI.style.styleElement(...)
-
-// Access to the store (v2.0: use SolidLogic)
-SolidLogic.store           // The rdflib store
-SolidLogic.store.fetcher   // Fetcher
-SolidLogic.store.updater   // UpdateManager
-
-// Authentication (v2.0: use SolidLogic.authn)
-SolidLogic.authn.currentUser()
-SolidLogic.authn.login()
-SolidLogic.authn.logout()
-
-// RDF operations (v2.0: use $rdf directly)
-$rdf.sym('https://example.org/')
-$rdf.lit('Hello')
-$rdf.Namespace('http://xmlns.com/foaf/0.1/')
-
-// Pane registry
-panes.paneRegistry.register(myPane)
-panes.paneRegistry.byName('folder')
-
-// Version info (new in v2.0)
-console.log(mashlib.versionInfo)
-```
-
-## Configuration
-
-### Starting URL
-
-Open a specific resource on load:
-
-```javascript
-const subject = $rdf.sym('https://alice.example/profile/card#me')
-panes.runDataBrowser(document, subject)
-```
-
-### URL Parameters
-
-mashlib reads URL parameters:
-
-```
-https://example.org/browse?uri=https://alice.example/profile/card
-```
-
-```javascript
-// Or set programmatically
-const params = new URLSearchParams(window.location.search)
-const uri = params.get('uri')
-if (uri) {
-  panes.runDataBrowser(document, $rdf.sym(uri))
-}
-```
-
-## DOM Structure
-
-mashlib creates this DOM structure:
-
-```html
-<body>
-  <header id="PageHeader">
-    <!-- Login status, navigation -->
-  </header>
-
-  <div id="PageBody">
-    <div id="outline">
-      <!-- Breadcrumb, tabs -->
-    </div>
-    <div id="main">
-      <!-- Pane content -->
-    </div>
-  </div>
-
-  <footer id="PageFooter">
-    <!-- Footer links -->
-  </footer>
-</body>
-```
-
-### Required Elements
-
-At minimum, you need:
-
-```html
-<div id="PageBody"></div>
-```
-
-mashlib will create other elements as needed.
-
-## Custom Integration
-
-### With React
-
-```jsx
-import { useEffect, useRef } from 'react'
-
-function SolidOSBrowser({ uri }) {
-  const containerRef = useRef(null)
-
-  useEffect(() => {
-    if (containerRef.current && window.panes) {
-      const subject = window.$rdf.sym(uri)
-      window.panes.runDataBrowser(document, subject)
-    }
-  }, [uri])
-
-  return <div id="PageBody" ref={containerRef} />
-}
-```
-
-### With Vue
-
-```vue
-<template>
-  <div id="PageBody" ref="container"></div>
-</template>
-
-<script>
-export default {
-  props: ['uri'],
-  mounted() {
-    if (window.panes) {
-      const subject = window.$rdf.sym(this.uri)
-      window.panes.runDataBrowser(document, subject)
-    }
-  }
-}
+  document.addEventListener('DOMContentLoaded', () => panes.runDataBrowser())
 </script>
 ```
 
-## Registering Custom Panes
+### `panes.getOutliner(document).GotoSubject(...)`
 
-One of mashlib's most powerful features is the ability to register custom panes with **plain JavaScript** — no build step, no transpiler, no npm required. Just edit and refresh!
-
-**[See the Custom Pane Demo →](https://solidos.org/docs/pane-demo/)**
-
-### Basic Registration
+Draws one resource into `#OutlineView` without the rest of the main page. Pages that choose the resource themselves, like `browse.html`, use this:
 
 ```javascript
-// Define your pane - pure JavaScript!
-const myPane = {
-  name: 'my-custom-pane',
-  icon: 'https://example.org/icon.svg',
-
-  // When should this pane be shown? Return a label or null
-  label: function(subject, context) {
-    return "My Custom View"
-  },
-
-  // Render the pane content
-  render: function(subject, context) {
-    const div = context.dom.createElement('div')
-    div.innerHTML = '<h2>Hello from my pane!</h2>'
-    div.innerHTML += '<p>Viewing: ' + subject.value + '</p>'
-    return div
-  }
-}
-
-// Register it - that's it!
-panes.register(myPane)
+const outliner = panes.getOutliner(document)
+outliner.GotoSubject($rdf.sym(uri), true, undefined, true, undefined, undefined, { preserveUrl: true })
 ```
 
-### Conditional Display
+The arguments are `(subject, expand, pane, solo, referrer, table, options)`; [Embedding mashlib](/docs/guides/embedding-mashlib#the-browse-page-line-by-line) explains each one.
 
-Show your pane only for specific resource types:
+## Page markup
 
-```javascript
-const photoPane = {
-  name: 'photo-pane',
+mashlib 3.1 draws into `#OutlineView`. The page `databrowser.html` uses:
 
-  label: function(subject, context) {
-    // Only show for image files
-    const uri = subject.value
-    if (uri.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-      return "Photo View"
-    }
-    return null  // Don't show for other resources
-  },
-
-  render: function(subject, context) {
-    const img = context.dom.createElement('img')
-    img.src = subject.value
-    img.style.maxWidth = '100%'
-    return img
-  }
-}
-
-panes.register(photoPane)
+```html
+<body id="PageBody" data-app-shell="databrowser">
+  <solid-ui-provider>
+    <a href="#MainContent" class="skip-link">Skip to main content</a>
+    <div class="app-main" tabindex="-1" aria-live="polite">
+      <div class="app-shell">
+        <main id="MainContent" class="app-view">
+          <div id="OutlineView" class="outline-view" aria-label="Resource browser"></div>
+        </main>
+      </div>
+    </div>
+  </solid-ui-provider>
+</body>
 ```
 
-### Dynamic Pane Loading
-
-Load panes from external URLs — perfect for hosting panes on your Pod or GitHub Pages:
-
-```javascript
-// Load a pane from an external ES module
-async function loadExternalPane(url) {
-  const module = await import(url)
-  panes.register(module.default)
-}
-
-// Load from your Pod
-loadExternalPane('https://you.solidcommunity.net/public/panes/weather-pane.js')
-
-// Or from GitHub Pages
-loadExternalPane('https://your-org.github.io/panes/chart-pane.js')
-```
-
-The external pane file (`weather-pane.js`):
-
-```javascript
-// weather-pane.js - an ES module
-export default {
-  name: 'weather-pane',
-  label: function(subject, context) {
-    // Check if subject has weather data
-    const store = SolidLogic.store
-    const WEATHER = $rdf.Namespace('http://example.org/weather#')
-    if (store.any(subject, WEATHER('temperature'))) {
-      return "Weather"
-    }
-    return null
-  },
-  render: function(subject, context) {
-    // Render weather data...
-  }
-}
-```
-
-### Accessing RDF Data in Panes
-
-Use the RDF store to read data about the subject:
-
-```javascript
-const profilePane = {
-  name: 'profile-summary',
-
-  label: function(subject, context) {
-    const store = SolidLogic.store
-    const FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/')
-    // Only show for resources with a name
-    if (store.any(subject, FOAF('name'))) {
-      return "Profile Summary"
-    }
-    return null
-  },
-
-  render: function(subject, context) {
-    const store = SolidLogic.store
-    const FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/')
-
-    const name = store.any(subject, FOAF('name'))
-    const img = store.any(subject, FOAF('img'))
-
-    const div = context.dom.createElement('div')
-    div.innerHTML = '<h2>' + (name ? name.value : 'Unknown') + '</h2>'
-    if (img) {
-      div.innerHTML += '<img src="' + img.value + '" style="max-width: 200px">'
-    }
-    return div
-  }
-}
-
-panes.register(profilePane)
-```
-
-## Styling
-
-### CSS Variables
-
-Customize appearance with CSS variables:
-
-```css
-:root {
-  --solid-primary-color: #7C4DFF;
-  --solid-secondary-color: #536DFE;
-  --solid-background-color: #FAFAFA;
-  --solid-text-color: #212121;
-  --solid-border-radius: 4px;
-  --solid-font-family: system-ui, sans-serif;
-}
-```
-
-### Custom Stylesheet
-
-Override specific elements:
-
-```css
-/* Custom header styling */
-#PageHeader {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-}
-
-/* Custom pane cards */
-.solid-panel {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-}
-
-/* Custom buttons */
-.solid-button {
-  border-radius: 20px;
-}
-```
+If `#OutlineView` is missing, mashlib creates it inside `#MainContent`, or at the end of `<body>`. The 2.x elements `#outline`, `#GlobalDashboard`, `#PageHeader` and `#PageFooter` are no longer used.
 
 ## Events
 
-mashlib emits events you can listen for:
+| Event | Dispatched on | When |
+|---|---|---|
+| `solid-panes:navigated` | `document` | after a solo `GotoSubject` has drawn a resource and written its history entry; `event.detail` has `url` and `state` |
+| `mashlib:themechange` | `window` | the theme changed; `event.detail.theme` is `'light'` or `'dark'` |
+| `mashlib:layoutchange` | `window` | the layout changed; `event.detail` has `layout`, `preference`, `inputMode` and `viewport` |
+
+Login events come from the session object:
 
 ```javascript
-// Navigation events
-document.addEventListener('solid-navigate', (event) => {
-  console.log('Navigated to:', event.detail.uri)
-})
-
-// Login/logout events (v2.0: use SolidLogic.authn)
-SolidLogic.authn.onLogin((webId) => {
-  console.log('User logged in:', webId)
-})
-
-SolidLogic.authn.onLogout(() => {
-  console.log('User logged out')
-})
-```
-
-## Building from Source
-
-```bash
-# Clone the monorepo
-git clone https://github.com/SolidOS/solidos.git
-cd solidos
-
-# Install and build
-npm install
-npm run setup
-npm run build
-
-# The bundle is in packages/mashlib/dist/
-```
-
-### Development Mode
-
-```bash
-# Watch for changes
-npm run watch
-
-# Start dev server
-npm start
-```
-
-## Bundle Contents
-
-mashlib includes:
-
-- **rdflib.js** — RDF operations
-- **solid-logic** — authentication, ACL, utilities
-- **solid-ui** — UI components
-- **solid-panes** — all built-in panes
-- **pane-registry** — pane management
-
-### Bundle Size
-
-| File | Size (gzipped) |
-|------|----------------|
-| mashlib.min.js | ~400 KB |
-| mash.css | ~50 KB |
-
-## Server Integration
-
-### Node Solid Server (NSS)
-
-NSS includes mashlib by default. It serves the data browser for HTML requests.
-
-### Community Solid Server (CSS)
-
-Configure CSS to serve mashlib:
-
-```json
-{
-  "@context": "https://linkedsoftwaredependencies.org/bundles/npm/@solid/community-server/^7.0.0/components/context.jsonld",
-  "import": [
-    "css:config/app/main/default.json",
-    "css:config/app/init/static-root.json"
-  ],
-  "staticPath": "./node_modules/mashlib/dist/"
+const authSession = SolidLogic.authn.authSession
+for (const name of ['login', 'sessionRestore', 'logout', 'sessionChange', 'identityReplaced']) {
+  authSession.events.on(name, () => console.log('session event:', name))
 }
 ```
 
+## Theme and layout
+
+mashlib sets three attributes on `<html>` and keeps them up to date:
+
+| Attribute | Values | Saved in `localStorage` |
+|---|---|---|
+| `data-theme` | `dark`, or absent for light | `mashlib-theme` (`light` or `dark`) |
+| `data-layout` | `desktop` or `mobile` (768 px wide or less) | `mashlib-layout` (`desktop` or `mobile`; absent means automatic) |
+| `data-input-mode` | `touch` or `pointer` | not saved |
+
+With no saved theme, mashlib follows the system's `prefers-color-scheme`. Panes receive the same values as `context.environment`. Colours and fonts come from solid-ui's `--solid-ui-*` tokens; see [Theming](/docs/reference/theming).
+
+## Adding panes
+
+```javascript
+panes.register(myPane)
+```
+
+A pane is an object with `name`, `icon`, `label(subject, context)` and `render(subject, context)`. Registered panes are offered after the built-in ones. You can also load panes from URLs at run time, from a JSS server's `--panes` list, or with `?pane=` on mashlib.com/dynamic. See [Dynamic panes](/docs/panes/dynamic-panes) and the [Custom pane demo](https://solidos.org/docs/pane-demo/).
+
+## Build from source
+
+```bash
+git clone https://github.com/SolidOS/mashlib.git
+cd mashlib
+npm install
+npm run build      # writes dist/
+npm start          # webpack-dev-server on port 8080
+```
+
+The repository's `.nvmrc` names Node 22.22.0.
+
+By default the build takes solid-ui and solid-panes from `node_modules`. To build against sibling checkouts of the SolidOS repositories, use the workspace scripts: `npm run build:workspace`, `npm run watch:workspace` and `npm run start:workspace`. To work on all of SolidOS at once, see the [SolidOS monorepo](https://github.com/SolidOS/solidos).
+
+## Where it runs
+
+- **Any static host**, as a browse page: [Embedding mashlib](/docs/guides/embedding-mashlib), [mashlib.com](https://mashlib.com/).
+- **JavaScript Solid Server** serves a data browser page for every resource: [Running SolidOS on JSS](/docs/guides/running-on-jss).
+- **Node Solid Server** serves mashlib's `databrowser.html` for RDF resources. Its latest release, 6.0.0, depends on mashlib `^2.0.0`, so it ships 2.x.
+- **Data Kitchen**, a desktop app: [SolidOS/data-kitchen](https://github.com/SolidOS/data-kitchen).
+
+[Deployment](/docs/reference/deployment) compares the options.
+
 ## Troubleshooting
 
-### "panes is not defined"
+**`panes is not defined`.** Your script ran before `mashlib.min.js`. Load mashlib first, and run your code on `DOMContentLoaded`.
 
-Ensure mashlib is loaded before your script:
+**The view appears below the page, outside your layout.** The page has no `#OutlineView`. Add `<div id="OutlineView" class="outline-view">` where the view should go.
 
-```html
-<script src="mashlib.min.js"></script>
-<script>
-  // panes is now available
-</script>
-```
+**The login takes 5 seconds longer, or JSON-LD fails with `ChunkLoadError`.** The files at the site root are missing; see [Files at the site root](/docs/guides/embedding-mashlib#files-at-the-site-root).
 
-### CORS Errors
+**The page turns dark.** mashlib follows the system theme. Save `light` under `mashlib-theme` in `localStorage` before mashlib loads.
 
-When accessing remote pods, ensure CORS is configured. For development, use a local Solid server.
+**A thick black border appears around part of your page.** mash.css styles some plain class names, such as `.container`. Rename your own classes.
 
-### Styling Issues
+## See also
 
-Make sure mash.css is loaded:
-
-```html
-<link href="mash.css" rel="stylesheet">
-```
-
-## See Also
-
-- [mashlib GitHub](https://github.com/SolidOS/mashlib)
-- [SolidOS Monorepo](https://github.com/SolidOS/solidos)
-- [Deployment Guide](/docs/reference/deployment) — hosting options
-- [Theming](/docs/reference/theming) — customization
+- [SolidOS/mashlib on GitHub](https://github.com/SolidOS/mashlib)
+- [Libraries overview](/docs/libraries/overview)
+- [Deployment](/docs/reference/deployment)

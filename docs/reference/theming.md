@@ -1,280 +1,131 @@
 ---
 sidebar_position: 5
 title: Theming
-description: Customizing the look and feel of SolidOS
+description: Colours, dark mode and the mobile layout in SolidOS 3.1
 ---
 
 # Theming
 
-SolidOS and mashlib can be customized to match your application's design.
+This page describes how SolidOS 3.1 (mashlib 3.1.0) handles colours, the light and dark theme, and the desktop and mobile layouts, and what a pane can read from them. Everything here was checked in the 3.1 data browser.
 
-## CSS Custom Properties
+## Two sets of CSS custom properties
 
-The SolidOS UI uses CSS custom properties for theming:
+| Set | Defined in | Used by |
+|---|---|---|
+| `--solid-ui-color-*`, `--solid-ui-font-size-*`, `--font-family-ui`, `--solid-ui-clickable-area` | solid-ui `theme.css` | The `solid-ui-…` web components: header buttons, login dialog, menus, the sharing dialog |
+| `--color-background`, `--color-text-*`, `--color-border-*`, `--color-surface-*`, `--color-header-*`, `--color-primary`, `--gray-*`, `--slate-*`, `--font-size-*`, `--border-radius-*`, `--spacing-*` and others | mashlib's stylesheet (`mash.css`, from `src/styles/themes/light.css`) | The data browser page and the built-in panes |
+
+Both are set on `:root`. The full lists are in [solid-ui's theme.css](https://github.com/SolidOS/solid-ui/blob/main/src/styles/theme.css) and in mashlib's `src/styles/themes/light.css`. The solid-ui tokens are listed on the [solid-ui](../libraries/solid-ui.md#design-tokens) page.
+
+## Changing colours
+
+Override the properties in a stylesheet that loads after mashlib's, or on `:root` from script:
 
 ```css
 :root {
-  /* Primary colors */
-  --solid-primary: #7C3AED;
-  --solid-primary-dark: #6D28D9;
-  --solid-secondary: #2563EB;
-
-  /* Background */
-  --solid-bg: #ffffff;
-  --solid-bg-secondary: #f8fafc;
-
-  /* Text */
-  --solid-text: #1e293b;
-  --solid-text-muted: #64748b;
-
-  /* Borders */
-  --solid-border: #e2e8f0;
-  --solid-border-focus: #7C3AED;
-
-  /* Status colors */
-  --solid-success: #22c55e;
-  --solid-warning: #f59e0b;
-  --solid-error: #ef4444;
+  --solid-ui-color-primary: #00695c;   /* web components: buttons, focus, selection */
+  --color-background: #fffbea;         /* the data browser page */
 }
 ```
 
-## Overriding Styles
+Run in the 3.1 data browser, this turned the primary `solid-ui-button` from `rgb(124, 77, 255)` to `rgb(0, 105, 92)` and the page background from `rgb(248, 249, 251)` to `rgb(255, 251, 234)`.
 
-### In Your Application
+The web components use shadow DOM, so ordinary CSS selectors do not reach inside them; custom properties do. The older widgets from `UI.widgets` style themselves with inline CSS from `UI.style`, so neither set of properties changes them.
 
-```html
-<style>
-  /* Override mashlib styles */
-  .mash-container {
-    --solid-primary: #0066cc;
-    font-family: 'Your Font', sans-serif;
-  }
+## Light and dark
 
-  /* Custom pane styling */
-  .profilePane {
-    background: var(--solid-bg-secondary);
-    border-radius: 8px;
-    padding: 1rem;
-  }
-</style>
+mashlib keeps the theme as an attribute on `<html>`:
+
+- `data-theme="dark"` for dark; no `data-theme` attribute for light.
+- At start-up the theme comes from localStorage key `mashlib-theme` (`light` or `dark`). Without it, the browser's `prefers-color-scheme` decides.
+- Each change fires `mashlib:themechange` on `window`, with `event.detail.theme`.
+
+**In 3.1 the dark palette is not in the shipped stylesheet.** mashlib's `themes.css` imports `light.css` only (the import of `dark.css` is commented out). So `data-theme="dark"` is set, and passed to panes, but the data browser itself keeps its light colours. This includes browsers whose system setting is dark: they get `data-theme="dark"` and a light page.
+
+3.1 has no menu item to switch theme. From the console, this does what mashlib's own switch does:
+
+```js
+localStorage.setItem('mashlib-theme', 'dark')
+document.documentElement.setAttribute('data-theme', 'dark')
+window.dispatchEvent(new CustomEvent('mashlib:themechange', { detail: { theme: 'dark' } }))
 ```
 
-### Dark Mode
+To go back, set `light` and remove the attribute (`document.documentElement.removeAttribute('data-theme')`).
+
+## Desktop and mobile layout
+
+mashlib sets these on `<html>` and keeps them up to date when the window is resized or the pointer type changes:
+
+| Attribute or property | Values |
+|---|---|
+| `data-layout` | `desktop` or `mobile` |
+| `data-layout-preference` | `auto`, `desktop` or `mobile` |
+| `data-input-mode` | `pointer`, or `touch` when the primary pointer is coarse |
+| `--app-height` | The window's inner height, in pixels |
+| `--app-header-height` | Height of the header, set by the data browser page |
+
+With the preference `auto` (the default), the layout is `mobile` when the window is 768 px wide or less. Store `mobile` or `desktop` in localStorage key `mashlib-layout` to fix it; remove the key to go back to `auto`. As with the theme, 3.1 has no menu item for this.
+
+Each change fires `mashlib:layoutchange` on `window`:
+
+```js
+window.addEventListener('mashlib:layoutchange', e => console.log(e.detail))
+// { inputMode: 'pointer', layout: 'mobile', preference: 'mobile', viewport: { height: 900, width: 1200 } }
+```
+
+In CSS, select on the attribute, as mashlib's own stylesheet does:
 
 ```css
-@media (prefers-color-scheme: dark) {
-  :root {
-    --solid-bg: #0f172a;
-    --solid-bg-secondary: #1e293b;
-    --solid-text: #e2e8f0;
-    --solid-text-muted: #94a3b8;
-    --solid-border: #334155;
-  }
-}
-```
-
-## Mashlib Configuration
-
-When embedding mashlib, you can customize its appearance:
-
-```javascript
-const options = {
-  // Custom CSS to inject
-  customCss: `
-    .header { background: linear-gradient(135deg, #7C3AED, #2563EB); }
-    .tabulator { font-size: 14px; }
-  `,
-
-  // Hide certain UI elements
-  hideHeader: false,
-  hideFooter: true,
-
-  // Custom logo
-  logo: '/my-logo.svg'
-}
-
-panes.runDataBrowser(document, subject, options)
-```
-
-## Component Styling
-
-### Buttons
-
-```css
-.solid-button {
-  background: var(--solid-primary);
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.solid-button:hover {
-  background: var(--solid-primary-dark);
-}
-
-.solid-button--secondary {
-  background: transparent;
-  border: 1px solid var(--solid-border);
-  color: var(--solid-text);
-}
-```
-
-### Cards
-
-```css
-.solid-card {
-  background: var(--solid-bg);
-  border: 1px solid var(--solid-border);
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-```
-
-### Forms
-
-```css
-.solid-input {
-  width: 100%;
+html[data-layout="mobile"] .my-pane {
   padding: 0.5rem;
-  border: 1px solid var(--solid-border);
-  border-radius: 4px;
-  font-size: 1rem;
-}
-
-.solid-input:focus {
-  outline: none;
-  border-color: var(--solid-border-focus);
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
 }
 ```
 
-## Pane-Specific Styling
+solid-ui also ships `solid-ui/breakpoints.css`, which defines the custom media query `--solid-ui-mobile` as `(max-width: 48rem)`. Custom media queries need a build step (for example PostCSS) to work in today's browsers.
 
-### Profile Pane
+## What a pane receives
 
-```css
-.profilePane .avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  object-fit: cover;
-}
+`panes.runDataBrowser()` passes the theme and layout to every pane as `context.environment`:
 
-.profilePane .name {
-  font-size: 1.5rem;
-  font-weight: 600;
+```js
+{
+  layout: 'desktop',            // or 'mobile'
+  layoutPreference: 'auto',     // or 'desktop', 'mobile'
+  inputMode: 'pointer',         // or 'touch'
+  theme: 'light',               // or 'dark'
+  viewport: { width: 1300, height: 900 }
 }
 ```
 
-### Chat Pane
+When the layout or theme changes, mashlib updates the environment (`panes.updateEnvironment`) and re-renders the open panes (`panes.refreshUI`). A folder view is not rebuilt when only the layout changes; it adapts through CSS.
 
-```css
-.chatPane .message {
-  padding: 0.75rem;
-  margin: 0.5rem 0;
-  border-radius: 12px;
-  max-width: 70%;
-}
+This pane shows its environment, and was re-rendered with `theme dark` after the console switch above:
 
-.chatPane .message--mine {
-  background: var(--solid-primary);
-  color: white;
-  margin-left: auto;
+```js
+const envPane = {
+  name: 'envDemo',
+  icon: UI.icons.iconBase + 'noun_66617.svg',
+  label: (subject) => subject.uri.endsWith('/') ? 'Environment' : null,
+  render: (subject, context) => {
+    const div = context.dom.createElement('div')
+    const env = context.environment
+    div.textContent = env
+      ? `layout ${env.layout}, theme ${env.theme}, input ${env.inputMode}`
+      : 'no environment'
+    return div
+  }
 }
-
-.chatPane .message--theirs {
-  background: var(--solid-bg-secondary);
-}
+panes.register(envPane)
 ```
 
-### Folder Pane
-
-```css
-.folderPane .file-item {
-  display: flex;
-  align-items: center;
-  padding: 0.5rem;
-  border-radius: 4px;
-}
-
-.folderPane .file-item:hover {
-  background: var(--solid-bg-secondary);
-}
-
-.folderPane .file-icon {
-  width: 20px;
-  height: 20px;
-  margin-right: 0.5rem;
-}
-```
+Read `context.environment` with a fallback (`context.environment?.theme ?? 'light'`), as the built-in panes do: a page that renders panes without `runDataBrowser` may leave it out. Several built-in panes copy the values onto their own element, for example `element.dataset.layout = environment.layout`, and the profile pane and social pane set `data-theme` from `environment.theme`. A pane can do the same and style itself from those attributes.
 
 ## Icons
 
-SolidOS uses icons from solid-ui. You can customize or add your own:
+The web components draw [Lucide](https://lucide.dev/) icons as elements named `icon-lucide-…`. The older widgets and many panes use image files under `UI.icons.iconBase` (`https://solidos.github.io/solid-ui/src/icons/`).
 
-```javascript
-import { icons } from 'solid-ui'
+## See also
 
-// Use built-in icons
-const folderIcon = icons.iconBase + 'noun_973694.svg'
-
-// Use custom icons
-const myIcon = 'https://mysite.example/icons/custom.svg'
-```
-
-## Typography
-
-```css
-.solid-heading {
-  font-family: system-ui, -apple-system, sans-serif;
-  font-weight: 600;
-  color: var(--solid-text);
-}
-
-.solid-heading--1 { font-size: 2rem; }
-.solid-heading--2 { font-size: 1.5rem; }
-.solid-heading--3 { font-size: 1.25rem; }
-
-.solid-text {
-  font-size: 1rem;
-  line-height: 1.6;
-  color: var(--solid-text);
-}
-
-.solid-text--muted {
-  color: var(--solid-text-muted);
-}
-```
-
-## Responsive Design
-
-```css
-/* Mobile-first approach */
-.pane-container {
-  padding: 1rem;
-}
-
-@media (min-width: 768px) {
-  .pane-container {
-    padding: 2rem;
-    max-width: 800px;
-    margin: 0 auto;
-  }
-}
-
-@media (min-width: 1024px) {
-  .pane-container {
-    max-width: 1200px;
-  }
-}
-```
-
-## See Also
-
-- [mashlib Documentation](/libraries/mashlib)
-- [solid-ui Widgets](/libraries/solid-ui)
-- [Creating Panes](/panes/creating-panes)
+- [solid-ui](../libraries/solid-ui.md): components and design tokens
+- [pane-registry](../libraries/pane-registry.md): the `RenderEnvironment` type
+- [mashlib](../libraries/mashlib.md): the data browser page and `runDataBrowser`

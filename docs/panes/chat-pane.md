@@ -1,279 +1,101 @@
 ---
 sidebar_position: 5
 title: Chat Pane
-description: Real-time messaging
+description: Chat channels, threads and messages stored on a pod
 ---
 
 # Chat Pane
 
-The chat pane renders `meeting:LongChat` resources — real-time messaging for Solid.
+The chat pane shows a chat channel: its messages grouped by day, a box to write a new one, and buttons for participants, your other chats and the channel's preferences. Messages are stored on the pod, one document per day, and each message is signed by its author.
 
-## What It Renders
+![The chat pane in SolidOS 3.1: three messages and the message box](/img/builtin-panes/chat-pane.png)
 
-- `meeting:LongChat` — Chat rooms
-- Individual messages within chats
+| | |
+|---|---|
+| Package | [chat-pane](https://github.com/SolidOS/chat-pane) 4.0.0 (unchanged for SolidOS 3.1) |
+| Pane names | `long chat` (chat channels) and `chat` (older short chats) |
+| Registered by | solid-panes 5.1.0, `long chat` first, after `tabbed` |
+| Creates | chat channels (`mintClass` is `meeting:LongChat`) |
 
-## Features
+## When it applies
 
-- Real-time messaging
-- Message history
-- Participant list
-- Read receipts
-- Reply threading
-- File attachments
-- Emoji support
-- Message editing
-- Message deletion
+The package exports two panes.
 
-## Screenshot
+`long chat` (`src/longChatPane.ts`). Its `label(subject, context)` returns:
 
-![Chat Pane Mockup](/img/panes/chat-pane-mockup.svg)
+| Condition | Label |
+|---|---|
+| subject is a `meeting:LongChat` | `Chat channnel` (spelled this way in the source) |
+| subject is a `sioc:Thread` | `Thread` |
+| subject has `sioc:content` and `dct:created` | `message` |
+| anything else | `null` |
 
-Messages are displayed in real-time with typing indicators, participant avatars, and timestamps.
+`chat` (`src/shortChatPane.ts`, audience Power User). Its `label` returns `Chat (n)` if the subject has `n` `wf:message` values, `Meeting chat` for a `meeting:Chat`, `IRC log` for a document containing a `foaf:ChatChannel`, and `null` otherwise. It is registered after `long chat`, so a chat channel opens in `long chat`.
 
-## RDF Structure
+## What you see
 
-### Chat Container
+- **Messages** grouped under the day they were sent, each with its author, time and a tools button (edit your own message, bookmark, thumbs up or down, reply in a thread).
+- **Message box** with a send button and a camera button for a photo. Enter sends; the preferences can make Shift-Enter send instead.
+- **Participants** (people icon) and **your other chats** (chat icon) on the left, and **preferences** (wrench) on the right. The preferences are a form: color text by author, expand image links inline, newest first, inline image height, Shift-Enter sends, author and date on the left, show deleted messages.
+
+The message area is solid-ui's `infiniteMessageArea`. It loads more days as you scroll and listens for changes to the current day's document with `store.updater.addDownstreamChangeListener`, so new messages from others appear without a reload.
+
+## Data
+
+A chat channel is a folder with an `index.ttl`, plus one `chat.ttl` per day in `YYYY/MM/DD/` folders. This is what the pane wrote on the test pod for the screenshot (`chat/`), as Turtle:
 
 ```turtle
+# chat/index.ttl
 @prefix meeting: <http://www.w3.org/ns/pim/meeting#> .
-@prefix dct: <http://purl.org/dc/terms/> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix wf: <http://www.w3.org/2005/01/wf/flow#> .
+@prefix ical: <http://www.w3.org/2002/12/cal/ical#> .
+@prefix ui: <http://www.w3.org/ns/ui#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-<#this>
-    a meeting:LongChat ;
-    dct:title "Project Discussion" ;
-    dct:created "2024-01-15T10:00:00Z"^^xsd:dateTime ;
-    meeting:participation [
-        a meeting:Participation ;
-        meeting:participant <https://alice.example/profile/card#me>
-    ], [
-        a meeting:Participation ;
-        meeting:participant <https://bob.example/profile/card#me>
-    ] .
+<#this> a meeting:LongChat ;
+    dc:title "Chat channel" ;
+    dc:author </me/profile/card.jsonld#me> ;
+    dc:created "2026-11-17T20:49:30Z"^^xsd:dateTime ;
+    ui:sharedPreferences <#SharedPreferences> ;
+    wf:participation <#id1794948680960> .
+
+<#id1794948680960> wf:participant </me/profile/card.jsonld#me> ;
+    ical:dtstart "2026-11-17T20:51:20Z"^^xsd:dateTime ;
+    ui:backgroundColor "#c3f7f8" .
 ```
 
-### Individual Messages
-
-Messages are stored in date-organized files:
-
 ```turtle
-# In chat/2024/01/15/chat.ttl
-
+# chat/2026/11/17/chat.ttl
 @prefix sioc: <http://rdfs.org/sioc/ns#> .
 @prefix dct: <http://purl.org/dc/terms/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix sec: <https://w3id.org/security#> .
+@prefix wf: <http://www.w3.org/2005/01/wf/flow#> .
 
-<#msg1>
-    a sioc:Post ;
-    sioc:content "Hey everyone, ready for the meeting?" ;
-    dct:created "2024-01-15T10:30:00Z"^^xsd:dateTime ;
-    sioc:has_creator <https://alice.example/profile/card#me> .
+<../../../index.ttl#this> wf:message <#Msg1794948883604> .
 
-<#msg2>
-    a sioc:Post ;
-    sioc:content "Yes! I've uploaded the documents" ;
-    dct:created "2024-01-15T10:31:00Z"^^xsd:dateTime ;
-    sioc:has_creator <https://bob.example/profile/card#me> ;
-    sioc:attachment <project-plan.pdf> .
+<#Msg1794948883604>
+    sioc:content "Hello team, the pane pages are moving to SolidOS 3.1." ;
+    dct:created "2026-11-17T20:54:43Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+    foaf:maker </me/profile/card.jsonld#me> ;
+    sec:proofValue "5cc296c0ec6e…" .
 ```
 
-## Usage
+- `sec:proofValue` is the author's signature over the message. The signing code is solid-ui's `src/chat/signature.ts`, using `@noble/curves`.
+- Editing a message adds a new message and links the old one to it with `dct:isReplacedBy`. Deleting adds a replacement with `schema:dateDeleted`.
+- A thread is a `sioc:Thread`; the message it answers points to it with `sioc:has_reply`, and the thread lists its messages with `sioc:has_member`.
 
-```javascript
-// Navigate to a chat
-panes.runDataBrowser(document, sym('https://alice.example/chats/project/index.ttl#this'))
+These writes are in solid-ui's `src/chat/chatLogic.js`.
 
-// Get the pane directly
-const chatPane = paneRegistry.byName('chat')
-```
-
-## Creating a Chat
-
-### Programmatically
-
-```javascript
-import { store, sym, lit, st } from 'solid-logic'
-
-const MEETING = Namespace('http://www.w3.org/ns/pim/meeting#')
-const DCT = Namespace('http://purl.org/dc/terms/')
-
-async function createChat(containerUri, title) {
-  const chatIndex = sym(`${containerUri}index.ttl`)
-  const chat = sym(`${containerUri}index.ttl#this`)
-
-  const statements = [
-    st(chat, RDF('type'), MEETING('LongChat'), chatIndex),
-    st(chat, DCT('title'), lit(title), chatIndex),
-    st(chat, DCT('created'), lit(new Date().toISOString(), null,
-      sym('http://www.w3.org/2001/XMLSchema#dateTime')), chatIndex)
-  ]
-
-  await store.updater.update([], statements)
-  return chat
-}
-```
-
-### Via UI
-
-1. Navigate to a container
-2. Click "New Chat"
-3. Enter chat name
-4. Add participants
-5. Click "Create"
-
-## Sending Messages
-
-```javascript
-const SIOC = Namespace('http://rdfs.org/sioc/ns#')
-const DCT = Namespace('http://purl.org/dc/terms/')
-
-async function sendMessage(chatUri, content) {
-  const now = new Date()
-  const dateFolder = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`
-
-  const messageDoc = sym(`${chatUri.doc().dir().uri}${dateFolder}/chat.ttl`)
-  const messageId = sym(`${messageDoc.uri}#${Date.now()}`)
-
-  const statements = [
-    st(messageId, RDF('type'), SIOC('Post'), messageDoc),
-    st(messageId, SIOC('content'), lit(content), messageDoc),
-    st(messageId, DCT('created'), lit(now.toISOString(), null,
-      sym('http://www.w3.org/2001/XMLSchema#dateTime')), messageDoc),
-    st(messageId, SIOC('has_creator'), authn.currentUser(), messageDoc)
-  ]
-
-  await store.updater.update([], statements)
-}
-```
-
-## Real-Time Updates
-
-The chat pane uses WebSockets for real-time updates:
-
-```javascript
-// Subscribe to changes
-store.updater.addDownstreamChangeListener(chatUri.doc(), () => {
-  // Reload and re-render
-  refreshMessages()
-})
-```
-
-### Solid Notifications
-
-For Solid servers supporting notifications:
-
-```javascript
-// Subscribe via WebSocket
-const socket = new WebSocket('wss://alice.example/')
-socket.onopen = () => {
-  socket.send(`sub ${chatUri.doc().uri}`)
-}
-socket.onmessage = (event) => {
-  if (event.data.startsWith('pub')) {
-    // Document changed, reload
-    store.fetcher.refresh(chatUri.doc())
-  }
-}
-```
-
-## Attachments
-
-### Uploading Files
-
-```javascript
-async function attachFile(chatUri, file) {
-  const attachmentUri = sym(`${chatUri.doc().dir().uri}attachments/${file.name}`)
-
-  // Upload the file
-  await store.fetcher.putResourceAs(attachmentUri, file, file.type)
-
-  // Reference in message
-  const messageId = /* ... create message ... */
-  await store.updater.update([], [
-    st(messageId, SIOC('attachment'), attachmentUri, messageDoc)
-  ])
-}
-```
-
-### Displaying Attachments
-
-```javascript
-const attachments = store.each(message, SIOC('attachment'), null, null)
-attachments.forEach(attachment => {
-  const link = document.createElement('a')
-  link.href = attachment.uri
-  link.textContent = attachment.uri.split('/').pop()
-  container.appendChild(link)
-})
-```
-
-## Participants
-
-### Adding Participants
-
-```javascript
-async function addParticipant(chatUri, webId) {
-  const participation = blankNode()
-
-  await store.updater.update([], [
-    st(chatUri, MEETING('participation'), participation, chatUri.doc()),
-    st(participation, RDF('type'), MEETING('Participation'), chatUri.doc()),
-    st(participation, MEETING('participant'), sym(webId), chatUri.doc())
-  ])
-}
-```
-
-### Listing Participants
-
-```javascript
-function getParticipants(chatUri) {
-  const participations = store.each(chatUri, MEETING('participation'), null, null)
-  return participations.map(p =>
-    store.any(p, MEETING('participant'), null, null)
-  ).filter(Boolean)
-}
-```
-
-## Access Control
-
-Chats typically use these permissions:
-
-```turtle
-# chat/.acl
-@prefix acl: <http://www.w3.org/ns/auth/acl#> .
-
-<#owner>
-    a acl:Authorization ;
-    acl:agent <https://alice.example/profile/card#me> ;
-    acl:accessTo <./> ;
-    acl:default <./> ;
-    acl:mode acl:Read, acl:Write, acl:Control .
-
-<#participants>
-    a acl:Authorization ;
-    acl:agent <https://bob.example/profile/card#me> ;
-    acl:agent <https://carol.example/profile/card#me> ;
-    acl:accessTo <./> ;
-    acl:default <./> ;
-    acl:mode acl:Read, acl:Append .
-```
-
-## Type Index Integration
-
-Register chats in the Type Index:
-
-```turtle
-<#chats>
-    a solid:TypeRegistration ;
-    solid:forClass meeting:LongChat ;
-    solid:instanceContainer </chats/> .
-```
+`mintNew` also writes two ACL documents. In both, the creator has Read, Write and Control, and everyone can read. The folder's `.acl` lets any logged-in agent append (post messages); `index.ttl.acl` lets any logged-in agent write `index.ttl` (join as a participant).
 
 ## Source
 
-- [chatPane.js in solid-panes](https://github.com/SolidOS/solid-panes/tree/main/src/chat)
+- [github.com/SolidOS/chat-pane](https://github.com/SolidOS/chat-pane): `src/longChatPane.ts`, `src/shortChatPane.ts`
+- The message area, message tools and signatures are in solid-ui, `src/chat/`.
 
-## See Also
+## See also
 
-- [Meeting Ontology](http://www.w3.org/ns/pim/meeting#) — RDF vocabulary
-- [SIOC Ontology](http://rdfs.org/sioc/spec/) — for posts
-- [Solid Notifications](https://solidproject.org/TR/notifications-protocol) — real-time updates
+- [Meeting Pane](./meeting-pane.md): a meeting can have a chat tab
+- [SIOC Core Ontology](http://rdfs.org/sioc/spec/)

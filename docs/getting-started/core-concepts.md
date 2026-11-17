@@ -1,191 +1,170 @@
 ---
 sidebar_position: 2
 title: Core Concepts
-description: Understanding Solid pods, RDF, and the pane system
+description: Pods, RDF, WebIDs, panes, the store and login in SolidOS 3.1
 ---
 
 # Core Concepts
 
-Before building with SolidOS, understand these foundational concepts.
+The ideas you need before building with SolidOS 3.1.
 
-## Solid Pods
+## Pods
 
-A **pod** (Personal Online Datastore) is where your data lives.
+A **pod** is a web server that keeps someone's data as documents and folders (containers), each with its own address:
 
 ```
-https://alice.solidcommunity.net/
+https://alice.example/
 ├── profile/
-│   └── card#me          ← WebID (identity)
-├── public/              ← Anyone can read
-├── private/             ← Only you can access
-├── contacts/
-│   ├── alice.ttl
-│   └── bob.ttl
-└── settings/
-    └── prefs.ttl
+│   └── card            ← profile document; card#me is Alice's WebID
+├── public/             ← readable by anyone, by convention
+├── private/
+└── contacts/
+    └── index.ttl
 ```
 
-Key properties:
-- **You own it** — your data, your control
-- **ACL protected** — fine-grained access control
-- **Linked Data** — everything connects via URIs
-- **Protocol-based** — any compliant server works
+- Every document and folder has a URL, and is read with HTTP `GET` and changed with `PUT`, `PATCH` and `DELETE` ([Solid Protocol](https://solidproject.org/TR/protocol)).
+- Who may do what is set per document or folder (see [Access control](#access-control)).
+- Any server that follows the protocol works with SolidOS.
 
-## RDF & Linked Data
+## RDF and linked data
 
-Solid uses **RDF** (Resource Description Framework) — data as triples:
+Data in a pod is **RDF**: statements of the form subject, predicate, object, where each part can be a URL.
 
 ```turtle
-# Subject → Predicate → Object
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
 
 <#me> a foaf:Person ;
     foaf:name "Alice" ;
-    foaf:knows <https://bob.example.com/profile/card#me> .
+    foaf:knows <https://bob.example/profile/card#me> .
 ```
 
-Why RDF?
-- **Universal identifiers** — URIs for everything
-- **Vocabularies** — shared meaning (foaf:Person, vcard:email)
-- **Linking** — connect data across pods
-- **Queryable** — SPARQL for complex queries
+Because the parts are URLs, data in one pod can point at data in another. Shared vocabularies give the predicates a common meaning:
 
-### Common Vocabularies
-
-| Prefix | Vocabulary | Used For |
+| Prefix | Vocabulary | Used for |
 |--------|------------|----------|
-| `foaf:` | Friend of a Friend | People, social |
-| `vcard:` | vCard | Contacts |
-| `schema:` | Schema.org | General |
-| `solid:` | Solid | Solid-specific |
+| `foaf:` | Friend of a Friend | People, profiles |
+| `vcard:` | vCard | Contacts, address books |
+| `schema:` | Schema.org | General things |
+| `solid:` | Solid terms | Type indexes, inboxes |
 | `acl:` | Web Access Control | Permissions |
+
+More in the [RDF primer](../reference/rdf-primer.md).
 
 ## WebID
 
-Your **WebID** is your identity on the decentralized web:
+A **WebID** is a URL that names a person, such as `https://alice.example/profile/card#me`. Fetching it returns the profile document that describes them. You log in to SolidOS as a WebID.
 
-```
-https://alice.solidcommunity.net/profile/card#me
-```
+## The page globals
 
-It's a URI that:
-- Identifies you uniquely
-- Points to your profile document
-- Can be dereferenced (fetched) to learn about you
-- Uses the `#me` fragment convention
+mashlib puts its libraries on the page as globals, so you can try everything below in the browser console on [mashlib.com](https://mashlib.com/):
 
-## The Pane System
+| Global | What it is |
+|--------|------------|
+| `panes` | solid-panes: `register`, `byName`, `list`, `getOutliner`, plus `runDataBrowser` added by mashlib |
+| `UI` | solid-ui |
+| `SolidLogic` | solid-logic: `store`, `authn`, `authSession`, `solidLogicSingleton` |
+| `$rdf` | rdflib |
+| `mashlib.versionInfo` | build and version information |
 
-SolidOS renders data through **panes** — specialized UI components.
+## The store
 
-### How Panes Work
+All of SolidOS shares one rdflib store. Documents are loaded into it, read from it and written back through it.
 
 ```javascript
-// Each pane declares what it can handle
-const contactPane = {
-  name: 'contact',
+const store = SolidLogic.store
+const FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/')
+const me = $rdf.sym('https://testingsolidos.solidcommunity.net/profile/card#me')
 
-  // "Can you render this resource?"
-  label: (subject, context) => {
-    if (subject.hasType(vcard('Individual'))) {
-      return "Contact"  // Yes! Return a label
-    }
-    return null  // No, pass to next pane
+await store.fetcher.load(me.doc())          // GET the profile document into the store
+store.any(me, FOAF('name'))?.value           // "Testing SolidOS"
+store.each(me, FOAF('knows')).length         // 2
+```
+
+`store.updater.update(deletions, insertions)` writes changes back to the pod. [Data Flow](../architecture/data-flow.md) shows a full read and write.
+
+Inside a pane, use the store from the context (`context.session.store`) rather than a global. It is the same object.
+
+## Panes
+
+A **pane** is a view for one kind of thing. In 3.1 a pane is a plain object, usually the default export of an ES module:
+
+```javascript
+export default {
+  name: 'hello',                    // unique name
+  icon: 'https://example.org/hello.svg',   // image URL for menus
+
+  // "Can you show this?" Return a label to say yes, null to say no.
+  label (subject, context) {
+    const store = context.session.store
+    return store.any(subject, store.sym('http://xmlns.com/foaf/0.1/primaryTopic')) ? 'Hello' : null
   },
 
-  // "Render it!"
-  render: (subject, dom, context) => {
-    const div = dom.createElement('div')
-    // Build the UI...
+  // "Show it." Return one element.
+  render (subject, context) {
+    const div = context.dom.createElement('div')
+    div.textContent = 'Hello'
     return div
   }
 }
 ```
 
-### Pane Selection
+`subject` is an rdflib `NamedNode`. `context` has `dom` (the document), `session.store`, `session.logic` (solid-logic), `session.paneRegistry`, and in the data browser `environment` (layout, theme, input mode and viewport). Optional fields such as `shouldGetFocus`, `audience` and `mintClass` are described in [Pane Anatomy](../panes/pane-anatomy.md).
 
-When rendering a resource, SolidOS:
+A pane is added with `panes.register(pane)`.
 
-1. Queries all registered panes
-2. Each pane returns a label (or null)
-3. Most specific pane wins
-4. Falls back to generic pane if none match
+### How a pane is chosen
 
-```
-Resource: /contacts/alice.ttl (type: vcard:Individual)
+When SolidOS shows a resource:
 
-Panes consulted:
-  ✓ contacts-pane    → "Contact"     (specific, wins!)
-  ✓ generic-pane     → "Data"        (fallback)
-  ✗ chat-pane        → null          (can't handle)
-  ✗ meeting-pane     → null          (can't handle)
-```
+1. It goes through the registered panes **in registration order** and keeps every one whose `label` returns a string. The built-in panes are registered first, so a pane you add later comes after them.
+2. If a pane has an `audience` (a list of user roles), it is kept only when the logged-in user's preferences list those roles. The first pane from step 1 is always kept.
+3. It shows the first of these that matches the resource's `ui:mintClass`, otherwise the first whose `shouldGetFocus(subject)` returns true, otherwise the first in the list.
 
-## The Store
+For a file or folder, the others are offered in the **⋮** menu at the top right of the view. For the test profile above, the panes that say yes to the WebID are `profile`, `social`, `source`, `default` and `internal`, and `profile` is shown.
 
-SolidOS uses **rdflib.js** to manage RDF data in memory:
+## Login
+
+SolidOS 3.1 logs in with Solid-OIDC through `@uvdsl/solid-oidc-client-browser`, wrapped by solid-logic as `authSession`. In the data browser the header's **Log In** button and account menu (the `<solid-ui-login-button>` and `<solid-ui-account>` components) do this for you. From code:
 
 ```javascript
-import { store } from 'solid-logic'
+SolidLogic.authn.currentUser()              // NamedNode of the WebID, or null
+await SolidLogic.authn.checkUser()          // the same, after restoring a session
 
-// Fetch data into the store
-await store.fetcher.load('https://alice.example/profile/card')
+const session = SolidLogic.authSession
+session.events.on('login', () => { /* ... */ })   // also 'logout', 'sessionRestore', 'sessionChange', 'identityReplaced'
+await session.login('https://solidcommunity.net', window.location.href)  // redirects to the provider
+await session.logout()
 
-// Query the store
-const name = store.any(
-  namedNode('https://alice.example/profile/card#me'),
-  foaf('name'),
-  null
-)
-
-// Update the store
-store.add(
-  namedNode('https://alice.example/profile/card#me'),
-  foaf('nick'),
-  literal('Ali')
-)
-
-// Write back to pod
-await store.updater.update([], [/* statements */])
+SolidLogic.getSuggestedIssuers()            // [{ name, uri }, ...] identity providers offered at login
 ```
 
-## Authentication
+More in [Authentication](../cookbook/authentication.md).
 
-SolidOS handles authentication via **Solid-OIDC**:
+## Access control
 
-```javascript
-import { authn } from 'solid-logic'
-
-// Check current user
-const webId = authn.currentUser()
-
-// Login
-await authn.login()
-
-// Logout
-await authn.logout()
-```
-
-## Access Control
-
-Solid uses **Web Access Control (WAC)** for permissions:
+Most Solid servers use **Web Access Control** ([WAC](https://solidproject.org/TR/wac)). An ACL document next to a resource lists who may do what:
 
 ```turtle
-# .acl file
-<#authorization>
+@prefix acl: <http://www.w3.org/ns/auth/acl#> .
+
+<#owner>
     a acl:Authorization ;
     acl:agent <https://alice.example/profile/card#me> ;
     acl:accessTo <./document.ttl> ;
-    acl:mode acl:Read, acl:Write .
+    acl:mode acl:Read, acl:Write, acl:Control .
 ```
 
-Modes:
-- `acl:Read` — view the resource
-- `acl:Write` — modify the resource
-- `acl:Append` — add to (but not modify)
-- `acl:Control` — manage permissions
+| Mode | Allows |
+|------|--------|
+| `acl:Read` | reading the resource |
+| `acl:Write` | changing or deleting it |
+| `acl:Append` | adding to it without changing what is there |
+| `acl:Control` | reading and changing its ACL |
 
-## Next Steps
+In SolidOS you change access with the sharing dialog rather than by editing ACLs. See [Access Control](../cookbook/access-control.md).
 
-- [Quick Start](/docs/getting-started/quick-start) — run SolidOS locally
-- [Architecture Overview](/docs/architecture/overview) — how pieces connect
-- [RDF Primer](/docs/reference/rdf-primer) — deeper dive into RDF
+## Next steps
+
+- [Quick Start](./quick-start.md): run SolidOS
+- [Your First Pane](./your-first-pane.md): write and load a pane
+- [Architecture Overview](../architecture/overview.md): how the packages fit together

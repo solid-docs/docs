@@ -1,80 +1,56 @@
 ---
 sidebar_position: 1
 title: What is SolidOS?
-description: Introduction to SolidOS, the operating system for Solid
+description: What SolidOS is, the packages it is made of, and where it runs
 ---
 
 # What is SolidOS?
 
-SolidOS is an **operating system for Solid** — a modular, extensible data browser that lets users interact with data stored in Solid pods.
+SolidOS is a data browser for [Solid](https://solidproject.org/) pods. Give it the web address of anything on a pod (a profile, a folder, an address book, a chat, a Turtle file) and it loads the data, picks a view for it, and lets you edit it if you are allowed to. These docs describe SolidOS 3.1 (mashlib 3.1.0, November 2026).
 
-## The Vision
+## What you see
 
-Imagine an operating system where:
-- **Data is yours** — stored in your personal Solid pod
-- **Apps are modular** — "panes" that render specific data types
-- **Everything is linked** — RDF/Linked Data connects it all
-- **You control access** — fine-grained permissions on your data
+![SolidOS 3.1 at mashlib.com showing a public profile](/img/getting-started/mashlib-com-profile.png)
 
-SolidOS makes this real.
+You can try it now at **[mashlib.com](https://mashlib.com/)**, which serves the official mashlib 3.1.0 bundle. Paste an address into the bar and press **Go**.
 
-## What You See
+## The packages
 
-When you visit a Solid pod with SolidOS, you get an interactive data browser:
+SolidOS is a set of JavaScript packages. Their versions in the 3.1 release:
 
-![SolidOS Data Browser Interface](/img/solidos-browser-preview.svg)
+| Package | Version | What it does |
+|---------|---------|--------------|
+| [mashlib](https://github.com/SolidOS/mashlib) | 3.1.0 | The bundle: puts everything on the page, starts the data browser, keeps the layout and theme |
+| [solid-panes](https://github.com/SolidOS/solid-panes) | 5.1.0 | The outline (the part that shows a resource), the header, navigation, and the built-in panes |
+| [pane-registry](https://github.com/SolidOS/pane-registry) | 5.1.1 | The list of registered panes, and the types that describe a pane and its context |
+| [solid-ui](https://github.com/SolidOS/solid-ui) | 5.1.0 | Web components (login, account menu, dialogs, file explorer, forms) and the older widget library |
+| [solid-logic](https://github.com/SolidOS/solid-logic) | 6.2.0 | The shared store, the login session, and logic for access control, type indexes, profiles and folders |
+| [rdflib](https://github.com/linkeddata/rdflib.js) | 2.4.1 | The RDF store, parsers, the fetcher that loads documents and the updater that writes them |
 
-**[Try the Live Browser Demo →](https://solidos.org/docs/browser/)** — Experience SolidOS in action with a fully functional data browser
+The larger views are packages of their own, which solid-panes pulls in: folder-pane, profile-pane, contacts-pane, issue-pane, meeting-pane and source-pane (4.1.0), chat-pane (4.0.0) and activitystreams-pane (2.1.0).
 
-## Key Components
+## Panes
 
-SolidOS is built from several libraries:
+A **pane** is a view for one kind of thing. Every pane answers two questions: "can you show this?" (its `label` function) and "show it" (its `render` function). When you open an address, SolidOS asks every registered pane in turn, keeps the ones that say yes, and shows one of them. For a file or folder, the others are listed in the **⋮** menu at the top right of the view. (A person's WebID is shown without that header, so it has no menu.)
 
-| Component | Purpose |
-|-----------|---------|
-| **mashlib** | Bundles everything into a deployable data browser |
-| **solid-panes** | Collection of panes (modular apps) |
-| **solid-ui** | Reusable UI widgets and components |
-| **solid-logic** | Core business logic (auth, ACL, store) |
-| **rdflib.js** | RDF processing and Linked Data |
+You can add panes of your own without rebuilding SolidOS: a pane is one ES module, and it can be loaded into a running data browser. [Your First Pane](./your-first-pane.md) does this.
 
-## The Pane System
+## Where SolidOS runs
 
-The magic of SolidOS is **panes** — modular applications that know how to render specific data types.
+- **mashlib.com.** [mashlib.com](https://mashlib.com/) is the official bundle with an address bar. [mashlib.com/dynamic](https://mashlib.com/dynamic/) is the same data browser built from plain ES modules with no build step, and it can load extra panes from a link. See [mashlib.com and no-build SolidOS](../guides/mashlib-com.md).
+- **On a pod server.** A Solid server can answer a browser's request for a resource with the data browser, so the pod shows itself in SolidOS. solidcommunity.net does this. The JavaScript Solid Server (JSS) does it with one flag. See [Running SolidOS on JSS](../guides/running-on-jss.md).
+- **In your own page.** Load mashlib in a page and point it at a resource. See [Embedding mashlib](../guides/embedding-mashlib.md).
+- **On the desktop.** [Data Kitchen](https://github.com/SolidOS/data-kitchen) wraps mashlib in Electron.
 
-When you navigate to a resource:
-1. SolidOS fetches the data
-2. It asks each pane: "Can you render this?"
-3. The most specific pane wins
-4. That pane renders the UI
+## Next steps
 
-![Pane Selection Process](/img/pane-selection-flow.svg)
-
-## Where SolidOS Runs
-
-SolidOS can be deployed in multiple ways:
-
-- **Embedded in Solid servers** — solidcommunity.net uses it as the default UI
-- **Standalone web app** — host mashlib.js anywhere
-- **Desktop app** — Data Kitchen wraps it in Electron
-- **Your own app** — embed panes in your applications
-
-## Who Uses SolidOS?
-
-- **solidcommunity.net** — the largest Solid pod provider
-- **Inrupt's Pod Spaces** — enterprise Solid deployment
-- **Self-hosters** — running Community Solid Server
-- **Developers** — building Solid applications
-
-## Next Steps
-
-- [Core Concepts](/docs/getting-started/core-concepts) — understand pods, RDF, and panes
-- [Quick Start](/docs/getting-started/quick-start) — run SolidOS locally
-- [Your First Pane](/docs/getting-started/your-first-pane) — build something!
+- [Core Concepts](./core-concepts.md): pods, RDF, WebIDs, panes, the store and login
+- [Quick Start](./quick-start.md): run SolidOS
+- [Your First Pane](./your-first-pane.md): write a view
+- [Architecture Overview](../architecture/overview.md): how the packages fit together
 
 ## Resources
 
-- **[Try Live Demo](https://solidos.org/docs/browser/)** — interactive data browser on this site
-- **[SolidOS GitHub](https://github.com/SolidOS)** — source code
-- **[Solid Project](https://solidproject.org/)** — the Solid ecosystem
-- **[SolidOS Community](https://solidos.solidcommunity.net/)** — see SolidOS in production
+- [SolidOS on GitHub](https://github.com/SolidOS)
+- [Solid Project](https://solidproject.org/)
+- [What changed in 3.1](../guides/migrating-to-3.1.md)

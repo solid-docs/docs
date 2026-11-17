@@ -1,318 +1,153 @@
 ---
 sidebar_position: 2
 title: Authentication
-description: Login, logout, and session management
+description: Logging in and out, and reacting to the session, in SolidOS 3.1
 ---
 
 # Authentication
 
-Patterns for handling user authentication in SolidOS.
+SolidOS 3.1 logs users in with Solid-OIDC through [`@uvdsl/solid-oidc-client-browser`](https://github.com/uvdsl/solid-oidc-client-browser), wrapped by solid-logic 6.2.0 as `authSession`. The header's `solid-ui-account` element shows Log In and Sign Up when logged out, and the user's picture with a menu when logged in.
 
-## Basic Login/Logout
+Every snippet here was run in the SolidOS 3.1 data browser, where `SolidLogic`, `UI`, `$rdf` and `panes` are globals. In a bundled project, import the same names from `solid-logic` and `solid-ui`. The functions are listed in [solid-logic](../libraries/solid-logic.md#login-state).
 
-### Check Login Status
+## Who is logged in
 
-```javascript
-import { authn } from 'solid-logic'
-
-function checkAuth() {
-  const user = authn.currentUser()
-
-  if (user) {
-    console.log(`Logged in as: ${user.uri}`)
-    return user
-  } else {
-    console.log('Not logged in')
-    return null
-  }
-}
+```js
+const me = await SolidLogic.authn.checkUser()   // NamedNode of the WebID, or null
 ```
 
-### Login
+`checkUser()` waits until the session has been restored or the return from the identity provider has been handled. After that, `authn.currentUser()` gives the same answer synchronously. The raw values are on the session:
 
-```javascript
-import { authn } from 'solid-logic'
-
-async function login() {
-  try {
-    await authn.login()
-    const user = authn.currentUser()
-    console.log(`Logged in as: ${user.uri}`)
-  } catch (error) {
-    console.error('Login failed:', error)
-  }
-}
+```js
+const { authSession } = SolidLogic
+authSession.webId      // 'https://alice.example/profile/card#me', or undefined
+authSession.isActive   // true or false
+authSession.info       // { webId, isLoggedIn }
 ```
 
-### Login with Specific Provider
+Inside a pane, use the logic from the context: `context.session.logic.authn.currentUser()`.
 
-```javascript
-async function loginWithProvider(providerUrl) {
-  await authn.login({
-    provider: providerUrl
-  })
-}
+## Logging in
 
-// Usage
-await loginWithProvider('https://solidcommunity.net')
-await loginWithProvider('https://login.inrupt.com')
+### With the login dialog
+
+The Log In button in the header opens this dialog. The field offers the providers from `SolidLogic.getSuggestedIssuers()` and accepts any other provider URL. It starts with the provider used last time.
+
+![The SolidOS 3.1 login dialog: "Select an identity provider", a "Solid Identity Provider" field, Cancel and Login](/img/libraries/login-modal.png)
+
+Open the same dialog from code:
+
+```js
+UI.showDialog(customElements.get('solid-ui-login-modal'))
 ```
 
-### Logout
+Or add a login button. It must be inside `solid-ui-provider`, which in the data browser wraps the whole page, so a pane can render one:
 
-```javascript
-async function logout() {
-  await authn.logout()
-  console.log('Logged out')
-}
-```
-
-## Session Events
-
-### Listen for Login
-
-```javascript
-import { authn } from 'solid-logic'
-
-authn.onLogin((webId) => {
-  console.log(`User logged in: ${webId}`)
-
-  // Update UI
-  showLoggedInUI(webId)
-
-  // Load user data
-  loadUserProfile(webId)
-})
-```
-
-### Listen for Logout
-
-```javascript
-authn.onLogout(() => {
-  console.log('User logged out')
-
-  // Update UI
-  showLoggedOutUI()
-
-  // Clear cached data
-  clearUserData()
-})
-```
-
-## Protected Operations
-
-### Require Login Before Action
-
-```javascript
-async function requireAuth() {
-  const user = authn.currentUser()
-  if (!user) {
-    await authn.login()
-  }
-  return authn.currentUser()
-}
-
-async function saveNote(content) {
-  const user = await requireAuth()
-  if (!user) {
-    throw new Error('Login required')
-  }
-
-  // Proceed with save
-  await createNote(user, content)
-}
-```
-
-### Login Gate Component
-
-```javascript
-function createAuthGate(dom, onAuthenticated) {
-  const container = dom.createElement('div')
-
-  const user = authn.currentUser()
-  if (user) {
-    onAuthenticated(container, user)
-  } else {
-    const message = dom.createElement('p')
-    message.textContent = 'Please log in to continue'
-    container.appendChild(message)
-
-    const loginBtn = UI.widgets.button(dom, 'Log In', async () => {
-      await authn.login()
-      const newUser = authn.currentUser()
-      if (newUser) {
-        container.innerHTML = ''
-        onAuthenticated(container, newUser)
-      }
-    })
-    container.appendChild(loginBtn)
-  }
-
-  return container
-}
-
-// Usage
-const gate = createAuthGate(document, (container, user) => {
-  container.textContent = `Welcome, ${user.uri}!`
-})
-```
-
-## User Profile
-
-### Load Profile Data
-
-```javascript
-import { store, sym } from 'solid-logic'
-
-const FOAF = Namespace('http://xmlns.com/foaf/0.1/')
-const VCARD = Namespace('http://www.w3.org/2006/vcard/ns#')
-
-async function loadProfile(webId) {
-  const person = sym(webId)
-  await store.fetcher.load(person.doc())
-
-  return {
-    webId: webId,
-    name: store.any(person, FOAF('name'), null, null)?.value ||
-          store.any(person, VCARD('fn'), null, null)?.value,
-    photo: store.any(person, FOAF('img'), null, null)?.uri,
-    email: store.any(person, FOAF('mbox'), null, null)?.uri?.replace('mailto:', ''),
-  }
-}
-```
-
-### Get Pod Root
-
-```javascript
-import { profile } from 'solid-logic'
-
-async function getPodRoot(webId) {
-  const podRoot = await profile.getPodRoot(webId)
-  return podRoot  // e.g., 'https://alice.example/'
-}
-```
-
-### Get Inbox
-
-```javascript
-const LDP = Namespace('http://www.w3.org/ns/ldp#')
-
-async function getInbox(webId) {
-  const person = sym(webId)
-  await store.fetcher.load(person.doc())
-
-  const inbox = store.any(person, LDP('inbox'), null, null)
-  return inbox?.uri
-}
-```
-
-## Session Persistence
-
-### Check Session on Page Load
-
-```javascript
-document.addEventListener('DOMContentLoaded', async () => {
-  // Check if there's a valid session
-  const user = authn.currentUser()
-
-  if (user) {
-    // Session exists, update UI
-    updateUIForUser(user)
-  } else {
-    // No session, show login UI
-    showLoginUI()
-  }
-})
-```
-
-### Handle Session Expiry
-
-```javascript
-// Session can expire, handle gracefully
-async function fetchWithAuth(uri) {
-  try {
-    await store.fetcher.load(uri)
-  } catch (error) {
-    if (error.status === 401) {
-      // Session may have expired
-      const user = authn.currentUser()
-      if (!user) {
-        // Need to re-login
-        await authn.login()
-        // Retry the request
-        await store.fetcher.load(uri)
-      }
+```js
+const greetingPane = {
+  name: 'greeting',
+  icon: UI.icons.iconBase + 'noun_66617.svg',
+  label: (subject) => subject.uri.endsWith('#me') ? 'Greeting' : null,
+  render: (subject, context) => {
+    const div = context.dom.createElement('div')
+    const me = context.session.logic.authn.currentUser()
+    if (me) {
+      div.textContent = 'You are logged in as ' + me.uri
     } else {
-      throw error
+      const button = context.dom.createElement('solid-ui-login-button')
+      button.textContent = 'Log in to see your greeting'
+      div.appendChild(button)
     }
+    return div
   }
 }
+panes.register(greetingPane)
 ```
 
-## Multiple Users
+`solid-ui-logout-button` and `solid-ui-signup-button` work the same way. The [solid-ui](../libraries/solid-ui.md#account-and-login) page lists them with `solid-ui-account`, `solid-ui-avatar` and `solid-ui-guard`.
 
-### Display Current User
+### Straight to a provider
 
-```javascript
-function createUserBadge(dom) {
-  const container = dom.createElement('div')
-  container.className = 'user-badge'
+To skip the dialog, send the browser to a provider yourself. Both forms are accepted:
 
-  const user = authn.currentUser()
-  if (user) {
-    const avatar = UI.widgets.avatar(dom, user, { size: 32 })
-    container.appendChild(avatar)
+```js
+await SolidLogic.authSession.login('https://solidcommunity.net', window.location.href)
+await SolidLogic.authSession.login({ oidcIssuer: 'https://solidcommunity.net', redirectUrl: window.location.href })
+```
 
-    loadProfile(user.uri).then(profile => {
-      const name = dom.createElement('span')
-      name.textContent = profile.name || 'User'
-      container.appendChild(name)
-    })
-  }
+The second argument (or `redirectUrl`) is where the provider sends the user back to. The page then loads again, and `checkUser()` finishes the login. The dialog's own path also stores the provider in localStorage `loginIssuer` and clears cached access information from the store before it redirects.
 
-  return container
+The suggested providers are Solid Community (`https://solidcommunity.net`), Solid Web (`https://solidweb.org`), Solid Web ME (`https://solidweb.me`) and Inrupt.com (`https://login.inrupt.com`). On any other host, that host is offered first, so a pod server that serves SolidOS offers itself.
+
+## Logging out
+
+```js
+await SolidLogic.authSession.logout()
+```
+
+SolidOS then refreshes the view, so the page shows what a logged-out visitor sees. When a provider was stored in `loginIssuer`, solid-ui also calls that provider's `end_session_endpoint` and the server's `/.well-known/solid/logout`.
+
+`SolidLogic.performServerSideLogout({ issuer, postLogoutRedirectPath })` does those two server calls on its own, and goes to `postLogoutRedirectPath` (default `/`) if the server logout succeeds. It returns `true` when it navigated.
+
+## Reacting to login and logout
+
+`authSession.events` is an emitter with `on(event, handler)` and `off(event, handler)`:
+
+```js
+const { authSession, authn } = SolidLogic
+authSession.events.on('login', () => console.log('logged in as', authn.currentUser()?.uri))
+authSession.events.on('logout', () => console.log('logged out'))
+```
+
+| Event | When |
+|---|---|
+| `login` | The page has come back from the provider and the session is active |
+| `logout` | The session went from active to inactive |
+| `sessionChange` | Any other change of the active state or WebID |
+| `sessionRestore` | A restore during `checkUser()` turned an inactive session into an active one |
+| `identityReplaced` | The identity that was logged in is gone or replaced; data fetched under it should be dropped |
+
+The session object is also an `EventTarget`. It fires `sessionStateChange` with `event.detail` = `{ isActive, webId }`:
+
+```js
+SolidLogic.authSession.addEventListener('sessionStateChange', e => console.log(e.detail))
+```
+
+What we saw in the 3.1 data browser against a local pod:
+
+- Returning from the provider fired `sessionChange`, `sessionStateChange` and `login`.
+- `logout()` fired `logout`, `identityReplaced` and `sessionStateChange`.
+- Reloading a page while logged in fired none of them. Code that runs at start-up should call `await authn.checkUser()` rather than wait for an event.
+
+`SolidLogic.reloadOnIdentityReplaced(authSession.events, reload?)` reloads the page (or calls your `reload` function) on `identityReplaced`. solid-ui's provider uses it so that a switch to another account in another tab does not leave the previous user's data on screen.
+
+## Authenticated requests
+
+The shared store's fetcher sends the session's credentials, so `SolidLogic.store.fetcher.load(...)`, the updater and the solid-logic helpers all act as the logged-in user. For a request outside rdflib, use the session's fetch:
+
+```js
+const response = await SolidLogic.authSession.authFetch('https://your.pod/private/notes.ttl')
+```
+
+The session's tokens are kept in the browser's IndexedDB (database `soidc`), so a reload restores the login without another trip to the provider.
+
+## After login: the user's profile
+
+```js
+const logic = SolidLogic.solidLogicSingleton
+const me = await SolidLogic.authn.checkUser()
+if (me) {
+  await logic.profile.loadProfile(me)
+  const name = UI.utils.label(me)
+  const podRoot = logic.profile.getPodRoot(me)
+  const inbox = await logic.profile.getMainInbox(me)
 }
 ```
 
-### Switch Accounts
+More profile, preferences and type index helpers are in [solid-logic](../libraries/solid-logic.md#profile).
 
-```javascript
-async function switchAccount() {
-  // Logout current user
-  await authn.logout()
+## See also
 
-  // Login as different user
-  await authn.login()
-}
-```
-
-## Security Considerations
-
-### Never Store Credentials
-
-```javascript
-// DON'T do this:
-// localStorage.setItem('password', password)
-
-// DO use Solid-OIDC through authn
-await authn.login()
-```
-
-### Validate User Input
-
-```javascript
-function isValidWebId(uri) {
-  try {
-    const url = new URL(uri)
-    return url.protocol === 'https:'
-  } catch {
-    return false
-  }
-}
-```
-
-## See Also
-
-- [solid-logic](/docs/libraries/solid-logic) — authn module
-- [Access Control](/docs/cookbook/access-control) — permissions
-- [Solid-OIDC](https://solidproject.org/TR/oidc) — specification
+- [solid-logic](../libraries/solid-logic.md): `authn`, `authSession` and the rest of the API
+- [solid-ui](../libraries/solid-ui.md): the login and account components
+- [Access control](./access-control.md): what a logged-in user can share

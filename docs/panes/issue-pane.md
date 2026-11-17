@@ -1,305 +1,98 @@
 ---
 sidebar_position: 9
 title: Issue Pane
-description: Issue and task tracking
+description: Issue trackers - a table, a board by state, single issues, and tracker settings
 ---
 
 # Issue Pane
 
-The issue pane renders `wf:Issue` resources — a lightweight issue tracker built into SolidOS.
+The issue pane shows an issue tracker and its issues. A tracker has tabs: **My Trackers**, **Table View** (filterable and sortable), a **board** with one column per state (the tab is named after the issue class, "task" for a default tracker), and **Settings**. **New task** adds an issue. Opening a single issue shows its own editable view.
 
-## What It Renders
+![The issue pane in SolidOS 3.1: the table view of a tracker with two open tasks](/img/builtin-panes/issue-pane.png)
 
-- `wf:Issue` — Individual issues
-- `wf:Tracker` — Issue collections/projects
+| | |
+|---|---|
+| Package | [issue-pane](https://github.com/SolidOS/issue-pane) 4.1.0 |
+| Pane name | `issue` |
+| Audience | everyone (`audience: []`) |
+| Registered by | solid-panes 5.1.0, after `basicPreferences` |
+| Creates | trackers (`mintClass` is `wf:Tracker`) |
 
-## Features
+## When it applies
 
-- Issue creation and editing
-- Status workflow (Open → In Progress → Closed)
-- Priority levels
-- Assignees
-- Labels/tags
-- Comments
-- Due dates
-- Related issues
+`label(subject, context)` returns:
 
-## Screenshot
+| Condition | Label |
+|---|---|
+| subject is a `wf:Task`, or has a `wf:tracker` | `issue` |
+| subject is a `wf:Tracker` | `tracker` |
+| anything else | `null` |
 
-![Issue Pane Mockup](/img/panes/issue-pane-mockup.svg)
+## What you see
 
-Issues display with status badges, description, reproduction steps, and threaded comments.
-```
+- **New task**: a title box; Enter saves the issue in the tracker's state store.
+- **Table View**: one row per issue with title, status and created time, and filter and sort controls above each column.
+- **Board**: one column per state; dropping a card on a column changes the issue's state. There is one board tab for the issue class and one for each `wf:issueCategory`.
+- **Settings**: the tracker's settings form (issue class and its states, categories, assignee class and so on), and a button that copies the tracker to the clipboard as CSV.
+- **My Trackers**: the trackers listed in your type indexes.
 
-## RDF Structure
+The board is `src/board.js` and the CSV button `src/csvButton.js`. The state store is watched with `store.updater.addDownstreamChangeListener`, so the table follows changes made by others.
 
-### Issue Tracker
+### A new tracker shows "Tracker settings need an update"
+
+A tracker made with **New Tracker** in issue-pane 4.1.0 sets `wf:issueClass wf:Task` but does not copy the list of allowed states into the tracker document. The pane looks for that list (`owl:disjointUnionOf`) in the tracker document only, so it shows the message *Tracker settings need an update for "task"*. Fill in the states in **Settings**, or add them to `index.ttl` yourself:
 
 ```turtle
 @prefix wf: <http://www.w3.org/2005/01/wf/flow#> .
-@prefix dct: <http://purl.org/dc/terms/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-<#tracker>
-    a wf:Tracker ;
-    dct:title "Project Issues" ;
-    wf:issueClass wf:Issue ;
-    wf:stateClass wf:State ;
+wf:Task owl:disjointUnionOf ( wf:Open wf:Closed ) .
+wf:Open rdfs:subClassOf wf:Task .
+wf:Closed rdfs:subClassOf wf:Task .
+```
+
+This is what was added to the tracker in the screenshot.
+
+## Data
+
+A tracker is a folder with `index.ttl` (the configuration) and `state.ttl` (the issues). From the test pod, as Turtle:
+
+```turtle
+# issues/index.ttl
+@prefix wf: <http://www.w3.org/2005/01/wf/flow#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+
+<#this> a wf:Tracker ;
+    dc:author </me/profile/card.jsonld#me> ;
+    dc:created "2026-11-17T20:49:30Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+    wf:issueClass wf:Task ;
     wf:initialState wf:Open ;
-    wf:terminalState wf:Closed ;
+    wf:stateStore <state.ttl> ;
     wf:assigneeClass foaf:Person .
 ```
 
-### Individual Issue
-
 ```turtle
+# issues/state.ttl
 @prefix wf: <http://www.w3.org/2005/01/wf/flow#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
 @prefix dct: <http://purl.org/dc/terms/> .
-@prefix sioc: <http://rdfs.org/sioc/ns#> .
 
-<#issue42>
-    a wf:Issue ;
-    dct:title "Fix login redirect bug" ;
-    dct:description """
-    When logging in from the /settings page, users
-    are redirected to the homepage instead of back
-    to /settings.
-    """ ;
-    wf:tracker <#tracker> ;
-    wf:state wf:Open ;
-    wf:priority wf:High ;
-    wf:assignee <https://alice.example/profile/card#me> ;
-    dct:created "2024-01-14T10:00:00Z"^^xsd:dateTime ;
-    dct:creator <https://bob.example/profile/card#me> .
+<index.ttl#this> wf:stateStore <state.ttl> .
 
-# Comment
-<#comment1>
-    a sioc:Post ;
-    sioc:reply_of <#issue42> ;
-    sioc:content "I can reproduce this on Chrome" ;
-    dct:created "2024-01-14T12:00:00Z"^^xsd:dateTime ;
-    sioc:has_creator <https://bob.example/profile/card#me> .
+<#Iss1794951000001> a wf:Open ;
+    wf:tracker <index.ttl#this> ;
+    dc:title "Write the chat pane page" ;
+    dct:created "2026-11-17T20:10:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
 ```
 
-## Usage
-
-```javascript
-// Navigate to an issue
-panes.runDataBrowser(document, sym('https://alice.example/project/issues.ttl#issue42'))
-
-// Get the pane directly
-const issuePane = paneRegistry.byName('issue')
-```
-
-## Creating Issues
-
-```javascript
-const WF = Namespace('http://www.w3.org/2005/01/wf/flow#')
-const DCT = Namespace('http://purl.org/dc/terms/')
-
-async function createIssue(trackerUri, title, description) {
-  const doc = trackerUri.doc()
-  const issueId = sym(`${doc.uri}#issue-${Date.now()}`)
-
-  const statements = [
-    st(issueId, RDF('type'), WF('Issue'), doc),
-    st(issueId, DCT('title'), lit(title), doc),
-    st(issueId, DCT('description'), lit(description), doc),
-    st(issueId, WF('tracker'), trackerUri, doc),
-    st(issueId, WF('state'), WF('Open'), doc),
-    st(issueId, DCT('created'), lit(new Date().toISOString(), null,
-      sym('http://www.w3.org/2001/XMLSchema#dateTime')), doc),
-    st(issueId, DCT('creator'), authn.currentUser(), doc),
-  ]
-
-  await store.updater.update([], statements)
-  return issueId
-}
-```
-
-## Issue States
-
-Standard workflow states:
-
-| State | Description |
-|-------|-------------|
-| `wf:Open` | New issue, not started |
-| `wf:InProgress` | Currently being worked on |
-| `wf:Closed` | Resolved or completed |
-
-### Changing State
-
-```javascript
-async function updateIssueState(issueUri, newState) {
-  const doc = issueUri.doc()
-  const currentState = store.any(issueUri, WF('state'), null, doc)
-
-  await store.updater.update(
-    currentState ? [st(issueUri, WF('state'), currentState, doc)] : [],
-    [st(issueUri, WF('state'), newState, doc)]
-  )
-}
-
-// Usage
-await updateIssueState(issueUri, WF('InProgress'))
-await updateIssueState(issueUri, WF('Closed'))
-```
-
-## Priority Levels
-
-```javascript
-// Available priorities
-const priorities = [
-  WF('Critical'),
-  WF('High'),
-  WF('Medium'),
-  WF('Low'),
-]
-
-async function setPriority(issueUri, priority) {
-  const doc = issueUri.doc()
-  const currentPriority = store.any(issueUri, WF('priority'), null, doc)
-
-  await store.updater.update(
-    currentPriority ? [st(issueUri, WF('priority'), currentPriority, doc)] : [],
-    [st(issueUri, WF('priority'), priority, doc)]
-  )
-}
-```
-
-## Assignees
-
-```javascript
-// Assign an issue
-async function assignIssue(issueUri, assigneeWebId) {
-  const doc = issueUri.doc()
-  const currentAssignee = store.any(issueUri, WF('assignee'), null, doc)
-
-  await store.updater.update(
-    currentAssignee ? [st(issueUri, WF('assignee'), currentAssignee, doc)] : [],
-    [st(issueUri, WF('assignee'), sym(assigneeWebId), doc)]
-  )
-}
-
-// Unassign
-async function unassignIssue(issueUri) {
-  const doc = issueUri.doc()
-  const currentAssignee = store.any(issueUri, WF('assignee'), null, doc)
-
-  if (currentAssignee) {
-    await store.updater.update(
-      [st(issueUri, WF('assignee'), currentAssignee, doc)],
-      []
-    )
-  }
-}
-```
-
-## Comments
-
-```javascript
-const SIOC = Namespace('http://rdfs.org/sioc/ns#')
-
-async function addComment(issueUri, content) {
-  const doc = issueUri.doc()
-  const commentId = sym(`${doc.uri}#comment-${Date.now()}`)
-
-  await store.updater.update([], [
-    st(commentId, RDF('type'), SIOC('Post'), doc),
-    st(commentId, SIOC('reply_of'), issueUri, doc),
-    st(commentId, SIOC('content'), lit(content), doc),
-    st(commentId, DCT('created'), lit(new Date().toISOString(), null,
-      sym('http://www.w3.org/2001/XMLSchema#dateTime')), doc),
-    st(commentId, SIOC('has_creator'), authn.currentUser(), doc),
-  ])
-
-  return commentId
-}
-
-// Get all comments for an issue
-function getComments(issueUri) {
-  return store.each(null, SIOC('reply_of'), issueUri, null)
-    .map(comment => ({
-      uri: comment.uri,
-      content: store.any(comment, SIOC('content'), null, null)?.value,
-      created: store.any(comment, DCT('created'), null, null)?.value,
-      creator: store.any(comment, SIOC('has_creator'), null, null)
-    }))
-    .sort((a, b) => new Date(a.created) - new Date(b.created))
-}
-```
-
-## Labels/Tags
-
-```javascript
-async function addLabel(issueUri, labelName) {
-  const doc = issueUri.doc()
-
-  await store.updater.update([], [
-    st(issueUri, DCT('subject'), lit(labelName), doc)
-  ])
-}
-
-function getLabels(issueUri) {
-  return store.each(issueUri, DCT('subject'), null, null)
-    .map(label => label.value)
-}
-```
-
-## Listing Issues
-
-```javascript
-async function listIssues(trackerUri, filters = {}) {
-  await store.fetcher.load(trackerUri.doc())
-
-  let issues = store.each(null, WF('tracker'), trackerUri, null)
-
-  // Filter by state
-  if (filters.state) {
-    issues = issues.filter(issue =>
-      store.holds(issue, WF('state'), filters.state, null)
-    )
-  }
-
-  // Filter by assignee
-  if (filters.assignee) {
-    issues = issues.filter(issue =>
-      store.holds(issue, WF('assignee'), sym(filters.assignee), null)
-    )
-  }
-
-  // Map to objects
-  return issues.map(issue => ({
-    uri: issue.uri,
-    title: store.any(issue, DCT('title'), null, null)?.value,
-    state: store.any(issue, WF('state'), null, null),
-    priority: store.any(issue, WF('priority'), null, null),
-    assignee: store.any(issue, WF('assignee'), null, null),
-    created: store.any(issue, DCT('created'), null, null)?.value,
-  }))
-}
-```
-
-## Related Issues
-
-```javascript
-async function linkIssues(issueUri, relatedIssueUri) {
-  const doc = issueUri.doc()
-
-  await store.updater.update([], [
-    st(issueUri, DCT('relation'), relatedIssueUri, doc)
-  ])
-}
-
-function getRelatedIssues(issueUri) {
-  return store.each(issueUri, DCT('relation'), null, null)
-}
-```
+An issue's state is its `rdf:type` (here `wf:Open`). The **New task** form (`src/newIssue.js`) writes exactly these four triples, using the tracker's `wf:initialState` for the type. If the tracker has a `wf:issueURITemplate`, each issue gets its own document instead of a fragment in `state.ttl`.
 
 ## Source
 
-- [issue/issuePane.js in solid-panes](https://github.com/SolidOS/solid-panes/tree/main/src/issue)
+[github.com/SolidOS/issue-pane](https://github.com/SolidOS/issue-pane): `src/issuePane.js` is the pane object; `src/issue.js` renders a single issue; `src/ontology/trackerSettingsForm.ttl` is the settings form.
 
-## See Also
+## See also
 
-- [Workflow Ontology](http://www.w3.org/2005/01/wf/flow#) — wf: vocabulary
-- [Meeting Pane](/docs/panes/meeting-pane) — action items
+- [Meeting Pane](./meeting-pane.md): a meeting's action items are a tracker

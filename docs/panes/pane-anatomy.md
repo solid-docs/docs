@@ -1,235 +1,200 @@
 ---
 sidebar_position: 2
-title: Pane Anatomy
-description: Structure and lifecycle of a SolidOS pane
+title: The Pane Contract
+description: What a SolidOS 3.1 pane is made of, what it is given, and when it is called
 ---
 
-# Pane Anatomy
+# The Pane Contract
 
-Every pane in SolidOS follows a consistent structure that enables the databrowser to discover, activate, and render it appropriately.
+This page is the reference for what a pane is in SolidOS 3.1 (mashlib 3.1.0, solid-panes 5.1.0, pane-registry 5.1.1). Every built-in pane and every pane you write follows it.
 
-## Core Structure
+A pane is an object with a `name`, an `icon`, a `label(subject, context)` function and a `render(subject, context)` function. Written as its own file, it is an ES module whose default export is that object:
 
-A pane is a JavaScript object with these essential properties:
+```javascript title="types-pane.js"
+// types-pane.js: the classes a thing belongs to, and how many statements describe it.
+const RDF_TYPE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
 
-```javascript
-const myPane = {
-  // Unique identifier
-  name: 'myPane',
+export default {
+  name: 'types',
+  icon: new URL('types.svg', import.meta.url).href,
 
-  // Icon shown in pane selector
-  icon: icons.iconBase + 'noun_Document.svg',
-
-  // Determines if pane can render this subject
-  label: (subject, context) => {
-    // Return string label if applicable, null otherwise
-    if (store.holds(subject, RDF('type'), FOAF('Person'))) {
-      return 'View Person'
-    }
-    return null
+  // Called for every registered pane each time something is shown.
+  // Return a short label to be offered, or null. Keep it cheap: no fetching.
+  label (subject, context) {
+    const store = context.session.store
+    return store.any(subject, store.sym(RDF_TYPE), null, subject.doc()) ? 'Types' : null
   },
 
-  // Renders the pane content
-  render: (subject, context) => {
-    const div = context.dom.createElement('div')
-    // Build your UI here
-    return div
-  }
-}
-```
-
-## Required Properties
-
-### `name`
-
-A unique string identifier for the pane. Used internally for registration and debugging.
-
-```javascript
-name: 'profilePane'
-```
-
-### `icon`
-
-URL to an SVG icon displayed in the pane selector. Usually references icons from solid-ui:
-
-```javascript
-icon: icons.iconBase + 'noun_15059.svg'
-```
-
-### `label(subject, context)`
-
-A function that determines whether this pane can render the given subject.
-
-**Parameters:**
-- `subject` - The RDF node to potentially render
-- `context` - Object containing `dom`, `session`, and other context
-
-**Returns:**
-- `string` - Label to show in pane selector (pane is applicable)
-- `null` - Pane cannot render this subject
-
-```javascript
-label: (subject, context) => {
-  // Check if subject is a Person
-  if (store.holds(subject, RDF('type'), FOAF('Person'))) {
-    return 'Profile'
-  }
-  // Check if subject is a chat
-  if (store.holds(subject, RDF('type'), MEETING('LongChat'))) {
-    return 'Chat'
-  }
-  return null
-}
-```
-
-### `render(subject, context)`
-
-Creates and returns the DOM element for this pane.
-
-**Parameters:**
-- `subject` - The RDF node to render
-- `context` - Object containing:
-  - `dom` - Document object for creating elements
-  - `session` - Current user session
-  - `div` - Container div (optional)
-
-**Returns:**
-- `HTMLElement` - The rendered pane content
-
-```javascript
-render: (subject, context) => {
-  const { dom } = context
-  const div = dom.createElement('div')
-  div.className = 'myPane'
-
-  const name = store.any(subject, FOAF('name'))
-  if (name) {
-    const h1 = dom.createElement('h1')
-    h1.textContent = name.value
-    div.appendChild(h1)
-  }
-
-  return div
-}
-```
-
-## Optional Properties
-
-### `mintClass`
-
-RDF class that this pane can create new instances of:
-
-```javascript
-mintClass: FOAF('Person')
-```
-
-### `mintNew(context, options)`
-
-Function to create a new instance of the pane's data type:
-
-```javascript
-mintNew: async (context, options) => {
-  const newDoc = options.newBase + 'profile.ttl'
-  // Create the resource
-  return { newInstance: sym(newDoc + '#me') }
-}
-```
-
-### `global`
-
-If `true`, pane appears in global menu rather than per-resource:
-
-```javascript
-global: true
-```
-
-## Lifecycle
-
-1. **Registration** - Pane is registered with `paneRegistry.register(myPane)`
-2. **Discovery** - When user navigates to a resource, all panes' `label()` functions are called
-3. **Selection** - Applicable panes appear in the pane selector
-4. **Rendering** - When selected, `render()` is called to build the UI
-5. **Updates** - Pane can subscribe to store changes to update reactively
-
-## Context Object
-
-The context passed to `label()` and `render()` contains:
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `dom` | Document | For creating DOM elements |
-| `session` | Object | Current authentication session |
-| `div` | HTMLElement | Container element (in render) |
-| `statusArea` | HTMLElement | Area for status messages |
-| `getOutliner` | Function | Gets the outliner instance |
-
-## Example: Complete Pane
-
-```javascript
-import { store, sym } from 'solid-logic'
-import { icons, widgets } from 'solid-ui'
-import { Namespace } from 'rdflib'
-
-const FOAF = Namespace('http://xmlns.com/foaf/0.1/')
-const RDF = Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#')
-
-export const personPane = {
-  name: 'person',
-
-  icon: icons.iconBase + 'noun_15059.svg',
-
-  label: (subject, context) => {
-    if (store.holds(subject, RDF('type'), FOAF('Person'))) {
-      return 'Person'
-    }
-    return null
-  },
-
-  render: (subject, context) => {
+  // Build the view and return one element. It is put on the page for you.
+  render (subject, context) {
     const { dom } = context
-    const container = dom.createElement('div')
-    container.className = 'personPane'
+    const store = context.session.store
+    const types = store.each(subject, store.sym(RDF_TYPE), null, subject.doc())
+    const count = store.statementsMatching(subject, null, null, subject.doc()).length
 
-    // Name
-    const name = store.any(subject, FOAF('name'))
-    if (name) {
-      const h1 = dom.createElement('h1')
-      h1.textContent = name.value
-      container.appendChild(h1)
+    const root = dom.createElement('section')
+    root.className = 'types-pane'
+    const heading = dom.createElement('h2')
+    heading.textContent = `${count} statements about this thing`
+    const list = dom.createElement('ul')
+    for (const type of types) {
+      const item = dom.createElement('li')
+      item.textContent = type.value
+      list.appendChild(item)
     }
-
-    // Photo
-    const photo = store.any(subject, FOAF('img'))
-    if (photo) {
-      const img = dom.createElement('img')
-      img.src = photo.uri
-      img.style.maxWidth = '200px'
-      container.appendChild(img)
-    }
-
-    // Friends
-    const friends = store.each(subject, FOAF('knows'))
-    if (friends.length > 0) {
-      const h2 = dom.createElement('h2')
-      h2.textContent = `Friends (${friends.length})`
-      container.appendChild(h2)
-
-      const ul = dom.createElement('ul')
-      friends.forEach(friend => {
-        const li = dom.createElement('li')
-        li.textContent = friend.uri
-        ul.appendChild(li)
-      })
-      container.appendChild(ul)
-    }
-
-    return container
+    root.append(heading, list)
+    return root
   }
 }
 ```
 
-## See Also
+Registered on a page running SolidOS 3.1 with `panes.register(pane)`, it is offered in the pane menu of anything that has a type, with its label and icon:
 
-- [Creating Panes](/panes/creating-panes) - Step-by-step guide
-- [Pane Overview](/panes/overview) - Available panes
-- [solid-ui Widgets](/libraries/solid-ui) - UI components for panes
+![The pane menu of a recipe document in SolidOS 3.1, offering About, Under The Hood, the registered Types pane, and Open in New Tab](/img/panes-dev/pane-menu.png)
+
+Chosen from the menu, it renders below the file explorer header:
+
+![The Types pane rendering a recipe: "6 statements about this thing" and the class schema:Recipe](/img/panes-dev/types-pane.png)
+
+## Fields
+
+The TypeScript type is `PaneDefinition`, exported by [pane-registry](../libraries/pane-registry.md).
+
+| Field | Required | What SolidOS 3.1 does with it |
+|---|---|---|
+| `name` | yes | The pane's identifier. `byName(name)` finds it, the pane menu uses it as the item key, and the history entry records it (see [Navigation](./navigation.md)). `register` skips a pane without one. |
+| `icon` | yes | URL of an image, shown in the pane menu and the file explorer header. solid-ui's pane menu also accepts a function `(subject, context)` that returns the URL. |
+| `label(subject, context)` | yes | Returns a string to say the pane can show `subject`, or `null` (any falsy value) to say it cannot. The string is the pane menu item's text. `register` skips a pane without one. |
+| `render(subject, context, options?)` | yes | Builds the view and returns one `HTMLElement`. See [Rendering](#rendering). |
+| `shouldGetFocus(subject)` | no | Asked only of panes whose `label` accepted the subject. The first one, in registry order, that returns `true` becomes the view shown, instead of the first relevant pane. Built in, the source pane uses it to open first for `.js`, `.cjs` and `.mjs` files. |
+| `audience` | no | An array of role classes (`NamedNode`), such as `solid:PowerUser` or `solid:Developer` from `http://www.w3.org/ns/solid/terms#`. The pane is offered only to users whose preferences include every role listed. The most relevant pane is kept even when its audience does not match. |
+| `global` | no | `true` for a pane that is not about one resource, such as `home` and `trustedApplications`. Global panes are never offered for a subject. |
+| `mintClass` | no | The RDF class (`NamedNode`) of the things this pane creates. Used to name the pane in "new" menus. A resource whose document says `ui:mintClass` with this class opens in this pane first. |
+| `mintNew(context, options)` | no | Creates a new instance. Panes with `mintNew` are offered in the folder pane's and solid-ui's create menus. It returns a promise of the options with `newInstance` set. |
+| `predicates` | no | A map from predicate URI to a number, copied into the registry's `paneForPredicate` index. |
+| `classes` | no | A map from class URI to a number. Declared in the type; nothing in 3.1 reads it. |
+| `requireQueryButton` | no | When the pane is opened in place, the page's `#queryButton` is shown for it and hidden otherwise. `register(pane, requireQueryButton)` sets this field from its second argument, overwriting any value on the object. |
+
+The outliner also reads one field the type does not declare: a pane with `managesUpdates: true`, shown again for the same subject without a refresh, keeps its rendered element instead of being rendered again. Set it only if the pane keeps its own DOM up to date.
+
+## The context
+
+`label` and `render` receive the same `context`, of type `DataBrowserContext`. A pane takes everything it needs from it, rather than importing SolidOS packages.
+
+| Property | What it is |
+|---|---|
+| `context.dom` | The `Document` to create elements in. |
+| `context.session.store` | The shared rdflib store (`LiveStore`). Every pane, the outline and solid-logic read and write the same store. It has `fetcher` (loading) and `updater` (writing). |
+| `context.session.logic` | The solid-logic object: `authn`, `acl`, `resource`, `profile`, `inbox`, `typeIndex`, `chat`, `directory`, `load`, `updatePromise`, `clearStore`. See [solid-logic](../libraries/solid-logic.md). |
+| `context.session.paneRegistry` | The registry: `list`, `byName`, `register`, `paneForIcon`, `paneForPredicate`. |
+| `context.getOutliner(dom)` | Returns the page's outline manager, for [navigation](./navigation.md). |
+| `context.environment` | The render environment, described below. Optional in the type; set by mashlib. |
+
+`context.environment` is a `RenderEnvironment`:
+
+| Property | Values |
+|---|---|
+| `layout` | `'desktop'` or `'mobile'` |
+| `layoutPreference` | `'desktop'`, `'mobile'` or `'auto'` |
+| `inputMode` | `'touch'` or `'pointer'` |
+| `theme` | `'light'` or `'dark'` |
+| `viewport` | `{ width, height }` in CSS pixels |
+
+On the page started by `panes.runDataBrowser()`, a change of layout or theme renders the pane on show again, with the new environment. Read `context.environment` in `render` each time; do not keep it.
+
+## Choosing a pane
+
+For each subject shown, SolidOS 3.1 asks every registered pane's `label` in registration order. The panes that accept it are offered in the pane menu, and one of them is shown:
+
+1. A pane whose `mintClass` matches the subject's `ui:mintClass`.
+2. Otherwise the first pane whose `shouldGetFocus(subject)` returns `true`.
+3. Otherwise the first pane that accepted the subject.
+
+Registration order is the priority: built-in panes are registered most specific first, and `panes.register` adds a pane after all of them. A pane added at run time is therefore offered in the menu, and is shown first only when it asks with `shouldGetFocus`. [Panes overview](./overview.md#how-a-pane-is-chosen) has the details, including the `audience` filter.
+
+`label` is called often: for every pane, on every view, and again to build the menu. It must return quickly and must not fetch. By the time it is called, the subject's document has been loaded into the store (for a folder, its listing too).
+
+## Rendering
+
+`render(subject, context, options)` returns one element. SolidOS then:
+
+- adds the class `paneDiv` to it and puts it inside a `<solid-ui-file-explorer-provider>` element in `#OutlineView`. It is an ordinary child in the page's DOM, not inside a shadow root, so page styles reach it;
+- shows the file explorer header above it for most resources, with the pane's icon and the pane menu;
+- if `render` throws, shows the stack trace in an element with the class `exceptionPane` instead.
+
+The third argument holds the outliner's options for this view (for example `solo` and `folderView`). Most panes ignore it.
+
+`render` is synchronous. To show data that is not in the store yet, return the element at once and fill it in when the data arrives. This pane, for a WebID, loads each of the person's storages and counts what the top of it lists:
+
+```javascript title="storage-pane.js"
+// storage-pane.js: for a WebID, how many things the top of each of its storages lists.
+const PIM_STORAGE = 'http://www.w3.org/ns/pim/space#storage'
+const LDP_CONTAINS = 'http://www.w3.org/ns/ldp#contains'
+
+export default {
+  name: 'storage-count',
+  icon: new URL('storage.svg', import.meta.url).href,
+
+  label (subject, context) {
+    const store = context.session.store
+    return store.any(subject, store.sym(PIM_STORAGE)) ? 'Storage' : null
+  },
+
+  render (subject, context) {
+    const { dom } = context
+    const store = context.session.store
+    const list = dom.createElement('ul')
+
+    for (const storage of store.each(subject, store.sym(PIM_STORAGE))) {
+      const item = dom.createElement('li')
+      item.textContent = storage.value + ': loading…'
+      list.appendChild(item)
+      // render() must return at once: fetch afterwards, then fill in the element.
+      store.fetcher.load(storage).then(() => {
+        const count = store.each(storage, store.sym(LDP_CONTAINS), null, storage).length
+        item.textContent = `${storage.value}: ${count} items`
+      }, err => {
+        item.textContent = `${storage.value}: could not be read (${err.status || err.message})`
+      })
+    }
+    return list
+  }
+}
+```
+
+A failed `fetcher.load` rejects with an `Error` whose `status` is the HTTP status, for example 401 for a storage that is not public.
+
+There is no teardown call. When the user moves on, the element is removed from the page. Do not leave timers or listeners on `document` running after that.
+
+## Registering
+
+```javascript
+panes.register(pane)
+```
+
+`register` comes from pane-registry and is re-exported by solid-panes; on a page running mashlib it is `window.panes.register`. It:
+
+- logs `registering pane: <name>` and appends the pane to `panes.list`;
+- skips a pane without `name` or `label` (with a console message);
+- indexes the pane by `icon` in `paneForIcon` and by each `predicates` key in `paneForPredicate`;
+- sets `pane.requireQueryButton` from its second argument.
+
+There is no `unregister`. Registering a second pane under a name already used does not replace the first: both are in `panes.list`, and `byName` returns the earlier one. Pane loaders check the name before registering; see [Dynamic Panes](./dynamic-panes.md).
+
+The built-in panes are registered by solid-panes itself, in [`src/registerPanes.js`](https://github.com/SolidOS/solid-panes/blob/main/src/registerPanes.js), when the module is first imported.
+
+## Types
+
+In TypeScript, take the types from pane-registry:
+
+```typescript
+import type { PaneDefinition, DataBrowserContext, RenderEnvironment } from 'pane-registry'
+```
+
+## See also
+
+- [Creating Panes](./creating-panes.md): a pane built step by step, with writing, testing and publishing
+- [Your First Pane](../getting-started/your-first-pane.md): the shortest path to a working pane
+- [Dynamic Panes](./dynamic-panes.md): loading a pane module at run time
+- [Navigation](./navigation.md): `GotoSubject` and the `solid-panes:navigated` event
+- [solid-panes](../libraries/solid-panes.md): the library that runs panes

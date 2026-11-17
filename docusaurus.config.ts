@@ -17,7 +17,7 @@ const config: Config = {
   organizationName: 'solid-docs',
   projectName: 'docs',
 
-  onBrokenLinks: 'warn',
+  onBrokenLinks: 'throw',
 
   i18n: {
     defaultLocale: 'en',
@@ -58,7 +58,7 @@ const config: Config = {
     colorMode: {
       defaultMode: 'light',
       disableSwitch: false,
-      respectPrefersColorScheme: true,
+      respectPrefersColorScheme: false,
     },
     announcementBar: {
       id: 'contribute',
@@ -132,6 +132,10 @@ const config: Config = {
               href: 'https://github.com/SolidOS/solid-panes',
             },
             {
+              label: 'pane-registry',
+              href: 'https://github.com/SolidOS/pane-registry',
+            },
+            {
               label: 'solid-ui',
               href: 'https://github.com/SolidOS/solid-ui',
             },
@@ -150,6 +154,54 @@ const config: Config = {
             {
               type: 'html',
               value: '<hr style="margin: 0.5rem 0;">',
+            },
+            {
+              label: 'folder-pane',
+              href: 'https://github.com/SolidOS/folder-pane',
+            },
+            {
+              label: 'contacts-pane',
+              href: 'https://github.com/SolidOS/contacts-pane',
+            },
+            {
+              label: 'profile-pane',
+              href: 'https://github.com/SolidOS/profile-pane',
+            },
+            {
+              label: 'chat-pane',
+              href: 'https://github.com/SolidOS/chat-pane',
+            },
+            {
+              label: 'meeting-pane',
+              href: 'https://github.com/SolidOS/meeting-pane',
+            },
+            {
+              label: 'issue-pane',
+              href: 'https://github.com/SolidOS/issue-pane',
+            },
+            {
+              label: 'source-pane',
+              href: 'https://github.com/SolidOS/source-pane',
+            },
+            {
+              label: 'activitystreams-pane',
+              href: 'https://github.com/SolidOS/activitystreams-pane',
+            },
+            {
+              label: 'pane-loader',
+              href: 'https://github.com/melvincarvalho/pane-loader',
+            },
+            {
+              type: 'html',
+              value: '<hr style="margin: 0.5rem 0;">',
+            },
+            {
+              label: 'mashlib.com (SolidOS 3.1 live)',
+              href: 'https://mashlib.com/',
+            },
+            {
+              label: 'JavaScript Solid Server (JSS)',
+              href: 'https://jss.live/',
             },
             {
               label: 'Solid Project',
@@ -192,6 +244,7 @@ const config: Config = {
             {label: 'solid-logic', to: '/libraries/solid-logic'},
             {label: 'solid-ui', to: '/libraries/solid-ui'},
             {label: 'mashlib', to: '/libraries/mashlib'},
+            {label: 'pane-registry', href: 'https://github.com/SolidOS/pane-registry'},
           ],
         },
         {

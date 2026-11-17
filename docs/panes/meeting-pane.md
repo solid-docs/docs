@@ -1,282 +1,73 @@
 ---
 sidebar_position: 8
 title: Meeting Pane
-description: Meeting agendas and notes
+description: A meeting as a set of tabs - details, participants, chat, notes, polls, materials
 ---
 
 # Meeting Pane
 
-The meeting pane renders `meeting:Meeting` resources — collaborative meeting agendas and notes.
+The meeting pane shows a meeting as a column of tabs on the left and the selected tab on the right. The first tab is the meeting's details form (name, location, start, end, comment, tab color). A green **+** under the tabs adds tools to the meeting: a group of people, a scheduling poll, a shared notepad, a chat, action items, a video call, materials, sharing, or a sub-meeting. Each tool becomes a tab.
 
-## What It Renders
+![The meeting pane in SolidOS 3.1: the details tab of a meeting called Docs sprint](/img/builtin-panes/meeting-pane.png)
 
-- `meeting:Meeting` — Meeting instances
-- Meeting agendas and action items
+| | |
+|---|---|
+| Package | [meeting-pane](https://github.com/SolidOS/meeting-pane) 4.1.0 |
+| Pane name | `meeting` |
+| Audience | Power User (`solid:PowerUser`) |
+| Registered by | solid-panes 5.1.0, after `period` and before `tabbed` |
+| Creates | meetings (`mintClass` is `meeting:Meeting`) |
 
-## Features
+## When it applies
 
-- Agenda management
-- Action item tracking
-- Participant list
-- Meeting notes
-- Attachments
-- Date/time scheduling
-- Recurring meetings
-- Export to calendar
+`label(subject, context)` returns `Meeting` if the store holds `subject rdf:type meeting:Meeting`, and `null` otherwise.
 
-## Screenshot
+The pane's audience is Power User. A meeting still opens in the meeting pane for every user, because the first relevant pane is always kept; but **New Meeting** appears in the folder pane's **Add** menu only for users who have set Power User in their [preferences](./dashboard-and-preferences.md).
 
-![Meeting Pane Mockup](/img/panes/meeting-pane-mockup.svg)
+## What you see
 
-Meetings display with participants, agenda items (with checkboxes), and action items with assignees and due dates.
+- **Tabs** on the left. The first is the meeting itself; each tool added becomes another tab, with the tab color from `ui:backgroundColor`.
+- **Details of meeting**: a form for `ical:summary` (name), `ical:location`, `ical:dtstart`, `ical:dtend`, `ical:comment` and the tab color. A changed field is saved to the meeting document.
+- **Public and private links** to the meeting, and the participants.
+- **+** opens the tool icons. Most tools create their resource with another pane's `mintNew`: `schedule` for a poll, `pad` for shared notes, `contact` for a group of people, `folder` for materials, `meeting` for a sub-meeting. The chat tool writes a `meeting:Chat` document (shown by the `chat` pane) and the action items tool a `wf:Tracker` (shown by the [issue pane](./issue-pane.md)). Each new thing gets a tab.
+- Web pages can be dragged onto the tab bar to add them as meeting materials.
 
-## RDF Structure
+## Data
+
+What the pane wrote on the test pod for the screenshot (`meeting/index.ttl`), as Turtle, after the details were filled in:
 
 ```turtle
 @prefix meeting: <http://www.w3.org/ns/pim/meeting#> .
-@prefix dct: <http://purl.org/dc/terms/> .
-@prefix cal: <http://www.w3.org/2002/12/cal/ical#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix ical: <http://www.w3.org/2002/12/cal/ical#> .
+@prefix ui: <http://www.w3.org/ns/ui#> .
 @prefix wf: <http://www.w3.org/2005/01/wf/flow#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-<#meeting1>
-    a meeting:Meeting ;
-    dct:title "Weekly Team Sync" ;
-    cal:dtstart "2024-01-15T10:00:00Z"^^xsd:dateTime ;
-    cal:dtend "2024-01-15T11:00:00Z"^^xsd:dateTime ;
+<#this> a meeting:Meeting ;
+    dc:author </me/profile/card.jsonld#me> ;
+    dc:created "2026-11-17T20:49:30Z"^^xsd:dateTime ;
+    meeting:toolList ( <#this> ) ;
+    ui:backgroundColor "#ddddcc"^^xsd:color ;
+    wf:participation <#id1794948699061> ;
+    ical:summary "Docs sprint" ;
+    ical:location "Online" ;
+    ical:dtstart "2026-11-18"^^xsd:date ;
+    ical:dtend "2026-11-19"^^xsd:date ;
+    ical:comment "Bring the pane pages up to SolidOS 3.1." .
 
-    meeting:participation [
-        meeting:participant <https://alice.example/profile/card#me>
-    ], [
-        meeting:participant <https://bob.example/profile/card#me>
-    ] ;
-
-    meeting:agenda (
-        <#item1>
-        <#item2>
-        <#item3>
-    ) .
-
-<#item1>
-    a meeting:AgendaItem ;
-    dct:title "Review last week's action items" ;
-    meeting:status meeting:Completed .
-
-<#item2>
-    a meeting:AgendaItem ;
-    dct:title "Project status updates" ;
-    meeting:status meeting:Pending .
-
-<#action1>
-    a wf:Task ;
-    dct:title "Complete documentation" ;
-    wf:assignee <https://alice.example/profile/card#me> ;
-    cal:due "2024-01-20"^^xsd:date ;
-    wf:status wf:Open .
+<#id1794948699061> wf:participant </me/profile/card.jsonld#me> ;
+    ical:dtstart "2026-11-17T20:51:39Z"^^xsd:dateTime ;
+    ui:backgroundColor "#c3f7f8" .
 ```
 
-## Usage
-
-```javascript
-// Navigate to a meeting
-panes.runDataBrowser(document, sym('https://alice.example/meetings/weekly.ttl#meeting1'))
-
-// Get the pane directly
-const meetingPane = paneRegistry.byName('meeting')
-```
-
-## Creating Meetings
-
-```javascript
-const MEETING = Namespace('http://www.w3.org/ns/pim/meeting#')
-const CAL = Namespace('http://www.w3.org/2002/12/cal/ical#')
-const DCT = Namespace('http://purl.org/dc/terms/')
-
-async function createMeeting(containerUri, title, startTime, endTime) {
-  const meetingDoc = sym(`${containerUri}${Date.now()}.ttl`)
-  const meeting = sym(`${meetingDoc.uri}#meeting`)
-
-  const statements = [
-    st(meeting, RDF('type'), MEETING('Meeting'), meetingDoc),
-    st(meeting, DCT('title'), lit(title), meetingDoc),
-    st(meeting, CAL('dtstart'), lit(startTime.toISOString(), null,
-      sym('http://www.w3.org/2001/XMLSchema#dateTime')), meetingDoc),
-    st(meeting, CAL('dtend'), lit(endTime.toISOString(), null,
-      sym('http://www.w3.org/2001/XMLSchema#dateTime')), meetingDoc),
-  ]
-
-  await store.updater.update([], statements)
-  return meeting
-}
-```
-
-## Agenda Items
-
-### Adding Items
-
-```javascript
-async function addAgendaItem(meetingUri, title) {
-  const itemId = sym(`${meetingUri.doc().uri}#item-${Date.now()}`)
-
-  await store.updater.update([], [
-    st(itemId, RDF('type'), MEETING('AgendaItem'), meetingUri.doc()),
-    st(itemId, DCT('title'), lit(title), meetingUri.doc()),
-    st(itemId, MEETING('status'), MEETING('Pending'), meetingUri.doc()),
-    // Add to meeting's agenda list (simplified - actual implementation uses RDF lists)
-  ])
-
-  return itemId
-}
-```
-
-### Updating Status
-
-```javascript
-async function toggleAgendaItem(itemUri) {
-  const currentStatus = store.any(itemUri, MEETING('status'), null, null)
-  const newStatus = currentStatus?.uri === MEETING('Completed').uri
-    ? MEETING('Pending')
-    : MEETING('Completed')
-
-  await store.updater.update(
-    [st(itemUri, MEETING('status'), currentStatus, itemUri.doc())],
-    [st(itemUri, MEETING('status'), newStatus, itemUri.doc())]
-  )
-}
-```
-
-## Action Items
-
-### Creating Tasks
-
-```javascript
-const WF = Namespace('http://www.w3.org/2005/01/wf/flow#')
-
-async function addActionItem(meetingUri, title, assigneeWebId, dueDate) {
-  const taskId = sym(`${meetingUri.doc().uri}#task-${Date.now()}`)
-  const doc = meetingUri.doc()
-
-  await store.updater.update([], [
-    st(taskId, RDF('type'), WF('Task'), doc),
-    st(taskId, DCT('title'), lit(title), doc),
-    st(taskId, WF('assignee'), sym(assigneeWebId), doc),
-    st(taskId, CAL('due'), lit(dueDate.toISOString().split('T')[0], null,
-      sym('http://www.w3.org/2001/XMLSchema#date')), doc),
-    st(taskId, WF('status'), WF('Open'), doc),
-  ])
-
-  return taskId
-}
-```
-
-### Completing Tasks
-
-```javascript
-async function completeTask(taskUri) {
-  const currentStatus = store.any(taskUri, WF('status'), null, null)
-
-  await store.updater.update(
-    currentStatus ? [st(taskUri, WF('status'), currentStatus, taskUri.doc())] : [],
-    [st(taskUri, WF('status'), WF('Completed'), taskUri.doc())]
-  )
-}
-```
-
-## Participants
-
-### Adding Participants
-
-```javascript
-async function addParticipant(meetingUri, webId) {
-  const participation = blankNode()
-  const doc = meetingUri.doc()
-
-  await store.updater.update([], [
-    st(meetingUri, MEETING('participation'), participation, doc),
-    st(participation, MEETING('participant'), sym(webId), doc),
-  ])
-}
-```
-
-### Listing Participants
-
-```javascript
-function getParticipants(meetingUri) {
-  const participations = store.each(meetingUri, MEETING('participation'), null, null)
-  return participations
-    .map(p => store.any(p, MEETING('participant'), null, null))
-    .filter(Boolean)
-}
-```
-
-## Meeting Notes
-
-```turtle
-<#meeting1>
-    meeting:notes """
-    ## Discussion Points
-
-    - Reviewed Q4 deliverables
-    - Identified blockers for Project X
-    - Agreed on next steps
-    """ .
-```
-
-```javascript
-// Get notes
-const notes = store.any(meetingUri, MEETING('notes'), null, null)
-
-// Update notes
-async function updateNotes(meetingUri, newNotes) {
-  const oldNotes = store.any(meetingUri, MEETING('notes'), null, meetingUri.doc())
-
-  await store.updater.update(
-    oldNotes ? [st(meetingUri, MEETING('notes'), oldNotes, meetingUri.doc())] : [],
-    [st(meetingUri, MEETING('notes'), lit(newNotes), meetingUri.doc())]
-  )
-}
-```
-
-## Calendar Export
-
-Export to iCalendar format:
-
-```javascript
-function exportToICS(meetingUri) {
-  const title = store.any(meetingUri, DCT('title'), null, null)?.value
-  const start = store.any(meetingUri, CAL('dtstart'), null, null)?.value
-  const end = store.any(meetingUri, CAL('dtend'), null, null)?.value
-
-  const ics = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//SolidOS//Meeting//EN
-BEGIN:VEVENT
-UID:${meetingUri.uri}
-DTSTART:${formatICSDate(start)}
-DTEND:${formatICSDate(end)}
-SUMMARY:${title}
-END:VEVENT
-END:VCALENDAR`
-
-  // Download as .ics file
-  const blob = new Blob([ics], { type: 'text/calendar' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `${title.replace(/\s+/g, '-')}.ics`
-  a.click()
-}
-
-function formatICSDate(isoDate) {
-  return new Date(isoDate).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
-}
-```
+`meeting:toolList` is an ordered list of the tabs; it starts with the meeting itself. A tool added later is appended to the list and linked from the meeting with its own predicate (for example `meeting:sharedNotes`, `meeting:chat`, `meeting:actions`, `meeting:subMeeting`).
 
 ## Source
 
-- [meetingPane.js in solid-panes](https://github.com/SolidOS/solid-panes/tree/main/src/meeting)
+[github.com/SolidOS/meeting-pane](https://github.com/SolidOS/meeting-pane): `src/meetingPane.js` is the whole pane; `src/meetingDetailsForm.ttl` is the details form.
 
-## See Also
+## See also
 
-- [Chat Pane](/docs/panes/chat-pane) — real-time discussion
-- [Issue Pane](/docs/panes/issue-pane) — task tracking
-- [iCalendar](https://tools.ietf.org/html/rfc5545) — calendar format
+- [Chat Pane](./chat-pane.md), [Issue Pane](./issue-pane.md): tools a meeting can hold
+- [Meeting ontology](http://www.w3.org/ns/pim/meeting)

@@ -1,439 +1,279 @@
 ---
 sidebar_position: 2
 title: rdflib.js
-description: The RDF foundation for SolidOS
+description: The RDF store, fetcher and updater under SolidOS
 ---
 
 # rdflib.js
 
-rdflib.js is the foundation of SolidOS — a JavaScript library for working with RDF (Resource Description Framework) data.
+rdflib.js holds the RDF data SolidOS works with. It provides the in-memory store, the fetcher that loads documents from the web into it, and the update manager that writes changes back.
 
-## Installation
+**SolidOS 3.1 uses rdflib 2.4.1**: mashlib 3.1.0 pins `rdflib` 2.4.1 and `solid-logic` 6.2.0.
+
+## In SolidOS: use the shared store
+
+A SolidOS page has one store, created by solid-logic. Panes and scripts on the page should use it rather than make their own, so that everything shares what has been loaded and the login session.
+
+| What | Inside a pane | On a page that loads mashlib |
+|---|---|---|
+| rdflib itself | `$rdf` | `window.$rdf` |
+| The store | `context.session.store` | `SolidLogic.store` |
+| The fetcher | `context.session.store.fetcher` | `SolidLogic.store.fetcher` |
+| The update manager | `context.session.store.updater` | `SolidLogic.store.updater` |
+
+`context.session.store` and `SolidLogic.store` are the same object. Its fetcher sends every request through the logged-in session, so private resources load once the user has logged in (see [Authentication](../cookbook/authentication.md)).
+
+The [Cookbook](../cookbook/overview.md) has task-by-task recipes. This page describes the rdflib API itself. Its examples were run in a SolidOS 3.1 pane, with:
+
+```javascript
+const store = context.session.store
+const { fetcher, updater } = store
+```
+
+and the namespaces `FOAF` and `RDF` defined as [below](#namespaces).
+
+## Outside SolidOS
 
 ```bash
-npm install rdflib
+npm install rdflib@2.4.1
 ```
 
-Or via CDN:
+```javascript
+import * as $rdf from 'rdflib'
+
+const store = $rdf.graph()
+const fetcher = new $rdf.Fetcher(store)          // also sets store.fetcher
+const updater = new $rdf.UpdateManager(store)    // also sets store.updater
+```
+
+In a plain HTML page, the browser build defines the global `$rdf`:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/rdflib/dist/rdflib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/rdflib@2.4.1/dist/rdflib.min.js"></script>
 ```
 
-## Core Concepts
-
-### The Store (IndexedFormula)
-
-The store is an in-memory RDF graph database:
+## Nodes
 
 ```javascript
-import { graph } from 'rdflib'
+const alice = $rdf.sym('https://alice.example/profile/card#me')   // NamedNode
+const name = $rdf.lit('Alice')                                    // Literal
+const age = $rdf.lit('30', undefined, $rdf.sym('http://www.w3.org/2001/XMLSchema#integer'))
+const greeting = $rdf.lit('Bonjour', 'fr')                        // language-tagged
+const address = $rdf.blankNode()                                  // BlankNode
+const x = $rdf.variable('x')                                      // Variable, for queries
 
-const store = graph()
-
-// The store holds triples (subject, predicate, object, graph)
-// Also called "quads" when including the graph component
+alice.doc()        // NamedNode <https://alice.example/profile/card>
+alice.site()       // NamedNode <https://alice.example/>
+alice.dir()        // NamedNode <https://alice.example/profile/>
 ```
 
-### Nodes
+`doc()` is the document a thing is described in: the URI without its `#fragment`. That is what you load, and what you name as the fourth part of a statement.
 
-RDF uses different node types:
+## Namespaces
 
 ```javascript
-import { sym, lit, blankNode, variable } from 'rdflib'
+const FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/')
+const VCARD = $rdf.Namespace('http://www.w3.org/2006/vcard/ns#')
+const RDF = $rdf.Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#')
+const LDP = $rdf.Namespace('http://www.w3.org/ns/ldp#')
 
-// NamedNode - a URI reference
-const alice = sym('https://alice.example/profile/card#me')
-
-// Literal - a value with optional language or datatype
-const name = lit('Alice')
-const age = lit(30, null, sym('http://www.w3.org/2001/XMLSchema#integer'))
-const greeting = lit('Bonjour', 'fr')
-
-// BlankNode - anonymous node
-const address = blankNode()
-
-// Variable - for queries
-const x = variable('x')
+FOAF('name')       // NamedNode <http://xmlns.com/foaf/0.1/name>
 ```
 
-### Namespaces
+## The store
 
-Create namespace helpers for common vocabularies:
+Each statement has a subject, predicate, object and a graph. In SolidOS the graph is the document the statement came from, or is to be written to.
 
 ```javascript
-import { Namespace } from 'rdflib'
+const kb = $rdf.graph()     // a separate, empty store (a pane uses context.session.store instead)
+const alice = $rdf.sym('https://alice.example/profile/card#me')
+const doc = alice.doc()
 
-const FOAF = Namespace('http://xmlns.com/foaf/0.1/')
-const VCARD = Namespace('http://www.w3.org/2006/vcard/ns#')
-const RDF = Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#')
-const RDFS = Namespace('http://www.w3.org/2000/01/rdf-schema#')
-const LDP = Namespace('http://www.w3.org/ns/ldp#')
-const SOLID = Namespace('http://www.w3.org/ns/solid/terms#')
+kb.add(alice, FOAF('name'), $rdf.lit('Alice'), doc)
+kb.add($rdf.st(alice, RDF('type'), FOAF('Person'), doc))
+kb.add(alice, FOAF('knows'), $rdf.sym('https://bob.example/profile/card#me'), doc)
 
-// Usage
-const nameProperty = FOAF('name')  // http://xmlns.com/foaf/0.1/name
-const Person = FOAF('Person')       // http://xmlns.com/foaf/0.1/Person
+kb.any(alice, FOAF('name'))?.value                 // 'Alice'
+kb.anyValue(alice, FOAF('name'))                   // 'Alice'
+kb.each(alice, FOAF('knows'))                      // [NamedNode]
+kb.holds(alice, RDF('type'), FOAF('Person'))       // true
+kb.statementsMatching(alice, null, null, doc)      // Statement[]
+kb.each(null, FOAF('knows'), $rdf.sym('https://bob.example/profile/card#me'))   // who knows Bob
+
+kb.remove($rdf.st(alice, FOAF('name'), $rdf.lit('Alice'), doc))
+kb.removeMatches(alice, FOAF('knows'), null, doc)
+kb.removeDocument(doc)                             // everything from that document
 ```
 
-## Working with the Store
+`null` (or leaving the argument out) matches anything. `any()` returns one matching node or `null`; `each()` returns all matches for the one position left open; `statementsMatching()` returns whole statements.
 
-### Adding Data
-
-```javascript
-import { graph, sym, lit, st } from 'rdflib'
-
-const store = graph()
-const alice = sym('https://alice.example/profile/card#me')
-const doc = sym('https://alice.example/profile/card')
-
-// Add a single statement
-store.add(alice, FOAF('name'), lit('Alice'), doc)
-
-// Using st() helper
-const statement = st(alice, FOAF('age'), lit(30), doc)
-store.add(statement)
-
-// Add multiple statements
-store.add(alice, RDF('type'), FOAF('Person'), doc)
-store.add(alice, FOAF('knows'), sym('https://bob.example/#me'), doc)
-```
-
-### Querying Data
-
-```javascript
-// Get a single value
-const name = store.any(alice, FOAF('name'), null, null)
-console.log(name?.value)  // "Alice"
-
-// Get all values for a predicate
-const friends = store.each(alice, FOAF('knows'), null, null)
-friends.forEach(friend => console.log(friend.uri))
-
-// Check if a statement exists
-const isPerson = store.holds(alice, RDF('type'), FOAF('Person'), null)
-
-// Get all statements matching a pattern
-const statements = store.match(alice, null, null, null)
-statements.forEach(st => {
-  console.log(`${st.predicate.uri}: ${st.object.value}`)
-})
-
-// Get statements where alice is the object
-const whoKnowsAlice = store.match(null, FOAF('knows'), alice, null)
-```
-
-### Removing Data
-
-```javascript
-// Remove a specific statement
-store.remove(st(alice, FOAF('name'), lit('Alice'), doc))
-
-// Remove all statements matching a pattern
-store.removeMatches(alice, FOAF('knows'), null, null)
-```
+These calls change only the store in memory. To change data on a server, use the [update manager](#update-manager).
 
 ## Fetcher
 
-The Fetcher loads RDF data from URIs into the store:
-
 ```javascript
-import { graph, Fetcher } from 'rdflib'
+const card = 'https://testingsolidos.solidcommunity.net/profile/card'
+const typeIndex = 'https://testingsolidos.solidcommunity.net/settings/publicTypeIndex.ttl'
 
-const store = graph()
-const fetcher = new Fetcher(store)
+await fetcher.load(card)                     // one document
+await fetcher.load([card, typeIndex])        // several, in parallel
+await fetcher.load(card, { force: true })    // refetch
 
-// Load a resource
-await fetcher.load('https://alice.example/profile/card')
-
-// Now query the loaded data
-const name = store.any(
-  sym('https://alice.example/profile/card#me'),
-  FOAF('name'),
-  null,
-  null
-)
-
-// Load multiple resources
-await fetcher.load([
-  'https://alice.example/profile/card',
-  'https://bob.example/profile/card'
-])
-
-// Check if a resource is loaded
-if (fetcher.requested['https://alice.example/profile/card']) {
-  console.log('Already loaded')
-}
-
-// Force reload
-await fetcher.load('https://alice.example/profile/card', { force: true })
+fetcher.getState(card)                       // 'unrequested', 'requested', 'fetched' or 'failed'
+fetcher.unload($rdf.sym(card))               // remove its statements from the store
+await fetcher.load(card, { force: true })    // after unload, only a forced load fetches it again
 ```
 
-### Fetcher Options
+`load()` accepts a NamedNode or a string, drops any `#fragment`, and does nothing if the document is already loaded, unless `force: true`. That includes a document removed with `unload()`: load it again with `force: true`. It rejects with an error that has `status` (the HTTP status, or `999` when the request could not be made at all) and `message`.
+
+`webOperation()` makes any HTTP request without parsing the answer into the store:
 
 ```javascript
-const fetcher = new Fetcher(store, {
-  timeout: 30000,           // Request timeout in ms
-  withCredentials: true,    // Include cookies for CORS
-  fetch: customFetch,       // Custom fetch implementation
+const response = await fetcher.webOperation('GET', 'https://testingsolidos.solidcommunity.net/profile/card')
+response.responseText
+
+await fetcher.webOperation('PUT', AREA + 'notes.txt', {
+  data: 'Hello',
+  contentType: 'text/plain'     // required whenever there is a body
 })
 ```
 
-### Authenticated and Alternate Fetches
+`AREA` here and below is a folder the user may write to, such as `https://alice.example/public/`.
 
-By default, rdflib's Fetcher uses `cross-fetch.fetch()` — a plain fetch without authentication. To work with private Solid data, you need to pass an authenticated fetch.
+It rejects on a non-2xx answer with an error whose `response` is the `Response`. The fetcher also has `delete(uri)`, `createContainer(parentURI, folderName, data)` (a POST with a `Slug`) and `getHeader(doc, name)`. See [Writing Data](../cookbook/writing-data.md) for each in use.
 
-#### Using `solidFetch`
-
-The simplest approach is to set a global `solidFetch` variable:
-
-1. Load your authentication library
-2. Log in to your identity provider
-3. Set `global.solidFetch` (Node) or `window.solidFetch` (browser) to the auth library's fetch
-4. All rdflib fetches will then be authenticated
+### Fetcher options and authentication
 
 ```javascript
-// Node.js example
-const auth = new (require("solid-node-client").SolidNodeClient)();
-await auth.login(credentials);
-global.solidFetch = auth.fetch;
-
-const store = graph();
-const fetcher = new Fetcher(store);
-await fetcher.load(privateUrl);  // authenticated
+new $rdf.Fetcher(store, {
+  fetch: myFetch,   // the fetch function to use for every request
+  timeout: 30000    // ms; 30000 is the default
+})
 ```
 
-:::note
-Prior to rdflib version 2.2.9, this variable was named `solidFetcher`. Use `solidFetch` going forward.
-:::
+Without a `fetch` option, the fetcher uses `window.solidFetch` (or `global.solidFetch` in Node) if one is set, and otherwise a plain `fetch`. `solidFetcher` is still read as an older name for the same thing.
 
-#### Using a Custom Fetcher
-
-To avoid global variables, pass the fetch directly when creating the Fetcher:
+Inside SolidOS you do not need either: the shared store's fetcher already uses the session. If you make a store of your own on a SolidOS page and want it to send the user's credentials, pass the session's fetch:
 
 ```javascript
-const fetcher = new Fetcher(store, {
-  fetch: auth.fetch.bind(auth)
-});
+const kb = $rdf.graph()
+const myFetcher = new $rdf.Fetcher(kb, {
+  fetch: SolidLogic.authSession.authFetch.bind(SolidLogic.authSession)
+})
 ```
 
-This means changes need to be added every time you create a new Fetcher, but avoids polluting the global scope.
+SolidOS 3.1 logs in with [@uvdsl/solid-oidc-client-browser](https://github.com/uvdsl/solid-oidc-client-browser), wrapped by solid-logic as `authSession`. Any library that gives you a `fetch`-compatible function can be used the same way.
 
-#### Authentication Libraries
-
-| Library | Environment | Notes |
-|---------|------------|-------|
-| [solid-client-authn-browser](https://github.com/inrupt/solid-client-js) | Browser | Inrupt's browser auth |
-| [solid-client-authn-node](https://github.com/inrupt/solid-client-js) | Node.js | When you don't need local filesystem access |
-| [solid-node-client](https://github.com/solid/solid-node-client) | Node.js | When you need full filesystem access |
-
-## UpdateManager
-
-The UpdateManager writes changes back to Solid pods:
+## Update manager
 
 ```javascript
-import { graph, Fetcher, UpdateManager, sym, lit, st } from 'rdflib'
+const doc = $rdf.sym(AREA + 'alice.ttl')
+const alice = $rdf.sym(doc.uri + '#me')
 
-const store = graph()
-const fetcher = new Fetcher(store)
-const updater = new UpdateManager(store)
-
-// Load the document first
-const doc = sym('https://alice.example/profile/card')
-await fetcher.load(doc)
-
-const alice = sym('https://alice.example/profile/card#me')
-
-// Update: delete old statements, insert new ones
-const oldName = store.any(alice, FOAF('name'), null, doc)
-const newName = lit('Alice Smith')
+await updater.update([], [$rdf.st(alice, FOAF('name'), $rdf.lit('Alice'), doc)])   // creates the document
 
 await updater.update(
-  oldName ? [st(alice, FOAF('name'), oldName, doc)] : [],  // deletions
-  [st(alice, FOAF('name'), newName, doc)]                   // insertions
-)
-
-// The store is automatically updated after successful PATCH
-```
-
-### Creating New Resources
-
-```javascript
-// PUT a new resource
-const newDoc = sym('https://alice.example/notes/note1.ttl')
-const note = sym('https://alice.example/notes/note1.ttl#it')
-
-store.add(note, RDF('type'), sym('http://example.org/Note'), newDoc)
-store.add(note, RDFS('label'), lit('My First Note'), newDoc)
-
-await updater.put(
-  newDoc,
-  store.statementsMatching(null, null, null, newDoc),
-  'text/turtle'
+  store.statementsMatching(alice, FOAF('name'), null, doc),   // statements to delete
+  [$rdf.st(alice, FOAF('name'), $rdf.lit('Alice Smith'), doc)] // statements to insert
 )
 ```
 
-### How the UpdateManager Decides What to Do
+`update(deletions, insertions)` sends one PATCH for one document; every statement must have that document as its graph. When the server accepts it, the store is changed to match. Without a callback it returns a promise that rejects with an `Error` whose message contains the server's answer. If the document has not been loaded, `update()` loads it first; if it does not exist (404), the PATCH creates it.
 
-The UpdateManager reads HTTP response headers to determine whether a document is editable and which update method to use.
+`updateMany(deletions, insertions)` takes statements for several documents and sends one `update()` per document.
 
-#### Editability
-
-For **HTTP(S) URIs**, a document is editable when both:
-- The `WAC-Allow` header grants write access to the current user
-- The response includes an `Accept-Patch` or `MS-Author-Via` header (see below)
-
-For **non-HTTP URIs** (e.g. `file://`), a document is editable if either:
-- It declares itself `a ont:MachineEditableDocument`
-- The `WAC-Allow` header grants write access
-
-#### Update Method Priority
-
-The UpdateManager picks the first matching method:
-
-| Priority | Method | Condition |
-|----------|--------|-----------|
-| 1 | **N3 PATCH** | `Accept-Patch` header contains `text/n3` |
-| 2 | **SPARQL PATCH** | `Accept-Patch` is `application/sparql-update` or `application/sparql-update-single-match`, or `MS-Author-Via` contains `SPARQL` |
-| 3 | **PUT** | `MS-Author-Via` contains `DAV` |
-
-:::note
-When submitting a form, PATCH is used except when re-ordering elements in an ordered list, which requires PUT.
-:::
-
-#### WebSocket Updates
-
-Real-time updates use the `Updates-Via` header. If the server provides `Updates-Via: wss://example.org`, the UpdateManager can subscribe to live changes.
-
-#### Inspecting Server Headers
-
-You can see what a server supports with:
-
-```bash
-curl --head https://solidcommunity.net/
-```
-
-Key headers to look for:
-
-```
-WAC-Allow: user="read write", public="read"
-Accept-Patch: text/n3, application/sparql-update
-MS-Author-Via: SPARQL
-Updates-Via: wss://solidcommunity.net
-```
-
-## Serialization
-
-### Parse RDF
+`put(doc, statements, contentType, callback)` replaces a whole document. It reports through the callback `(uri, ok, message)`; wrap it if you want a promise:
 
 ```javascript
-import { graph, parse } from 'rdflib'
+const statements = [
+  $rdf.st(alice, FOAF('name'), $rdf.lit('Alice'), doc),
+  $rdf.st(alice, RDF('type'), FOAF('Person'), doc)
+]
+await new Promise((resolve, reject) => {
+  updater.put(doc, statements, 'text/turtle', (uri, ok, message) => ok ? resolve() : reject(new Error(message)))
+})
+```
 
-const store = graph()
+### Which method the update manager uses
+
+`updater.editable(uri)` decides from the headers of the last response for that document:
+
+1. If `WAC-Allow` gives the user neither `write` nor `append`, the document is not editable (`false`), and `update()` rejects.
+2. If `Accept-Patch` lists `application/sparql-update` (or `application/sparql-update-single-match`), it uses **SPARQL Update** (`'SPARQL'`).
+3. Otherwise, if `Accept-Patch` lists `text/n3`, it uses **N3 Patch** (`'N3PATCH'`).
+4. Otherwise, if `MS-Author-Via` contains `SPARQL`, SPARQL Update; if it contains `DAV`, a full **PUT** (`'DAV'`).
+5. With no response yet it returns `undefined`, and `update()` loads the document and tries again.
+
+SPARQL Update comes first on purpose. rdflib's source says it is preferred over N3 Patch until the N3 Patch specification settles how inserts with blank nodes work. A server that offers both, such as solidcommunity.net and JavaScript Solid Server, is patched with SPARQL Update.
+
+You can read the headers yourself:
+
+```javascript
+const doc = $rdf.sym('https://testingsolidos.solidcommunity.net/profile/card')
+await store.fetcher.load(doc)
+
+store.fetcher.getHeader(doc, 'wac-allow')       // [ 'user="read",public="read"' ]
+store.fetcher.getHeader(doc, 'accept-patch')    // [ 'text/n3, application/sparql-update' ]
+store.updater.editable(doc.uri)                 // false: this user may not write here
+```
+
+### Live updates
+
+`updater.addDownstreamChangeListener(doc, listener)` reloads a document and calls `listener` when the server reports a change. It works only when the server sends an `Updates-Via` header (the older `solid-0.1` WebSocket protocol). Neither solidcommunity.net nor a default JavaScript Solid Server sent that header when this page was checked; on those servers the call sets up nothing.
+
+## Parsing and serializing
+
+```javascript
+const kb = $rdf.graph()
+const base = 'https://alice.example/profile/card'
 const turtle = `
   @prefix foaf: <http://xmlns.com/foaf/0.1/> .
-  <#me> a foaf:Person ;
-        foaf:name "Alice" .
+  <#me> a foaf:Person ; foaf:name "Alice" .
 `
+$rdf.parse(turtle, kb, base, 'text/turtle')
 
-parse(turtle, store, 'https://alice.example/profile/card', 'text/turtle')
+const doc = $rdf.sym(base)
+const asTurtle = $rdf.serialize(doc, kb, base, 'text/turtle')
+const asNTriples = $rdf.serialize(doc, kb, base, 'application/n-triples')
+const asRdfXml = $rdf.serialize(doc, kb, base, 'application/rdf+xml')
+
+// JSON-LD is produced asynchronously: pass a callback.
+const asJsonLd = await new Promise((resolve, reject) =>
+  $rdf.serialize(doc, kb, base, 'application/ld+json', (err, result) => err ? reject(err) : resolve(result)))
+
+// Parsing JSON-LD is asynchronous too: the callback runs when the data is in the store.
+await new Promise((resolve, reject) =>
+  $rdf.parse(asJsonLd, $rdf.graph(), base, 'application/ld+json', err => err ? reject(err) : resolve()))
 ```
 
-### Serialize RDF
+`serialize(doc, store, base, contentType)` writes the statements whose graph is `doc`.
+
+## Lists
+
+A Turtle list such as `( :a :b :c )` is parsed into a single `Collection` node. Its members are in `elements`:
 
 ```javascript
-import { serialize } from 'rdflib'
+const me = $rdf.sym('https://testingsolidos.solidcommunity.net/profile/card#me')
+await fetcher.load(me.doc())
 
-// Serialize to Turtle
-const turtle = serialize(doc, store, null, 'text/turtle')
-
-// Serialize to JSON-LD
-const jsonld = serialize(doc, store, null, 'application/ld+json')
-
-// Serialize to N-Triples
-const ntriples = serialize(doc, store, null, 'application/n-triples')
-
-// Serialize to RDF/XML
-const rdfxml = serialize(doc, store, null, 'application/rdf+xml')
+const list = store.any(me, $rdf.sym('http://schema.org/knowsLanguage'))
+list.termType     // 'Collection'
+list.elements     // the members, in order
 ```
 
-## Common Patterns
+## Types
 
-### Following Links
-
-```javascript
-async function getProfile(webId) {
-  await fetcher.load(webId)
-
-  const person = sym(webId)
-  const name = store.any(person, FOAF('name'), null, null)
-  const friends = store.each(person, FOAF('knows'), null, null)
-
-  // Load friend profiles
-  for (const friend of friends) {
-    await fetcher.load(friend.doc())  // Load the document containing the friend
-  }
-
-  return { name: name?.value, friends }
-}
-```
-
-### Type Checking
-
-```javascript
-function isContainer(uri) {
-  return store.holds(sym(uri), RDF('type'), LDP('Container'), null) ||
-         store.holds(sym(uri), RDF('type'), LDP('BasicContainer'), null)
-}
-
-function isPerson(uri) {
-  return store.holds(sym(uri), RDF('type'), FOAF('Person'), null) ||
-         store.holds(sym(uri), RDF('type'), VCARD('Individual'), null)
-}
-```
-
-### Getting Document from URI
-
-```javascript
-// For a URI like https://example.org/doc#thing
-// .doc() returns https://example.org/doc
-
-const thing = sym('https://example.org/doc#thing')
-const document = thing.doc()  // NamedNode for https://example.org/doc
-
-// Load the document containing a resource
-await fetcher.load(thing.doc())
-```
-
-## TypeScript Types
+rdflib ships TypeScript types. Commonly used ones:
 
 ```typescript
-import type {
-  NamedNode,
-  Literal,
-  BlankNode,
-  Variable,
-  Statement,
-  IndexedFormula,
-  Fetcher,
-  UpdateManager,
-  Node
-} from 'rdflib'
-
-// Node is the union type for all node types
-type RDFNode = NamedNode | Literal | BlankNode | Variable
-
-// Statement represents a quad
-interface Statement {
-  subject: NamedNode | BlankNode
-  predicate: NamedNode
-  object: Node
-  graph: NamedNode
-}
+import type { NamedNode, Literal, BlankNode, Statement, Store, LiveStore, Fetcher, UpdateManager } from 'rdflib'
 ```
 
-## See Also
+`LiveStore` is a store that has a fetcher and an update manager; it is the type of `context.session.store`.
 
-- [rdflib.js GitHub](https://github.com/linkeddata/rdflib.js)
-- [solid-logic](/docs/libraries/solid-logic) — builds on rdflib for Solid
-- [Architecture Overview](/docs/architecture/overview) — how rdflib fits in
+## See also
+
+- [rdflib.js on GitHub](https://github.com/linkeddata/rdflib.js)
+- [solid-logic](./solid-logic.md): the Solid layer built on this store
+- [Reading Data](../cookbook/reading-data.md) and [Writing Data](../cookbook/writing-data.md): recipes
+- [RDF Primer](../reference/rdf-primer.md)

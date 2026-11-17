@@ -1,183 +1,74 @@
 ---
 sidebar_position: 3
 title: Quick Start
-description: Run SolidOS locally in 5 minutes
+description: Ways to run SolidOS 3.1, from a link to your own server
 ---
 
 # Quick Start
 
-Get SolidOS running locally in 5 minutes.
+Four ways to run SolidOS 3.1, shortest first.
 
-## Prerequisites
+## 1. In the browser: mashlib.com
 
-- Node.js 18+
-- npm or yarn
-- A Solid pod (or we'll create a local one)
+Open **[https://mashlib.com/](https://mashlib.com/)**, paste the address of a pod, folder, profile or document, and press **Go**. Add `?uri=<address>` to the link to open one straight away, for example [the public test profile](https://mashlib.com/?uri=https%3A%2F%2Ftestingsolidos.solidcommunity.net%2Fprofile%2Fcard%23me).
 
-## Option 1: Clone the Monorepo
+This is the official mashlib 3.1.0 bundle, unchanged. In the browser console you can check:
 
-The fastest way to get the full development environment:
+```javascript
+mashlib.versionInfo.npmInfo.mashlib   // "3.1.0"
+```
+
+[https://mashlib.com/dynamic/](https://mashlib.com/dynamic/) is the same data browser built from plain ES modules, with no build step. It also takes `?pane=<module URL>` to load an extra pane, which [Your First Pane](./your-first-pane.md) uses.
+
+## 2. On your machine, with no build
+
+The no-build tree runs from any static file server. You need `git` and Node.js.
 
 ```bash
-# Clone SolidOS
-git clone https://github.com/SolidOS/solidos.git
-cd solidos
-
-# Install dependencies (uses Lerna)
-npm install
-npm run setup
-
-# Start the development server
-npm start
+git clone https://github.com/mashlib/dynamic.git
+cd dynamic
+npx http-server -p 8000 -c-1
 ```
 
-Visit `http://localhost:8080` — you're running SolidOS!
+Open http://localhost:8000/mashlib/browse.html?uri=https://testingsolidos.solidcommunity.net/profile/card%23me
 
-## Option 2: Use mashlib Directly
+You see the same profile as on mashlib.com. Every file under `mashlib/`, `src/` and `panes/` is loaded as it is, so you can edit one and reload. The libraries it imports (rdflib, solid-logic, lit and others) come from a CDN through `src/importmap.js`, so the page needs internet access.
 
-For a simpler setup, use the pre-built mashlib:
+`mashlib/databrowser.html?uri=<address>` is the same without the address bar. See [mashlib.com and no-build SolidOS](../guides/mashlib-com.md) for what is in the tree.
+
+## 3. On a pod server
+
+A Solid server can answer a browser that opens a resource with the data browser itself. The [JavaScript Solid Server](https://jss.live/) (JSS) does this with one flag. To serve the no-build data browser:
 
 ```bash
-# Create a project
-mkdir my-solid-app && cd my-solid-app
-npm init -y
-
-# Install mashlib
-npm install mashlib
-
-# Create an HTML file
+npm install -g javascript-solid-server
+jss start --conneg --mashlib-module https://mashlib.com/dynamic/mashlib/boot.js
 ```
 
-Create `index.html`:
+`--mashlib-cdn` serves the webpack bundle from unpkg instead (mashlib 2.0.0 unless you also pass `--mashlib-version`), and `--panes <module URL>` adds panes for every visitor. Ports, login, versions and the other options are in [Running SolidOS on JSS](../guides/running-on-jss.md).
 
-```html
-<!DOCTYPE html>
-<html>
-<head>
-  <title>My Solid App</title>
-  <script src="node_modules/mashlib/dist/mashlib.min.js"></script>
-  <link href="node_modules/mashlib/dist/mash.css" rel="stylesheet">
-</head>
-<body>
-  <div id="PageBody"></div>
-  <script>
-    const subject = panes.UI.store.sym('https://solidcommunity.net/')
-    panes.runDataBrowser(document, subject)
-  </script>
-</body>
-</html>
-```
+## 4. In your own page
 
-Serve it:
+mashlib can be loaded into a page of your own and pointed at a resource. The page structure that 3.1 expects (`<solid-ui-provider>`, `#MainContent`, `#OutlineView`) and the start-up calls are in [Embedding mashlib](../guides/embedding-mashlib.md).
 
-```bash
-npx serve .
-```
+## Working on SolidOS itself
 
-## Option 3: Data Kitchen (Desktop App)
+To change SolidOS's own packages, use the [SolidOS/solidos](https://github.com/SolidOS/solidos) monorepo. It keeps the packages under `workspaces/`, uses Node 22 (its `.nvmrc` says 22.22.0) and is set up with `npm run setup`. Its `npm start` script starts a local Node Solid Server on https port 8443 and the `css-mashlib` workspace, using the workspace builds. See [Contributing](../reference/contributing.md).
 
-For a standalone desktop experience:
+## Get a pod
 
-```bash
-# Clone Data Kitchen
-git clone https://github.com/SolidOS/data-kitchen.git
-cd data-kitchen
+To log in and edit, you need a pod. [Get a Pod](https://solidproject.org/users/get-a-pod) lists providers. The login dialog in SolidOS 3.1 suggests solidcommunity.net, solidweb.org, solidweb.me and login.inrupt.com as identity providers.
 
-# Install and run
-npm install
-npm start
-```
+## Common problems
 
-This gives you an Electron-based SolidOS app.
+**A page on `https://` cannot load files from `http://localhost`.** Browsers block a public site from importing from your machine. Run the data browser locally too (option 2), or put the file on a public host.
 
-## Get a Solid Pod
+**Files from another site do not load.** A module or data file loaded from another origin needs a cross-origin header (`Access-Control-Allow-Origin`). Solid pods and GitHub Pages send one. A plain static file server may not, so serve such files from the same server as the page.
 
-If you don't have a pod, get one free:
+**Nothing changes after editing a file.** The browser may be using a cached copy. Reload with the cache disabled (developer tools, Network, Disable cache).
 
-| Provider | URL |
-|----------|-----|
-| solidcommunity.net | https://solidcommunity.net/ |
-| Inrupt Pod Spaces | https://start.inrupt.com/ |
-| Self-hosted CSS | https://github.com/CommunitySolidServer/CommunitySolidServer |
+## Next steps
 
-## Local Development Pod
-
-For development, run a local Community Solid Server:
-
-```bash
-# Install CSS
-npm install -g @solid/community-server
-
-# Run with in-memory storage
-community-solid-server -p 3000
-
-# Or with file-based storage
-community-solid-server -p 3000 -c @css:config/file.json -f ./data
-```
-
-Now you have a local pod at `http://localhost:3000/`.
-
-## Project Structure
-
-After cloning the monorepo:
-
-```
-solidos/
-├── packages/
-│   ├── mashlib/           # Main bundle
-│   ├── solid-panes/       # Pane collection
-│   ├── solid-ui/          # UI widgets
-│   └── solid-logic/       # Core logic
-├── lerna.json             # Monorepo config
-├── package.json
-└── documentation/         # Dev guides
-```
-
-## Development Workflow
-
-```bash
-# Watch for changes across all packages
-npm run watch
-
-# Run tests
-npm test
-
-# Build for production
-npm run build
-
-# Start local server with hot reload
-npm start
-```
-
-## Verify It's Working
-
-1. Open `http://localhost:8080`
-2. You should see the SolidOS data browser
-3. Navigate to a Solid pod URL
-4. Try logging in with your WebID
-5. Browse your data!
-
-## Common Issues
-
-### "Cannot find module 'rdflib'"
-
-```bash
-npm run setup  # Re-run Lerna bootstrap
-```
-
-### Port already in use
-
-```bash
-# Use a different port
-PORT=9000 npm start
-```
-
-### CORS errors
-
-When developing locally against remote pods, you may need to configure CORS. Use a local CSS server for development.
-
-## Next Steps
-
-- [Your First Pane](/docs/getting-started/your-first-pane) — build something!
-- [Architecture Overview](/docs/architecture/overview) — understand the system
-- [solid-ui Components](/docs/libraries/solid-ui) — available widgets
+- [Your First Pane](./your-first-pane.md): write a pane and load it into the running data browser
+- [Architecture Overview](../architecture/overview.md): how the packages fit together
+- [Migrating to 3.1](../guides/migrating-to-3.1.md): what changed from 2.x

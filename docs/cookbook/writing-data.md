@@ -1,381 +1,209 @@
 ---
 sidebar_position: 4
 title: Writing Data
-description: Creating and updating RDF resources
+description: Creating, updating, uploading and deleting resources in Solid pods
 ---
 
 # Writing Data
 
-Patterns for creating, updating, and deleting RDF data in Solid pods.
+Recipes for changing data on a pod: patching documents, writing whole documents and files, making folders, uploading and deleting. Each one was run, in order, inside SolidOS 3.1 by a logged-in user on a [JavaScript Solid Server](https://github.com/JavaScriptSolidServer/JavaScriptSolidServer) pod.
 
-## Basic Updates
-
-### Add a Statement
+All recipes start from the same lines as [Reading Data](./reading-data.md):
 
 ```javascript
-import { store, sym, lit, st } from 'solid-logic'
-
-async function addStatement(subject, predicate, object, doc) {
-  await store.updater.update(
-    [],  // deletions
-    [st(sym(subject), predicate, object, sym(doc))]  // insertions
-  )
-}
-
-// Usage
-await addStatement(
-  'https://alice.example/profile/card#me',
-  FOAF('name'),
-  lit('Alice Smith'),
-  'https://alice.example/profile/card'
-)
+const store = context.session.store      // the shared rdflib store
+const { fetcher, updater } = store       // rdflib Fetcher and UpdateManager
+const logic = context.session.logic      // solid-logic (resource, profile, typeIndex, acl, ...)
+const FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/')
+const RDF = $rdf.Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#')
 ```
 
-### Remove a Statement
+`AREA` is a folder the user may write to, ending in `/`, for example `https://alice.example/public/cookbook/`.
+
+Writing needs a logged-in user with write access; see [Authentication](./authentication.md) and [Access Control](./access-control.md). Requests go through the session automatically, because the shared store's fetcher uses it.
+
+## Folders
 
 ```javascript
-async function removeStatement(subject, predicate, object, doc) {
-  await store.updater.update(
-    [st(sym(subject), predicate, object, sym(doc))],  // deletions
-    []  // insertions
-  )
-}
+// Create a folder at a URL you choose (it must end in '/').
+// An existing folder is left as it is.
+await logic.resource.createContainer(AREA)
+
+// Or let the server name it: POST to the parent with a suggested name (Slug).
+const response = await fetcher.createContainer(AREA, 'notes')
+const notesFolder = new URL(response.headers.get('Location'), AREA).href
+// 'https://alice.example/public/cookbook/notes/'
 ```
 
-### Update a Value
+`logic.resource.createContainer(url)` sends a `PUT` with `If-None-Match: *`, so it never overwrites. `fetcher.createContainer(parentURI, folderName, data)` takes the parent as a string; the server may choose a different name than the one suggested, so read the `Location` header.
+
+## Writing a whole document
 
 ```javascript
-async function updateValue(subject, predicate, newValue, doc) {
-  const subj = sym(subject)
-  const document = sym(doc)
+// Write a whole new Turtle document.
+const doc = $rdf.sym(AREA + 'note-1.ttl')
+const note = $rdf.sym(doc.uri + '#this')
+const SCHEMA = $rdf.Namespace('http://schema.org/')
 
-  // Find current value
-  const oldValue = store.any(subj, predicate, null, document)
+const statements = [
+  $rdf.st(note, RDF('type'), SCHEMA('NoteDigitalDocument'), doc),
+  $rdf.st(note, SCHEMA('name'), $rdf.lit('First note'), doc),
+  $rdf.st(note, SCHEMA('dateCreated'), $rdf.lit(new Date().toISOString(), undefined, $rdf.sym('http://www.w3.org/2001/XMLSchema#dateTime')), doc)
+]
 
-  await store.updater.update(
-    oldValue ? [st(subj, predicate, oldValue, document)] : [],
-    [st(subj, predicate, newValue, document)]
-  )
-}
-
-// Usage
-await updateValue(
-  'https://alice.example/profile/card#me',
-  FOAF('name'),
-  lit('Alice Johnson'),
-  'https://alice.example/profile/card'
-)
+await new Promise((resolve, reject) => {
+  updater.put(doc, statements, 'text/turtle', (uri, ok, message) => ok ? resolve() : reject(new Error(message)))
+})
+// The statements are now in the store as well as on the server.
 ```
 
-## Creating Resources
+`updater.put()` replaces whatever was at that URL. It reports through its callback, hence the promise around it.
 
-### Create a New Document
+## Changing a document: patch
 
 ```javascript
-async function createDocument(uri, statements) {
-  const doc = sym(uri)
+const doc = $rdf.sym(AREA + 'note-1.ttl')
+const note = $rdf.sym(doc.uri + '#this')
+const SCHEMA = $rdf.Namespace('http://schema.org/')
+await fetcher.load(doc)   // update() needs the document's headers to know how to patch it
 
-  // Add statements to local store first
-  statements.forEach(statement => store.add(statement))
+// Add a statement
+await updater.update([], [$rdf.st(note, SCHEMA('keywords'), $rdf.lit('cookbook'), doc)])
 
-  // PUT to server
-  await store.updater.put(
-    doc,
-    statements,
-    'text/turtle'
-  )
-}
+// Remove a statement
+await updater.update([$rdf.st(note, SCHEMA('keywords'), $rdf.lit('cookbook'), doc)], [])
 
-// Usage
-const noteUri = 'https://alice.example/notes/note1.ttl'
-const note = sym(`${noteUri}#this`)
+// Replace a value: delete the old statement and insert the new one in one PATCH
+const old = store.statementsMatching(note, SCHEMA('name'), null, doc)
+await updater.update(old, [$rdf.st(note, SCHEMA('name'), $rdf.lit('Renamed note'), doc)])
+```
 
-await createDocument(noteUri, [
-  st(note, RDF('type'), sym('http://schema.org/Note'), sym(noteUri)),
-  st(note, RDFS('label'), lit('My Note'), sym(noteUri)),
-  st(note, sym('http://schema.org/text'), lit('Note content here'), sym(noteUri)),
+`update(deletions, insertions)` sends one PATCH and changes the store once the server has accepted it. Every statement must name the same document as its fourth part. The PATCH fails (the server answered `409 Conflict`) if a statement to delete is not in the document. That keeps two editors from silently overwriting each other, but it also means the deletions must match the document exactly: take them from the store, as above, rather than typing them out. After a conflict, reload with `fetcher.load(doc, { force: true })` and build the patch again.
+
+Which kind of PATCH is sent (SPARQL Update or N3 Patch) depends on the server's headers; see [rdflib.js: which method the update manager uses](../libraries/rdflib.md#which-method-the-update-manager-uses).
+
+### Create a document by patching it
+
+```javascript
+// update() on a document that does not exist yet creates it.
+const doc = $rdf.sym(AREA + 'note-2.ttl')
+const note = $rdf.sym(doc.uri + '#this')
+const SCHEMA = $rdf.Namespace('http://schema.org/')
+
+await updater.update([], [$rdf.st(note, SCHEMA('name'), $rdf.lit('Second note'), doc)])
+```
+
+This is how most panes add to a document that may or may not exist yet: no separate create step.
+
+### Several documents in one call
+
+```javascript
+// Statements for several documents: updateMany() sends one PATCH per document.
+const SCHEMA = $rdf.Namespace('http://schema.org/')
+const one = $rdf.sym(AREA + 'note-1.ttl')
+const two = $rdf.sym(AREA + 'note-2.ttl')
+await fetcher.load([one, two])
+
+await updater.updateMany([], [
+  $rdf.st($rdf.sym(one.uri + '#this'), SCHEMA('isPartOf'), $rdf.sym(AREA), one),
+  $rdf.st($rdf.sym(two.uri + '#this'), SCHEMA('isPartOf'), $rdf.sym(AREA), two)
 ])
 ```
 
-### Create a Container
+The patches are separate requests: if one fails, the others may still have been applied.
+
+## Files and raw requests
+
+### Write any file
 
 ```javascript
-async function createContainer(parentUri, name) {
-  const containerUri = `${parentUri}${name}/`
+// Write any file: the body as a string, Blob or ArrayBuffer, and its content type.
+await fetcher.webOperation('PUT', AREA + 'hello.txt', {
+  data: 'Hello from a pane',
+  contentType: 'text/plain'
+})
 
-  await store.fetcher.createContainer(sym(parentUri), name)
-
-  return containerUri
-}
-
-// Usage
-await createContainer('https://alice.example/', 'documents')
-// Creates https://alice.example/documents/
-```
-
-### Create a Resource with Slug
-
-```javascript
-async function createWithSlug(containerUri, slug, statements) {
-  // Use POST with Slug header
-  const response = await store.fetcher.webOperation('POST', containerUri, {
-    headers: {
-      'Content-Type': 'text/turtle',
-      'Slug': slug
-    },
-    body: serialize(null, store, containerUri, 'text/turtle')
-  })
-
-  return response.headers.get('Location')
-}
-```
-
-## Common Write Patterns
-
-### Update Profile
-
-```javascript
-async function updateProfile(webId, updates) {
-  const person = sym(webId)
-  const doc = person.doc()
-
-  const deletions = []
-  const insertions = []
-
-  if ('name' in updates) {
-    const oldName = store.any(person, FOAF('name'), null, doc)
-    if (oldName) deletions.push(st(person, FOAF('name'), oldName, doc))
-    if (updates.name) insertions.push(st(person, FOAF('name'), lit(updates.name), doc))
-  }
-
-  if ('bio' in updates) {
-    const oldBio = store.any(person, FOAF('bio'), null, doc)
-    if (oldBio) deletions.push(st(person, FOAF('bio'), oldBio, doc))
-    if (updates.bio) insertions.push(st(person, FOAF('bio'), lit(updates.bio), doc))
-  }
-
-  if ('photo' in updates) {
-    const oldPhoto = store.any(person, FOAF('img'), null, doc)
-    if (oldPhoto) deletions.push(st(person, FOAF('img'), oldPhoto, doc))
-    if (updates.photo) insertions.push(st(person, FOAF('img'), sym(updates.photo), doc))
-  }
-
-  await store.updater.update(deletions, insertions)
-}
-```
-
-### Add to a List
-
-```javascript
-async function addFriend(myWebId, friendWebId) {
-  const me = sym(myWebId)
-  const friend = sym(friendWebId)
-  const doc = me.doc()
-
-  await store.updater.update([], [
-    st(me, FOAF('knows'), friend, doc)
-  ])
-}
-
-async function removeFriend(myWebId, friendWebId) {
-  const me = sym(myWebId)
-  const friend = sym(friendWebId)
-  const doc = me.doc()
-
-  await store.updater.update([
-    st(me, FOAF('knows'), friend, doc)
-  ], [])
-}
-```
-
-### Create a Note
-
-```javascript
-async function createNote(containerUri, title, content) {
-  const noteDoc = sym(`${containerUri}${Date.now()}.ttl`)
-  const note = sym(`${noteDoc.uri}#this`)
-
-  const now = new Date().toISOString()
-  const dateTimeLit = lit(now, null, sym('http://www.w3.org/2001/XMLSchema#dateTime'))
-
-  const statements = [
-    st(note, RDF('type'), sym('http://schema.org/Note'), noteDoc),
-    st(note, RDFS('label'), lit(title), noteDoc),
-    st(note, sym('http://schema.org/text'), lit(content), noteDoc),
-    st(note, DCT('created'), dateTimeLit, noteDoc),
-    st(note, DCT('creator'), authn.currentUser(), noteDoc),
-  ]
-
-  await store.updater.put(noteDoc, statements, 'text/turtle')
-  return note
-}
-```
-
-## Deleting Resources
-
-### Delete a Document
-
-```javascript
-async function deleteDocument(uri) {
-  await store.fetcher.delete(sym(uri))
-}
-```
-
-### Delete a Container
-
-```javascript
-async function deleteContainer(uri) {
-  const container = sym(uri)
-  await store.fetcher.load(container)
-
-  // First, delete all contents
-  const contents = store.each(container, LDP('contains'), null, null)
-  for (const item of contents) {
-    const isContainer = store.holds(item, RDF('type'), LDP('Container'), null)
-    if (isContainer) {
-      await deleteContainer(item.uri)
-    } else {
-      await store.fetcher.delete(item)
-    }
-  }
-
-  // Then delete the container
-  await store.fetcher.delete(container)
-}
-```
-
-## File Operations
-
-### Upload a File
-
-```javascript
-async function uploadFile(containerUri, file) {
-  const fileUri = `${containerUri}${file.name}`
-
-  await store.fetcher.webOperation('PUT', fileUri, {
-    headers: {
-      'Content-Type': file.type
-    },
-    body: file
-  })
-
-  return fileUri
-}
-
-// Usage with file input
-const input = document.querySelector('input[type="file"]')
-input.addEventListener('change', async (e) => {
-  const file = e.target.files[0]
-  const uri = await uploadFile('https://alice.example/photos/', file)
-  console.log('Uploaded:', uri)
+// Serialize part of the store yourself and PUT it.
+const doc = $rdf.sym(AREA + 'note-3.ttl')
+store.add($rdf.sym(doc.uri + '#this'), FOAF('name'), $rdf.lit('Third note'), doc)
+await fetcher.webOperation('PUT', doc, {
+  data: $rdf.serialize(doc, store, doc.uri, 'text/turtle'),
+  contentType: 'text/turtle'
 })
 ```
 
-### Upload with RDF Metadata
+`webOperation(method, uri, options)` fails without sending anything if there is a body and no `contentType`.
+
+### Let the server choose the name
 
 ```javascript
-async function uploadWithMetadata(containerUri, file, metadata) {
-  // Upload the file
-  const fileUri = await uploadFile(containerUri, file)
+// POST into a folder and let the server pick the name; Slug is a suggestion.
+const response = await fetcher.webOperation('POST', AREA, {
+  data: '<#this> <http://schema.org/name> "Posted note" .',
+  contentType: 'text/turtle',
+  headers: { Slug: 'posted.ttl' }
+})
+const created = new URL(response.headers.get('Location'), AREA).href
+```
 
-  // Create metadata document
-  const metaDoc = sym(`${fileUri}.meta`)
-  const fileNode = sym(fileUri)
+### Upload files
 
-  const statements = [
-    st(fileNode, RDFS('label'), lit(metadata.title || file.name), metaDoc),
-    st(fileNode, DCT('created'), lit(new Date().toISOString(), null,
-      sym('http://www.w3.org/2001/XMLSchema#dateTime')), metaDoc),
-  ]
-
-  if (metadata.description) {
-    statements.push(st(fileNode, DCT('description'), lit(metadata.description), metaDoc))
-  }
-
-  await store.updater.put(metaDoc, statements, 'text/turtle')
-
-  return fileUri
+```javascript
+// Upload File objects, for example from <input type="file"> or a drop event.
+// Each file is PUT to the folder under its own name.
+const files = [
+  new File(['# A note\n'], 'readme.md', { type: 'text/markdown' }),
+  new File([new Uint8Array([137, 80, 78, 71])], 'tiny.png', { type: 'image/png' })
+]
+const results = await logic.resource.uploadFiles(files, AREA)
+for (const result of results) {
+  if (result.success) console.log('uploaded', result.uploadedUri)
+  else console.warn('failed', result.file.name, result.error.status, result.error.message)
 }
 ```
 
-## Error Handling
+`uploadFiles(files, destination)` never rejects for a single failed file; check `success` on each result. Each name is URL-encoded. If the file's extension does not match its type, an extension is added (`photo` of type `image/png` is saved as `photo_.png`), and a file with neither a type nor a known extension is refused.
 
-### Handle Update Errors
+## Deleting
 
 ```javascript
-async function safeUpdate(deletions, insertions) {
-  try {
-    await store.updater.update(deletions, insertions)
-    return { success: true }
-  } catch (error) {
-    if (error.status === 401) {
-      return { success: false, reason: 'Not authenticated' }
-    } else if (error.status === 403) {
-      return { success: false, reason: 'No write permission' }
-    } else if (error.status === 409) {
-      return { success: false, reason: 'Conflict - resource changed' }
-    } else if (error.status === 412) {
-      return { success: false, reason: 'Precondition failed' }
-    } else {
-      return { success: false, reason: error.message }
-    }
-  }
+// Delete one resource. The store forgets the document too.
+await fetcher.delete(AREA + 'hello.txt')
+
+// Delete a folder and everything in it, deepest first.
+await logic.resource.recursiveDelete($rdf.sym(AREA))
+```
+
+`recursiveDelete` loads each folder's listing, deletes the contents, then the folder, and removes them all from the store. A resource that is already gone is not an error. Do not rely on the server to refuse deleting a folder that still has contents: the JavaScript Solid Server pod these recipes ran on deleted one with a plain `DELETE`.
+
+## When writing fails
+
+```javascript
+// update() rejects with an Error; the message carries the server's answer.
+try {
+  const doc = $rdf.sym('https://testingsolidos.solidcommunity.net/profile/card')
+  await fetcher.load(doc)
+  await updater.update([], [$rdf.st(doc, FOAF('name'), $rdf.lit('x'), doc)])
+} catch (err) {
+  console.warn(err.message)   // "... Can't make changes in uneditable ..."
+}
+
+// webOperation() rejects with an Error that has the Response: err.response.status
+try {
+  await fetcher.webOperation('PUT', 'https://testingsolidos.solidcommunity.net/public/x.txt', { data: 'x', contentType: 'text/plain' })
+} catch (err) {
+  console.warn(err.response?.status)   // 401: not logged in to that pod
 }
 ```
 
-### Retry on Conflict
+`update()` checks the `WAC-Allow` header before sending anything: when it says the user cannot write, the promise rejects without a request. To find out in advance, use `updater.editable(doc.uri)` after loading the document, or `logic.resource.fetchMetadata(doc)` and its `access.canEdit` (see [Reading Data](./reading-data.md#headers-and-permissions)).
 
-```javascript
-async function updateWithRetry(subject, predicate, newValue, doc, maxRetries = 3) {
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      // Reload to get latest state
-      await store.fetcher.load(sym(doc), { force: true })
+## Access control files on JavaScript Solid Server
 
-      // Get current value
-      const oldValue = store.any(sym(subject), predicate, null, sym(doc))
+JavaScript Solid Server stores ACL documents only as JSON-LD and answers a Turtle write to an `.acl` with `415 Unsupported Media Type`. Other documents can be written as Turtle, as above. For changing who may access what, use the solid-logic ACL functions described in [Access Control](./access-control.md) rather than writing ACL files by hand.
 
-      // Apply update
-      await store.updater.update(
-        oldValue ? [st(sym(subject), predicate, oldValue, sym(doc))] : [],
-        [st(sym(subject), predicate, newValue, sym(doc))]
-      )
+## See also
 
-      return { success: true }
-    } catch (error) {
-      if (error.status === 409 && i < maxRetries - 1) {
-        // Conflict, retry
-        continue
-      }
-      throw error
-    }
-  }
-}
-```
-
-## Batch Operations
-
-### Multiple Updates at Once
-
-```javascript
-async function batchUpdate(operations) {
-  const allDeletions = []
-  const allInsertions = []
-
-  operations.forEach(op => {
-    if (op.type === 'delete') {
-      allDeletions.push(st(sym(op.subject), op.predicate, op.object, sym(op.doc)))
-    } else if (op.type === 'insert') {
-      allInsertions.push(st(sym(op.subject), op.predicate, op.object, sym(op.doc)))
-    }
-  })
-
-  await store.updater.update(allDeletions, allInsertions)
-}
-```
-
-## See Also
-
-- [rdflib.js](/docs/libraries/rdflib) — UpdateManager
-- [Reading Data](/docs/cookbook/reading-data) — load and query
-- [Access Control](/docs/cookbook/access-control) — permissions
+- [Reading Data](./reading-data.md)
+- [rdflib.js](../libraries/rdflib.md): `update`, `put`, `webOperation` in detail
+- [solid-logic](../libraries/solid-logic.md): `resource.createContainer`, `uploadFiles`, `recursiveDelete`

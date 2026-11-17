@@ -1,378 +1,247 @@
 ---
 sidebar_position: 1
 title: Troubleshooting
-description: Common issues and solutions
+description: Common problems with SolidOS 3.1 and how to fix them
 ---
 
 # Troubleshooting
 
-Solutions to common issues when developing with SolidOS.
+Common problems when running SolidOS 3.1 or writing panes for it. The console examples assume a page that loads mashlib, which defines the globals `panes`, `UI`, `SolidLogic`, `$rdf` and `mashlib`.
 
-## Build Issues
-
-### "Cannot find module 'rdflib'"
-
-**Problem:** Dependencies not properly installed.
-
-**Solution:**
-```bash
-# In the monorepo
-npm run setup
-
-# Or in individual package
-npm install
-```
-
-### "Type error: property X does not exist"
-
-**Problem:** TypeScript definitions out of sync.
-
-**Solution:**
-```bash
-# Rebuild types
-npm run build
-
-# Or specifically
-npx tsc --build
-```
-
-### "Cannot resolve solid-logic"
-
-**Problem:** Symlinks not set up correctly in monorepo.
-
-**Solution:**
-```bash
-# Re-run lerna bootstrap
-npx lerna bootstrap
-
-# Or with npm workspaces
-npm install
-```
-
-## Runtime Issues
+## Loading SolidOS
 
 ### "panes is not defined"
 
-**Problem:** mashlib not loaded before your script.
+Your script ran before mashlib. Load mashlib first and start the data browser after the page has loaded:
 
-**Solution:**
 ```html
-<!-- Ensure mashlib loads first -->
-<script src="mashlib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mashlib@3.1.0/dist/mashlib.min.js"></script>
 <script>
-  // Now panes is available
   document.addEventListener('DOMContentLoaded', () => {
-    panes.runDataBrowser(document)
+    panes.runDataBrowser()
   })
 </script>
 ```
 
-### "Failed to fetch" / Network errors
+`runDataBrowser(uri?)` takes an optional URI or NamedNode to show. Without one, it shows the resource the page URL names.
 
-**Problem:** CORS not configured on the Solid server.
+### The view appears below the page, outside my layout
 
-**Solutions:**
+SolidOS 3.1 draws into the element with `id="OutlineView"`. If there is none, it creates one at the end of `#MainContent`, or of `<body>` when there is no `#MainContent`. Markup from 2.x such as `<table id="outline">` or `#PageBody > #main` is ignored. Use the structure of mashlib's `databrowser.html`:
 
-1. Use a local development server:
-```bash
-npm install -g @solid/community-server
-community-solid-server -p 3000
-```
-
-2. Check server CORS headers:
-```
-Access-Control-Allow-Origin: *
-Access-Control-Allow-Methods: GET, PUT, POST, DELETE, PATCH
-Access-Control-Allow-Headers: Content-Type, Authorization
-```
-
-### "401 Unauthorized"
-
-**Problem:** Not logged in, or session expired.
-
-**Solution:**
-```javascript
-import { authn } from 'solid-logic'
-
-// Check login status
-const user = authn.currentUser()
-if (!user) {
-  await authn.login()
-}
-```
-
-### "403 Forbidden"
-
-**Problem:** No permission to access the resource.
-
-**Solutions:**
-
-1. Check you're accessing your own pod
-2. Verify ACL permissions
-3. Check if resource exists (might be 404 masquerading as 403)
-
-```javascript
-// Check access before operation
-const canWrite = await solidLogicSingleton.checkAccess(uri, 'Write')
-if (!canWrite) {
-  console.log('No write access to', uri)
-}
-```
-
-### "404 Not Found"
-
-**Problem:** Resource doesn't exist.
-
-**Solution:**
-```javascript
-try {
-  await store.fetcher.load(uri)
-} catch (error) {
-  if (error.status === 404) {
-    // Resource doesn't exist, create it
-    await createResource(uri)
-  }
-}
-```
-
-### Store queries return null/empty
-
-**Problem:** Document not loaded before querying.
-
-**Solution:**
-```javascript
-// WRONG: query before load
-const name = store.any(person, FOAF('name'))  // null
-
-// CORRECT: load first
-await store.fetcher.load(person.doc())
-const name = store.any(person, FOAF('name'))  // "Alice"
-```
-
-## Authentication Issues
-
-### "Login popup blocked"
-
-**Problem:** Browser blocking popup for OIDC flow.
-
-**Solutions:**
-
-1. Trigger login from user action:
-```javascript
-button.onclick = () => authn.login()  // Works
-```
-
-2. Not from async code:
-```javascript
-// May be blocked
-setTimeout(() => authn.login(), 1000)
-```
-
-### "Invalid redirect URI"
-
-**Problem:** Your app's origin not registered with the identity provider.
-
-**Solutions:**
-
-1. For development, use localhost with the correct port
-2. Register your app origin with the IDP
-3. Check the provider's trusted app settings
-
-### Session not persisting
-
-**Problem:** Cookies or localStorage blocked.
-
-**Solutions:**
-
-1. Check browser privacy settings
-2. Ensure same-origin or correct CORS
-3. Check for third-party cookie blocking
-
-## Pane Issues
-
-### Pane not appearing
-
-**Problem:** Pane not registered, or label returning null.
-
-**Solutions:**
-
-1. Check pane is registered:
-```javascript
-console.log(paneRegistry.byName('my-pane'))  // Should not be undefined
-```
-
-2. Check label function:
-```javascript
-const result = myPane.label(subject, context)
-console.log('Label result:', result)  // Should be a string, not null
-```
-
-3. Verify resource type:
-```javascript
-console.log(store.each(subject, RDF('type'), null, null))
-```
-
-### Pane rendering blank
-
-**Problem:** Render function not returning element, or data not loaded.
-
-**Solutions:**
-
-1. Ensure render returns an element:
-```javascript
-render: (subject, dom, context) => {
-  const container = dom.createElement('div')
-  // ... build UI ...
-  return container  // MUST return element
-}
-```
-
-2. Load data before rendering:
-```javascript
-render: async (subject, dom, context) => {
-  await store.fetcher.load(subject.doc())  // Load first
-  // ... query and render ...
-}
-```
-
-### Styles not applying
-
-**Problem:** CSS not loaded or scoped incorrectly.
-
-**Solutions:**
-
-1. Include mash.css:
 ```html
-<link href="mash.css" rel="stylesheet">
+<solid-ui-provider>
+  <main id="MainContent">
+    <div id="OutlineView"></div>
+  </main>
+</solid-ui-provider>
 ```
 
-2. Use solid-ui styling:
+### The account button or login does nothing
+
+Components that need login state, such as `<solid-ui-account>`, must sit inside `<solid-ui-provider>`, and the provider must be registered before them. mashlib registers it for you; if you load solid-ui components yourself, import `solid-ui/components/provider` first.
+
+### Which version is running?
+
 ```javascript
-UI.style.styleElement(element, 'button')
+mashlib.versionInfo   // { buildTime, commit, npmInfo }; npmInfo.mashlib is the version
 ```
 
-## Data Issues
+## Panes
 
-### Updates not saving
+### Pane not offered
 
-**Problem:** UpdateManager not configured, or no write permission.
+1. Check that it is registered:
 
-**Solutions:**
+   ```javascript
+   panes.byName('my-pane')        // the pane, or null
+   panes.list.map(p => p.name)    // all registered panes, in order
+   ```
 
-1. Check updater exists:
+   `panes.register` skips a pane with no `name` or no `label`, and only logs a line to the console.
+
+2. Check that `label` returns a string for the resource:
+
+   ```javascript
+   const subject = $rdf.sym('https://example.org/data.ttl')
+   const context = panes.getOutliner(document).context
+   panes.byName('my-pane').label(subject, context)   // a string, not null
+   ```
+
+   `label` often depends on the resource's `rdf:type`. The document must be loaded for the type to be in the store: `await SolidLogic.store.fetcher.load(subject.doc())`.
+
+3. Check `audience`. A pane with an `audience` is only offered to users whose preferences give them those roles (for example Power User or Developer), unless it is the first relevant pane.
+
+4. Check `global`. A pane with `global: true` is never offered for a resource.
+
+### Pane offered, but not shown first
+
+The default pane is the one matching the resource's `ui:mintClass`, otherwise the first offered pane whose `shouldGetFocus(subject)` returns true, otherwise the first offered pane. Panes are tried in registration order, and a pane you register comes after the built-in ones. Add `shouldGetFocus` if your pane should be the default for some resources.
+
+### Pane registered, but the view on show does not have it
+
+Registering a pane does not redraw the view already on show. Show the resource again:
+
 ```javascript
-console.log(store.updater)  // Should not be undefined
+const subject = $rdf.sym('https://example.org/data.ttl')
+await panes.getOutliner(document).GotoSubject(subject, true, undefined, true)
 ```
 
-2. Verify write access:
-```javascript
-const canWrite = await solidLogicSingleton.checkAccess(uri, 'Write')
-```
+### Pane loaded with JSS `--panes` is missing
 
-3. Check update response:
+- JSS lists unusable entries when it starts. A pane URL must be `http(s)` or an absolute path on the server.
+- A pane that fails to load, or whose default export is not a pane, is skipped with a console warning.
+- The page waits at most 5 seconds for the panes. A slower pane is registered when it arrives and is offered from the next view drawn.
+- With `--mashlib-module`, panes are added once the module has put `panes.register` on the page. If it never does, the console shows one warning after 30 seconds.
+
+See the [JSS dynamic panes guide](https://jss.live/docs/guides/dynamic-panes).
+
+### Pane given with `?pane=` on mashlib.com/dynamic is missing
+
+- The page asks before it runs panes from a site you have not allowed yet. If you did not allow it, the pane is not added.
+- The module's default export must have `name`, `label` and `render`; otherwise the console shows "pane not added".
+- At most 10 `pane` parameters are read, and a pane whose `name` is already registered is not added again.
+
+### My changed pane still behaves like the old one
+
+`panes.register` adds to the list each time it is called, and `panes.byName` returns the first pane with that name. Reload the page rather than registering the same name twice.
+
+### Pane renders nothing
+
+`render` must return an `HTMLElement` straight away. If you need to load data first, return a container and fill it when the data arrives:
+
 ```javascript
-try {
-  await store.updater.update(dels, ins)
-  console.log('Update successful')
-} catch (error) {
-  console.error('Update failed:', error.status, error.message)
+render: (subject, context) => {
+  const div = context.dom.createElement('div')
+  const store = context.session.store
+  store.fetcher.load(subject.doc()).then(() => {
+    div.textContent = store.any(subject, $rdf.sym('http://xmlns.com/foaf/0.1/name'))?.value ?? ''
+  })
+  return div
 }
 ```
 
-### RDF parsing errors
+Read data through `context.session.store`, not a store you import yourself.
 
-**Problem:** Invalid Turtle or malformed data.
+### Pane colours look wrong in the dark theme
 
-**Solution:**
+Use the solid-ui theme variables (`--solid-ui-color-*`) instead of fixed colours, or read `context.environment.theme`. The theme is set by `data-theme="dark"` on `<html>` and changes fire a `mashlib:themechange` event. See [Theming](./theming.md).
+
+## Login
+
+### Login sends me away from the page
+
+That is expected. In 3.1 the login dialog ("Select an identity provider") redirects to the provider and back; it does not use a popup. Start login from a user action, such as a button click:
+
 ```javascript
-import { parse, graph } from 'rdflib'
-
-try {
-  const testStore = graph()
-  parse(turtleString, testStore, baseUri, 'text/turtle')
-} catch (error) {
-  console.error('Parse error:', error.message)
-}
+button.addEventListener('click', () => {
+  SolidLogic.authSession.login('https://solidcommunity.net', location.href)
+})
 ```
 
-### Blank nodes not matching
+### I am logged out after the redirect back
 
-**Problem:** Blank nodes have different IDs across loads.
+After the page loads again, wait for the session before you read the user:
 
-**Solution:** Use named nodes when you need to reference them:
+```javascript
+const me = await SolidLogic.authn.checkUser()   // NamedNode or null
+```
+
+`SolidLogic.authn.currentUser()` can return `null` until `checkUser()` has finished. To react later, listen for `login`, `logout` or `sessionRestore` on `SolidLogic.authSession.events`.
+
+### 401 Unauthorized
+
+You are not logged in, or the session has ended. Check `SolidLogic.authn.currentUser()`, and log in again.
+
+### 403 Forbidden
+
+You are logged in but the resource's access rules do not give you that access. Check the resource's sharing settings, or ask its owner.
+
+## Writing data
+
+### Changes do not save
+
+1. Check you are logged in: `SolidLogic.authn.currentUser()`.
+2. Load the document, then check how rdflib would write it:
+
+   ```javascript
+   await SolidLogic.store.fetcher.load(uri)
+   SolidLogic.store.updater.editable(uri)   // e.g. 'SPARQL' or 'N3PATCH'; false or undefined: not writable
+   ```
+
+3. Catch the error from the update to see the server's answer:
+
+   ```javascript
+   try {
+     await SolidLogic.store.updater.update(deletions, insertions)
+   } catch (error) {
+     console.error(error)
+   }
+   ```
+
+### 415 Unsupported Media Type when changing sharing
+
+JSS stores ACL documents only as JSON-LD and answers a Turtle ACL write with 415. SolidOS 3.1 writes ACLs as Turtle, so with the mashlib 3.1.0 bundle a sharing change on a JSS pod gets a 415. The no-build data browser at [mashlib.com/dynamic/](https://mashlib.com/dynamic/) retries such a write once as JSON-LD.
+
+### Network errors on another server
+
+If the data browser runs on one origin and the data is on another, the data server must allow cross-origin requests (CORS). Look for CORS errors in the browser console.
+
+### Queries return nothing
+
+Load the document before you query it:
+
+```javascript
+const person = $rdf.sym('https://alice.example/profile/card#me')
+await SolidLogic.store.fetcher.load(person.doc())
+SolidLogic.store.any(person, $rdf.sym('http://xmlns.com/foaf/0.1/name'))
+```
+
+### Blank nodes do not match
+
+Blank node identifiers change each time a document is loaded. Give anything you need to refer to again a URI:
+
 ```turtle
-# Instead of blank node
+# Instead of a blank node
 <#me> foaf:knows [ foaf:name "Bob" ] .
 
-# Use named node
+# use a named node
 <#me> foaf:knows <#bob> .
 <#bob> foaf:name "Bob" .
 ```
 
-## Performance Issues
+## Developing the libraries
 
-### Slow loading
+These apply to the [SolidOS/solidos](https://github.com/SolidOS/solidos) workspace; see [Contributing](./contributing.md).
 
-**Solutions:**
+### Wrong Node version
 
-1. Load in parallel:
-```javascript
-await Promise.all(uris.map(uri => store.fetcher.load(sym(uri))))
-```
+The workspace pins Node 22.22.0 in `.nvmrc` and its scripts switch version with nvm. Install nvm, then `nvm install` in the repository.
 
-2. Avoid loading same document twice:
-```javascript
-if (!store.fetcher.requested[uri]) {
-  await store.fetcher.load(sym(uri))
-}
-```
+### A change in one library does not show up
 
-3. Use `store.fetcher.nowOrWhenFetched` for conditional loads
+The libraries depend on each other: a pane, then solid-panes, then mashlib. Each one has to be rebuilt for a change to reach the page. Run `npx lerna bootstrap --force-local` after an `npm install` in any workspace, or use `npm run watch-pivot` to rebuild them as you edit.
 
-### Memory issues with large stores
+### Scripts fail on Windows
 
-**Solutions:**
+The npm scripts are bash scripts, so they need a bash environment.
 
-1. Clear unused data:
-```javascript
-store.removeMatches(null, null, null, oldDoc)
-```
-
-2. Don't load entire containers recursively
-
-## Debugging Tips
-
-### Enable debug logging
+## Inspecting data
 
 ```javascript
-// In browser console
-localStorage.setItem('debug', 'solid:*')
-```
+// Statements about a subject
+SolidLogic.store.statementsMatching($rdf.sym(uri), undefined, undefined, undefined)
 
-### Inspect the store
+// The current user
+SolidLogic.authn.currentUser()
 
-```javascript
-// All statements about a subject
-console.log(store.statementsMatching(subject, null, null, null))
-
-// All loaded documents
-console.log(Object.keys(store.fetcher.requested))
-
-// Current user
-console.log(authn.currentUser())
-```
-
-### View raw response
-
-```javascript
-const response = await fetch(uri, {
-  headers: { 'Accept': 'text/turtle' }
-})
+// The raw response
+const response = await fetch(uri, { headers: { Accept: 'text/turtle' } })
 console.log(await response.text())
 ```
 
-## See Also
+## See also
 
-- [FAQ](/docs/reference/faq) — frequently asked questions
-- [SolidOS GitHub Issues](https://github.com/SolidOS/solidos/issues)
+- [FAQ](./faq.md)
 - [Solid Forum](https://forum.solidproject.org/)
+- [SolidOS issues](https://github.com/SolidOS/solidos/issues)

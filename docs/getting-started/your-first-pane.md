@@ -1,237 +1,188 @@
 ---
 sidebar_position: 4
 title: Your First Pane
-description: Build a simple pane for SolidOS
+description: Write a SolidOS 3.1 pane as one ES module and load it into a running data browser
 ---
 
 # Your First Pane
 
-Let's build a pane that renders "Hello World" cards for a custom data type.
+You will write a pane that says hello to the owner of a profile document, load it into a running SolidOS 3.1 without building anything, and then make it the view that opens first.
 
-## What We're Building
+A pane is one JavaScript object with a `name`, an `icon`, a `label` function ("can you show this?") and a `render` function ("show it"). In 3.1 it can live in its own ES module and be added to a running data browser with `panes.register`.
 
-A pane that renders resources of type `ex:Greeting`:
+You need a browser. For steps 2 to 4 you also need `git` and Node.js.
 
-```turtle
-# greeting.ttl
-@prefix ex: <http://example.org/> .
+## Step 1: Try it in the console
 
-<#hello> a ex:Greeting ;
-    ex:message "Hello, World!" ;
-    ex:author "Alice" .
+Open [mashlib.com with the test profile document](https://mashlib.com/?uri=https%3A%2F%2Ftestingsolidos.solidcommunity.net%2Fprofile%2Fcard). Open the browser's developer tools, go to the Console, and paste:
+
+```javascript
+panes.register({
+  name: 'hello',
+  icon: UI.icons.iconBase + 'noun_15059.svg',
+  label (subject, context) {
+    const store = context.session.store
+    return store.any(subject, store.sym('http://xmlns.com/foaf/0.1/primaryTopic')) ? 'Hello' : null
+  },
+  render (subject, context) {
+    const store = context.session.store
+    const person = store.any(subject, store.sym('http://xmlns.com/foaf/0.1/primaryTopic'))
+    const h2 = context.dom.createElement('h2')
+    h2.textContent = 'Hello, ' + person.value
+    return h2
+  }
+})
 ```
 
-## Step 1: Set Up the Project
+Press **Go** in the address bar so the document is drawn again. Open the **⋮** menu at the top right of the `card` view: **Hello** is now in the list. Choose it, and the view shows `Hello, https://testingsolidos.solidcommunity.net/profile/card#me`.
 
-Clone the solid-panes repo:
+The pane is gone when you reload the page. The next steps put it in a file that is loaded every time.
+
+## Step 2: Write the pane as a module
+
+Get the no-build data browser, which can load panes from a link:
 
 ```bash
-git clone https://github.com/SolidOS/solid-panes.git
-cd solid-panes
-npm install
+git clone https://github.com/mashlib/dynamic.git
+cd dynamic
 ```
 
-## Step 2: Create the Pane File
+In that folder, create `hello-pane.js`:
 
-Create `src/greeting/greetingPane.ts`:
+```javascript
+// hello-pane.js: a first SolidOS pane.
+// Offered for a profile document (one with a foaf:primaryTopic); says hello to its owner.
+const FOAF = 'http://xmlns.com/foaf/0.1/'
+const VCARD = 'http://www.w3.org/2006/vcard/ns#'
 
-```typescript
-import { PaneDefinition } from 'pane-registry'
-import { NamedNode, sym } from 'rdflib'
-import { store } from 'solid-logic'
+const ICON = 'data:image/svg+xml,' + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" ' +
+  'stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/></svg>')
 
-const EX = (local: string) => sym('http://example.org/' + local)
+export default {
+  name: 'hello',
+  icon: ICON,
 
-const greetingPane: PaneDefinition = {
-  // Unique identifier
-  name: 'greeting',
-
-  // Developer info
-  dev: {
-    name: 'Your Name',
-    repo: 'https://github.com/SolidOS/solid-panes'
+  // "Can I show this?" A string (the name in the pane menu) means yes, null means no.
+  label (subject, context) {
+    const store = context.session.store
+    return store.any(subject, store.sym(FOAF + 'primaryTopic')) ? 'Hello' : null
   },
 
-  // Icon (optional)
-  icon: '👋',
+  // Build the view and return one element.
+  render (subject, context) {
+    const dom = context.dom
+    const store = context.session.store
+    const person = store.any(subject, store.sym(FOAF + 'primaryTopic'))
+    const name = store.any(person, store.sym(FOAF + 'name')) ||
+      store.any(person, store.sym(VCARD + 'fn'))
 
-  // Can this pane render the given subject?
-  label: (subject: NamedNode, context: any): string | null => {
-    const dominated = store.holds(subject, rdf('type'), EX('Greeting'))
-    if (dominated) {
-      return 'Greeting'
-    }
-    return null
-  },
-
-  // Render the pane
-  render: (
-    subject: NamedNode,
-    dom: Document,
-    context: any
-  ): HTMLElement => {
-    const container = dom.createElement('div')
-    container.className = 'greeting-pane'
-
-    // Get the message
-    const message = store.any(subject, EX('message'), null)
-    const author = store.any(subject, EX('author'), null)
-
-    // Build the UI
-    container.innerHTML = `
-      <div style="
-        padding: 20px;
-        border-radius: 8px;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-        font-family: system-ui;
-      ">
-        <h2 style="margin: 0 0 10px 0;">
-          ${message?.value || 'No message'}
-        </h2>
-        <p style="margin: 0; opacity: 0.8;">
-          — ${author?.value || 'Anonymous'}
-        </p>
-      </div>
-    `
-
-    return container
+    const div = dom.createElement('div')
+    div.style.padding = '1em'
+    const h2 = dom.createElement('h2')
+    h2.textContent = 'Hello, ' + (name ? name.value : person.value)
+    const p = dom.createElement('p')
+    p.textContent = 'This pane was loaded from ' + import.meta.url
+    div.append(h2, p)
+    return div
   }
 }
-
-export default greetingPane
 ```
 
-## Step 3: Register the Pane
+The module imports nothing. Everything it needs comes from `context`: the document (`context.dom`) and the store that SolidOS has already loaded the resource into (`context.session.store`).
 
-Edit `src/registerPanes.ts`:
+## Step 3: Load it into the data browser
 
-```typescript
-import greetingPane from './greeting/greetingPane'
-
-// ... other imports
-
-export function registerPanes() {
-  // ... other registrations
-
-  register(greetingPane)
-}
-```
-
-## Step 4: Test It
-
-Start the development server:
+Start a static file server in the same folder:
 
 ```bash
-npm run dev
+npx http-server -p 8000 -c-1
 ```
 
-Create a test file on your pod (`greeting.ttl`):
+Open:
 
-```turtle
-@prefix ex: <http://example.org/> .
+http://localhost:8000/mashlib/browse.html?pane=http://localhost:8000/hello-pane.js&uri=https://testingsolidos.solidcommunity.net/profile/card
 
-<#hello> a ex:Greeting ;
-    ex:message "Hello from my first pane!" ;
-    ex:author "Me" .
+`?pane=` names the module to load and `?uri=` the resource to show. The page imports the module, checks that its default export has `name`, `label` and `render`, and calls `panes.register` with it before drawing the resource. The browser console shows `[browse] pane "hello" added from http://localhost:8000/hello-pane.js`.
+
+## Step 4: Open your pane
+
+The profile document opens in its default view. Open the **⋮** menu at the top right of the `card` view and choose **Hello**:
+
+![The ⋮ menu of the card document listing Data, Source, Under The Hood, Hello and Open in New Tab](/img/getting-started/hello-pane-menu.png)
+
+![The Hello pane showing "Hello, Testing SolidOS" and the address it was loaded from](/img/getting-started/hello-pane.png)
+
+To change the pane, edit `hello-pane.js` and reload the page with the cache disabled (developer tools, Network, Disable cache).
+
+## Step 5: Make it the first view
+
+A pane you add is registered after the built-in panes, so it is offered in the menu but not shown first. To ask to be shown first for the things it says yes to, add `shouldGetFocus` next to `icon`:
+
+```javascript
+  icon: ICON,
+
+  shouldGetFocus (subject) { return true },
 ```
 
-Navigate to `http://localhost:9000/` and browse to your greeting file. You should see your custom greeting card!
+Reload. The profile document now opens in the Hello view. `shouldGetFocus` is only asked of panes whose `label` said yes, so this does not affect other resources. A resource whose `ui:mintClass` matches another pane's `mintClass` still opens in that pane.
 
-## Understanding the Code
+## Step 6: Share it
 
-### The `label` Function
+To let other people use your pane, put `hello-pane.js` where a browser can fetch it from another site: a public folder on your pod, GitHub Pages, or any host that serves JavaScript with an `Access-Control-Allow-Origin` header. Then send a link to the no-build data browser at mashlib.com:
 
-```typescript
-label: (subject: NamedNode, context: any): string | null => {
-  // Check if this resource has rdf:type ex:Greeting
-  const isGreeting = store.holds(subject, rdf('type'), EX('Greeting'))
-
-  if (isGreeting) {
-    return 'Greeting'  // Return a label to claim this resource
-  }
-  return null  // Return null to pass
-}
+```
+https://mashlib.com/dynamic/?pane=<your module URL>&uri=<a resource>
 ```
 
-This function:
-- Is called for every resource being rendered
-- Returns a string label if the pane can handle it
-- Returns null to pass to other panes
+For example, this link loads a pane published with [pane-loader](https://github.com/melvincarvalho/pane-loader) and shows a folder:
 
-### The `render` Function
+[https://mashlib.com/dynamic/?pane=https://melvincarvalho.github.io/pane-loader/examples/hello-pane.js&uri=https://testingsolidos.solidcommunity.net/public/](https://mashlib.com/dynamic/?pane=https://melvincarvalho.github.io/pane-loader/examples/hello-pane.js&uri=https://testingsolidos.solidcommunity.net/public/)
 
-```typescript
-render: (
-  subject: NamedNode,     // The resource to render
-  dom: Document,          // The DOM document
-  context: any            // Context (store, pane registry, etc.)
-): HTMLElement => {
-  // Build and return a DOM element
-}
-```
+A pane from another site is code that runs as the person looking at it: once they are logged in it can read and change whatever they can. So the page asks first ("This link adds a pane from …", **Allow panes from this site** or **Not now**) and shows the resource without the pane meanwhile. A pane from the page's own site, as in step 3, is loaded without asking. The answer is remembered in that browser.
 
-This function:
-- Receives the subject (RDF resource) to render
-- Must return an HTMLElement
-- Can use `store` to query related data
-- Can use solid-ui widgets
+A server can also load panes for every visitor: JSS does this with `--panes <module URL>`. See [Running SolidOS on JSS](../guides/running-on-jss.md) and [Dynamic Panes](../panes/dynamic-panes.md).
 
-## Using solid-ui Widgets
+## Rules for a loaded pane
 
-Instead of raw HTML, use solid-ui components:
+- Make the pane the module's **default export**.
+- Do not import solid-logic, solid-ui or rdflib from a CDN. A second copy of solid-logic has its own empty store and no login. Use `context.session.store`, `context.session.logic`, and the page globals `UI` and `$rdf` if you need them.
+- Refer to your own files (icons, styles) relative to the module: `new URL('hello.svg', import.meta.url).href`.
+- Keep `label` fast. It is called for every resource shown, for every registered pane.
+- `render` returns one element. Build it with `context.dom`.
 
-```typescript
-import * as UI from 'solid-ui'
+## The other way: build it into solid-panes
 
-render: (subject, dom, context) => {
-  const container = dom.createElement('div')
+The built-in panes are compiled into solid-panes, and from there into the mashlib bundle. To add a pane that way, as the [solid-panes README](https://github.com/SolidOS/solid-panes) describes:
 
-  // Use solid-ui's field widget
-  const messageField = UI.widgets.field(
-    dom,
-    store,
-    subject,
-    EX('message'),
-    'Message'
-  )
-  container.appendChild(messageField)
+1. Clone solid-panes and start its development sandbox:
 
-  return container
-}
-```
+   ```bash
+   git clone https://github.com/solidos/solid-panes
+   cd solid-panes
+   npm install
+   npm start
+   ```
 
-## Making It Editable
+   The sandbox is at http://localhost:5173 and shows the test profile.
 
-Add write capability:
+2. Put your pane under `src/`, for example `src/hello/helloPane.js`, with the same default export as above.
 
-```typescript
-render: (subject, dom, context) => {
-  const container = dom.createElement('div')
+3. Register it in `src/registerPanes.js`. That file exports `registerPanes (register)` and calls `register(...)` once per pane. The earliest registered panes have priority, so where you add the line decides where your pane comes in the list:
 
-  // Editable text field
-  const input = dom.createElement('input')
-  input.value = store.any(subject, EX('message'), null)?.value || ''
+   ```javascript
+   import helloPane from './hello/helloPane'
+   // ...
+   register(helloPane)
+   ```
 
-  input.addEventListener('change', async () => {
-    const oldValue = store.any(subject, EX('message'), null)
-    const newValue = literal(input.value)
+4. Larger panes are published as npm packages of their own (folder-pane, contacts-pane, meeting-pane and others) and imported into `registerPanes.js` the same way.
 
-    // Update the store and pod
-    await store.updater.update(
-      oldValue ? [st(subject, EX('message'), oldValue, subject.doc())] : [],
-      [st(subject, EX('message'), newValue, subject.doc())]
-    )
-  })
+A pane built in this way reaches users only in a new solid-panes and mashlib release. A loaded pane, as in steps 2 to 6, reaches them as soon as the file is published. [Creating Panes](../panes/creating-panes.md) covers both in more depth.
 
-  container.appendChild(input)
-  return container
-}
-```
+## Next steps
 
-## Next Steps
-
-- [Pane Anatomy](/docs/panes/pane-anatomy) — detailed structure
-- [solid-ui](/libraries/solid-ui) — available UI components
-- [Pane Anatomy](/panes/pane-anatomy) — pane structure and reactive updates
-- [Creating Panes](/panes/creating-panes) — detailed pane development guide
+- [Pane Anatomy](../panes/pane-anatomy.md): every field a pane can have and the full `context`
+- [Dynamic Panes](../panes/dynamic-panes.md): the three ways to load a pane, and how trust works
+- [Creating Panes](../panes/creating-panes.md): editing data, forms and solid-ui components in a pane
+- [solid-ui](../libraries/solid-ui.md): components to build the view with

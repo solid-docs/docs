@@ -1,349 +1,218 @@
 ---
 sidebar_position: 3
 title: solid-logic
-description: Business logic layer for Solid applications
+description: The shared store, login session and pod logic used by SolidOS 3.1
 ---
 
 # solid-logic
 
-solid-logic provides the business logic layer for SolidOS — authentication, access control, type indexes, and a shared store singleton.
+solid-logic holds the parts of SolidOS that are not user interface: the one shared RDF store, the login session, and helpers for profiles, type indexes, containers, files and access control. SolidOS 3.1 (mashlib 3.1.0) uses **solid-logic 6.2.0**.
 
-## Installation
+In a page that loads mashlib, the whole module is the global `SolidLogic`. In a bundled project:
 
 ```bash
-npm install solid-logic
+npm install solid-logic@6.2.0 rdflib@2.4.1
 ```
 
-## The Singleton Store
-
-solid-logic exports a shared store instance used across all SolidOS components:
-
-```javascript
-import { store } from 'solid-logic'
-
-// This is the same store used by all panes
-// Changes here are visible everywhere
-
-await store.fetcher.load('https://alice.example/profile/card')
-
-const name = store.any(
-  store.sym('https://alice.example/profile/card#me'),
-  store.sym('http://xmlns.com/foaf/0.1/name'),
-  null,
-  null
-)
+```js
+import { store, authn, authSession, solidLogicSingleton } from 'solid-logic'
 ```
 
-### Store Properties
+The code on this page was run in the SolidOS 3.1 data browser through the `SolidLogic`, `$rdf`, `UI` and `panes` globals. The blocks that write were run against a test pod while logged in. Replace `https://your.pod/...` with a folder you can write to.
 
-```javascript
-import { store } from 'solid-logic'
+## What it exports
 
-// The rdflib store (IndexedFormula)
-store                    // The graph itself
+The full list, from `dist/index.d.ts` of 6.2.0:
 
-// Fetcher for loading data
-store.fetcher            // Fetcher instance
+| Export | What it is |
+|---|---|
+| `store` | The shared rdflib `LiveStore`, with `fetcher` and `updater`. The same object as `solidLogicSingleton.store`. |
+| `solidLogicSingleton` | The logic instance SolidOS uses: `store`, `authn`, `acl`, `resource`, `profile`, `inbox`, `typeIndex`, `chat`, `directory`, `load`, `updatePromise`, `clearStore`. |
+| `authn` | Login state: `currentUser()`, `checkUser()`, `saveUser()`, `authSession`, `dispose()`. |
+| `authSession` | The OpenID Connect session from `@uvdsl/solid-oidc-client-browser`, with a compatibility layer and an `events` emitter. |
+| `getSuggestedIssuers()` | The identity providers offered in the login dialog. |
+| `performServerSideLogout(options?)` | Ends the session at the identity provider and the server. |
+| `reloadOnIdentityReplaced(events, reload?)` | Reloads the page when the logged-in identity is replaced. |
+| `ACCESS_ROLES`, `PUBLIC_ACCESS_ROLES`, `WRITE_LOCKED_OWNER_ROLE` | Role names used by the sharing dialog. |
+| `Public`, `Authenticated` | Access subjects for "everyone" and "any logged-in user". |
+| `ACL_LINK` | The `acl` link relation as a NamedNode. |
+| `classifyContainerAccessScope`, `analyzeContainerAccessScope`, `classifyAuthorizationScope`, `filterAuthorizationsByContainerScope` | Tell whether a grant on a folder covers the folder, its contents, or both. |
+| `createTypeIndexLogic`, `createDirectoryLogic` | Factories for the type index and directory logic, for use with another store. |
+| `DEFAULT_DIRECTORY_CATALOG_URL`, `DEFAULT_DIRECTORY_SOURCES` | Defaults for `directory.search`. |
+| `UnauthorizedError`, `CrossOriginForbiddenError`, `SameOriginForbiddenError`, `NotFoundError`, `FetchError`, `NotEditableError`, `WebOperationError`, `ResourceUploadError` | Error classes. |
+| `offlineTestID`, `appContext` | Test helpers used inside `currentUser()`. |
 
-// UpdateManager for writing data
-store.updater            // UpdateManager instance
+solid-logic does not export `authn.login()`, `authn.logout()`, `onLogin`, `checkAccess`, `sym`, `lit` or `ns`. Take `sym`, `lit` and `st` from rdflib (`$rdf`), and namespaces from `UI.ns`.
+
+## The store
+
+```js
+const { store, solidLogicSingleton } = SolidLogic
+
+store === solidLogicSingleton.store                                // true
+store === panes.getOutliner(document).context.session.store         // true
+
+const doc = $rdf.sym('https://testingsolidos.solidcommunity.net/profile/card')
+await store.fetcher.load(doc)
 ```
 
-## Authentication
+Everything SolidOS shows is read into this store, so a pane and your own code see the same data. Reading and writing through rdflib is covered in [rdflib.js](./rdflib.md), [Reading data](../cookbook/reading-data.md) and [Writing data](../cookbook/writing-data.md).
 
-### authn Module
+`solidLogicSingleton` adds three helpers:
 
-```javascript
-import { authn } from 'solid-logic'
+```js
+const logic = SolidLogic.solidLogicSingleton
+const doc = $rdf.sym('https://your.pod/public/notes.ttl')
 
-// Get current logged-in user
-const webId = authn.currentUser()
-if (webId) {
-  console.log(`Logged in as ${webId.uri}`)
-}
-
-// Check login status
-if (authn.checkUser()) {
-  // User is authenticated
-}
-
-// Login
-await authn.login()
-
-// Logout
-await authn.logout()
-
-// Login with specific provider
-await authn.login({
-  provider: 'https://solidcommunity.net'
-})
+await logic.load(doc)                         // fetch one document, or an array of them
+const st = $rdf.st(doc, UI.ns.dct('title'), $rdf.lit('Notes'), doc)
+await logic.updatePromise([], [st])           // (deletions, insertions), sent as a PATCH
+logic.clearStore()                            // empty the store
 ```
 
-### Session Management
+## Login state
 
-```javascript
-import { authn } from 'solid-logic'
+`authn` answers "who is logged in". `authSession` holds the session itself.
 
-// Listen for login/logout events
-authn.onLogin((webId) => {
-  console.log(`User logged in: ${webId}`)
-})
+```js
+const { authn, authSession } = SolidLogic
 
-authn.onLogout(() => {
-  console.log('User logged out')
-})
-
-// Get session info
-const session = authn.session
-if (session) {
-  console.log(`Session expires: ${session.expiresAt}`)
-}
+const me = await authn.checkUser()   // waits for the session to be restored; NamedNode or null
+authn.currentUser()                  // the same answer, synchronously, once checkUser has run
+authSession.webId                    // the WebID string, or undefined
+authSession.isActive                 // true while logged in
+authSession.info                     // { webId, isLoggedIn }
 ```
 
-## Access Control
+Log in by sending the browser to an identity provider. Both call forms work:
 
-### Checking Permissions
-
-```javascript
-import { solidLogicSingleton } from 'solid-logic'
-
-const uri = 'https://alice.example/private/data.ttl'
-
-// Check specific access modes
-const canRead = await solidLogicSingleton.checkAccess(uri, 'Read')
-const canWrite = await solidLogicSingleton.checkAccess(uri, 'Write')
-const canControl = await solidLogicSingleton.checkAccess(uri, 'Control')
-
-// Check multiple modes
-const access = await solidLogicSingleton.checkAccessAll(uri)
-console.log(access)  // { Read: true, Write: false, Control: false }
+```js
+await authSession.login('https://solidcommunity.net', window.location.href)
+await authSession.login({ oidcIssuer: 'https://solidcommunity.net', redirectUrl: window.location.href })
 ```
 
-### ACL Management
+Log out with `await authSession.logout()`. For authenticated requests outside rdflib, use `authSession.authFetch(url, init)`.
 
-```javascript
-import { acl } from 'solid-logic'
+`authSession.events` is a small emitter with `on`, `off` and `emit`. Its events are `login`, `logout`, `sessionChange`, `sessionRestore` and `identityReplaced`. The session is also an `EventTarget` that fires `sessionStateChange`. When each one fires, the login dialog and a login button are covered in [Authentication](../cookbook/authentication.md).
 
-// Get ACL document for a resource
-const aclDoc = await acl.getACLDocument('https://alice.example/data.ttl')
+`getSuggestedIssuers()` returns `{ name, uri }` pairs: Solid Community (`https://solidcommunity.net`), Solid Web (`https://solidweb.org`), Solid Web ME (`https://solidweb.me`) and Inrupt.com (`https://login.inrupt.com`). When the page is served from any other host, that host is added at the top of the list.
 
-// Check if user has access
-const hasAccess = await acl.checkAccess(
-  'https://alice.example/data.ttl',
-  'https://bob.example/profile/card#me',
-  'Write'
-)
+## Profile
+
+```js
+const logic = SolidLogic.solidLogicSingleton
+const me = SolidLogic.authn.currentUser()
+
+await logic.profile.loadProfile(me)        // NamedNode of the profile document
+await logic.profile.loadMe()               // the logged-in user's WebID, after loading the profile
+await logic.profile.loadPreferences(me)    // NamedNode of the preferences file (needs login)
+logic.profile.getPodRoot(me)               // NamedNode of the storage root
+logic.profile.findStorage(me)              // the profile's pim:storage, or null
+await logic.profile.getMainInbox(me)       // NamedNode of the ldp:inbox
 ```
 
-## Type Index
+`silencedLoadPreferences(me)` works like `loadPreferences` but returns `undefined` instead of throwing.
 
-The Type Index maps RDF types to their storage locations in a pod:
+## Type indexes
 
-```javascript
-import { typeIndex } from 'solid-logic'
+```js
+const logic = SolidLogic.solidLogicSingleton
+const me = SolidLogic.authn.currentUser()
 
-// Find where contacts are stored
-const contactLocations = await typeIndex.findByType(
-  'http://www.w3.org/2006/vcard/ns#AddressBook'
-)
+const scopes = await logic.typeIndex.loadAllTypeIndexes(me)
+// [{ label: 'public', index, agent }, { label: 'private', index, agent }, ...]
 
-// Register a new type location
-await typeIndex.register(
-  'http://example.org/MyType',
-  'https://alice.example/my-data/',
-  true  // isContainer
-)
+const publicIndex = scopes.find(s => s.label === 'public').index
+const notes = $rdf.sym('https://your.pod/public/notes.ttl#this')
+const klass = UI.ns.schema('NoteDigitalDocument')
+
+await logic.typeIndex.registerInTypeIndex(notes, publicIndex, klass)
+await logic.typeIndex.getScopedAppInstances(klass, me)  // [{ instance, type, scope }]
+await logic.typeIndex.getAppInstances(klass)            // [NamedNode]
+await logic.typeIndex.deleteTypeIndexRegistrationForResource(notes, me)
 ```
 
-### Public vs Private Type Index
+Also available: `loadTypeIndexesFor`, `loadCommunityTypeIndexes`, `getRegistrations`, `getScopedAppsFromIndex`, `suggestPublicTypeIndex`, `suggestPrivateTypeIndex` and `deleteTypeIndexRegistration`.
 
-```javascript
-import { typeIndex } from 'solid-logic'
+## Containers and files
 
-// Get public type index (visible to others)
-const publicIndex = await typeIndex.getPublicTypeIndex(webId)
+`solidLogicSingleton.resource` is new in solid-logic 6. The 3.1 file explorer uses it.
 
-// Get private type index (only visible to owner)
-const privateIndex = await typeIndex.getPrivateTypeIndex(webId)
+```js
+const logic = SolidLogic.solidLogicSingleton
+const folder = 'https://your.pod/public/demo/'
 
-// List all registered types
-const registrations = await typeIndex.getAllRegistrations(webId)
-registrations.forEach(reg => {
-  console.log(`${reg.forClass} -> ${reg.instance || reg.instanceContainer}`)
-})
+await logic.resource.createContainer(folder)
+const file = new File(['Hello'], 'hello.txt', { type: 'text/plain' })
+const [result] = await logic.resource.uploadFiles([file], folder)
+// { success: true, file, uploadedUri } or { success: false, file, error }
+
+const { content, metadata } = await logic.resource.fetchContentAndMetadata($rdf.sym(folder + 'hello.txt'))
+
+await SolidLogic.store.fetcher.load($rdf.sym(folder))
+logic.resource.isContainer($rdf.sym(folder))            // true
+logic.resource.getContainerMembers($rdf.sym(folder))    // [NamedNode]
+logic.resource.getContainerMemberCount($rdf.sym(folder))
+
+await logic.resource.recursiveDelete($rdf.sym(folder))  // the folder and everything in it
 ```
 
-## Profile Utilities
+`fetchMetadata(subject)` reads the response headers and returns:
 
-```javascript
-import { profile } from 'solid-logic'
-
-// Load and parse a WebID profile
-const webId = 'https://alice.example/profile/card#me'
-const profileData = await profile.load(webId)
-
-console.log(profileData.name)
-console.log(profileData.inbox)
-console.log(profileData.storage)
-console.log(profileData.preferencesFile)
-
-// Get pod root from WebID
-const podRoot = await profile.getPodRoot(webId)
-// https://alice.example/
-
-// Get inbox
-const inbox = await profile.getInbox(webId)
-// https://alice.example/inbox/
-```
-
-## Preferences
-
-```javascript
-import { preferences } from 'solid-logic'
-
-// Load user preferences
-const prefs = await preferences.load(webId)
-
-// Get a preference value
-const theme = prefs.get('http://example.org/theme')
-
-// Set a preference
-await prefs.set('http://example.org/theme', 'dark')
-```
-
-## Container Operations
-
-```javascript
-import { container } from 'solid-logic'
-
-// List container contents
-const contents = await container.list('https://alice.example/documents/')
-
-contents.forEach(item => {
-  console.log(`${item.name} - ${item.type}`)  // file or container
-})
-
-// Create a container
-await container.create('https://alice.example/new-folder/')
-
-// Delete a container (must be empty)
-await container.delete('https://alice.example/old-folder/')
-```
-
-## Utility Functions
-
-### Document Helpers
-
-```javascript
-import { store } from 'solid-logic'
-
-// Get the document URI from a hash URI
-const doc = store.sym('https://example.org/doc#thing').doc()
-// https://example.org/doc
-
-// Check if a document is loaded
-const isLoaded = store.fetcher.requested['https://example.org/doc']
-```
-
-### Common Namespaces
-
-```javascript
-import { ns } from 'solid-logic'
-
-// Pre-defined namespaces
-ns.rdf('type')      // http://www.w3.org/1999/02/22-rdf-syntax-ns#type
-ns.rdfs('label')    // http://www.w3.org/2000/01/rdf-schema#label
-ns.foaf('name')     // http://xmlns.com/foaf/0.1/name
-ns.vcard('fn')      // http://www.w3.org/2006/vcard/ns#fn
-ns.ldp('Container') // http://www.w3.org/ns/ldp#Container
-ns.solid('inbox')   // http://www.w3.org/ns/solid/terms#inbox
-ns.acl('Read')      // http://www.w3.org/ns/auth/acl#Read
-```
-
-## Error Handling
-
-```javascript
-import { store, authn } from 'solid-logic'
-
-try {
-  await store.fetcher.load('https://alice.example/private/data.ttl')
-} catch (error) {
-  if (error.status === 401) {
-    // Not authenticated
-    await authn.login()
-  } else if (error.status === 403) {
-    // No permission
-    console.log('Access denied')
-  } else if (error.status === 404) {
-    // Resource doesn't exist
-    console.log('Not found')
-  }
+```js
+{
+  contentType: 'text/turtle',
+  access: { canEdit: true, canManageAccess: true, isPublic: true, isPublicKnown: true },
+  aclUri: 'https://your.pod/public/.acl',
+  eTag: '"a07662ad..."',
+  modified: '2026-11-17T20:50:52.036Z'
 }
 ```
 
-## TypeScript Types
+`fetchMetadataWithDelete` adds `access.canDelete`. The other helpers are `deleteResourceAndTypeIndexIfExists`, `getContainerIndexThing`, `containerHasIndexDocument`, `isStorageRoot` (true for the root of the origin, or for a container typed `pim:Storage`), `isHiddenFile`, `isMediaType`, `isImage`, `isAudio`, `isVideo` and `isWebId`. `getContainerMembers` and the `is…` checks read the store, so load the container first.
 
-```typescript
-import type {
-  SolidLogic,
-  AuthenticationContext,
-  AccessModes,
-  TypeRegistration
-} from 'solid-logic'
+## Access control
 
-interface AccessModes {
-  Read: boolean
-  Write: boolean
-  Append: boolean
-  Control: boolean
-}
+`solidLogicSingleton.acl` reads and changes Web Access Control (WAC) documents. It is built on [`@dokieli/web-access-control`](https://github.com/dokieli/web-access-control). A change takes two steps: a `plan…` call works out the triples to add and remove, and `applyPlan` writes them as a PATCH.
 
-interface TypeRegistration {
-  forClass: string
-  instance?: string
-  instanceContainer?: string
-}
+```js
+const acl = SolidLogic.solidLogicSingleton.acl
+const doc = 'https://your.pod/public/demo/hello.txt'
+
+const context = await acl.findEffectiveAcl(doc)
+// { resource, defaultACLResource, effectiveACLResource, inherited, authorizations, dataset, ... }
+
+const friend = { type: 'agent', iri: 'https://friend.example/profile/card#me' }
+const plan = await acl.planGrant(doc, friend, acl.modesFromRole('Viewer'))
+await acl.applyPlan(plan)                                   // a Response: 201 or 204
+
+await acl.applyPlan(await acl.planRevoke(doc, friend))
+await acl.applyPlan(await acl.planPublicRead(doc, false))   // stop public reading
+await acl.resetToDefault(doc)                               // delete the resource's own ACL
 ```
 
-## Integration with Panes
+The full set: `findAclDocUrl`, `findEffectiveAcl`, `findAccessGrants`, `classifyContainerScope`, `isProtectedResource`, `classifyAccessControlSubject`, `roleFromModes`, `modesFromRole`, `publicRoleFromModes`, `modesFromPublicRole`, `planGrant`, `planGrantContainer`, `planGrantContainerAndContents`, `planGrantContainerContents`, `planRevoke`, `planRevokeContainerContents`, `planPublicRead`, `resetToDefault`, `applyPlan`, and the older `setACLUserPublic` and `genACLText`. Recipes are in [Access control](../cookbook/access-control.md).
 
-Panes typically use solid-logic like this:
+## Inbox, chat and directory
 
-```javascript
-import { store, authn, ns } from 'solid-logic'
+- `inbox`: `createInboxFor(peerWebId, nick)`, `getNewMessages(user?)`, `markAsRead(url, date)`.
+- `chat`: `findChat`, `getChat`, `createChatThing`, `mintNew`, `sendInvite`, `setAcl`, `addToPrivateTypeIndex`. The chat pane uses these.
+- `directory.search(options?)` finds people and groups for the sharing dialog. It looks in the user's contacts, friends and groups, and in the public [Solid catalog](https://github.com/solid/catalog).
 
-const myPane = {
-  name: 'my-pane',
-
-  label: (subject, context) => {
-    // Use store to check type
-    if (store.holds(subject, ns.rdf('type'), MY_TYPE)) {
-      return 'My Pane'
-    }
-    return null
-  },
-
-  render: (subject, dom, context) => {
-    const container = dom.createElement('div')
-
-    // Check if user is logged in
-    const user = authn.currentUser()
-    if (!user) {
-      container.textContent = 'Please log in'
-      return container
-    }
-
-    // Query the store
-    const name = store.any(subject, ns.foaf('name'), null, null)
-    container.textContent = name?.value || 'Unknown'
-
-    return container
-  }
-}
+```js
+const results = await SolidLogic.solidLogicSingleton.directory.search({ query: 'tim' })
+// [{ kind: 'person', uri, label, subjectType: 'agent', relationshipLabel, sources: ['catalog'] }, ...]
 ```
 
-## See Also
+Its options are `query`, `sources` (any of `contacts`, `friends`, `catalog`, `groups`), `catalogUrl`, `user` and `maxFoafDistance`.
 
-- [solid-logic GitHub](https://github.com/SolidOS/solid-logic)
-- [rdflib.js](/docs/libraries/rdflib) — underlying RDF library
-- [Authentication Flow](/docs/architecture/overview#data-flow) — how auth works
+## Types
+
+The TypeScript interfaces (`SolidLogic`, `AuthnLogic`, `AclLogic`, `ResourceLogic`, `ProfileLogic`, `TypeIndexLogic`, `InboxLogic`, `ChatLogic`, `DirectoryLogic`) are in `dist/types.d.ts` of the [published package](https://unpkg.com/browse/solid-logic@6.2.0/). A pane receives the same instance as `context.session.logic`.
+
+## See also
+
+- [solid-ui](./solid-ui.md): the login and sharing components built on this
+- [pane-registry](./pane-registry.md): the context object a pane receives
+- [Authentication](../cookbook/authentication.md) and [Access control](../cookbook/access-control.md)
+- Source: [github.com/SolidOS/solid-logic](https://github.com/SolidOS/solid-logic)

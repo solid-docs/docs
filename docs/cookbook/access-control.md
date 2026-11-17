@@ -1,250 +1,171 @@
 ---
 sidebar_position: 5
 title: Access Control
-description: Managing permissions with WAC and ACP
+description: Reading and changing Web Access Control in SolidOS 3.1
 ---
 
 # Access Control
 
-Solid uses Access Control to determine who can read, write, and manage resources. SolidOS supports both Web Access Control (WAC) and Access Control Policy (ACP).
+SolidOS 3.1 works with Web Access Control ([WAC](https://solidproject.org/TR/wac)). Each resource can have an ACL document listing who may `Read`, `Write`, `Append` or `Control` it. A resource without its own ACL inherits the `acl:default` rules of the nearest folder above it that has one.
 
-## Web Access Control (WAC)
+There are two ways to change access in 3.1. One is the solid-logic 6.2.0 plan API, which the newer Manage Access dialog uses. The other is the older Sharing pane, which is what the data browser's Manage Access controls open. Every snippet below was run in the SolidOS 3.1 data browser, logged in as the owner of a test pod. Replace `https://your.pod/...` with your own resources.
 
-WAC is the original Solid access control system using `.acl` files.
+## In the interface
 
-### ACL Modes
+We tested each control in the official mashlib 3.1.0 bundle and in the no-build 3.1 tree, logged in as the owner of a JSS pod. Both behaved the same:
 
-| Mode | Description |
-|------|-------------|
-| `acl:Read` | View the resource |
-| `acl:Write` | Modify the resource |
-| `acl:Append` | Add to the resource (but not modify existing) |
-| `acl:Control` | Manage the ACL itself |
+- **Header of a file, desktop width:** the Manage Access button (person-and-cog icon) opens the Sharing pane in place of the file's view.
+- **Header of a file, mobile width:** the button moves into the header's ⋮ menu as "Manage Access". It opens the same Sharing pane.
+- **⋮ menu of a file or of the folder in the folder view:** "Manage Access" sends `resource-open-pane` with `paneName: 'sharing'` to the folder view. In our tests nothing visible opened.
 
-### Reading Permissions
+When logged out, or without `Control` access, these controls are not shown. The Sharing pane groups people as Owners, Editors, Posters, Submitters and Viewers. "Set specific sharing for this File" gives the resource its own ACL.
 
-```javascript
-import { store, sym } from 'solid-logic'
+![The Sharing pane in SolidOS 3.1 for a file named Notes: Owners "me", Viewers "Everyone", and a "Set specific sharing for this File" button](/img/libraries/sharing-pane.png)
 
-const ACL = Namespace('http://www.w3.org/ns/auth/acl#')
+solid-ui 5.1.0 also contains the newer `solid-ui-access-control-modal`, shown below. The outline in solid-panes 5.1.0 can open it in two ways: it listens for `UI.FILE_EXPLORER_MANAGE_ACCESS_EVENT` on each `solid-ui-file-explorer-provider`, and it sets `provider.handleAccessClick`. In 3.1, nothing dispatches that event and no control calls `provider.handleAccessClick`. This is true of the source and of the official bundle. Open the dialog from code as shown in [The Manage Access dialog](#the-manage-access-dialog), or dispatch the event yourself:
 
-async function getPermissions(resourceUri) {
-  const resource = sym(resourceUri)
-  const aclUri = resource.uri + '.acl'
-  const acl = sym(aclUri)
+```js
+const provider = document.querySelector('solid-ui-file-explorer-provider')
+provider.dispatchEvent(new CustomEvent(UI.FILE_EXPLORER_MANAGE_ACCESS_EVENT, {
+  bubbles: true, composed: true, detail: { subjectUri: provider.subjectUri }
+}))
+```
 
-  try {
-    await store.fetcher.load(acl)
-  } catch (e) {
-    // ACL might not exist, check parent
-    console.log('No direct ACL, inheriting from parent')
-    return null
-  }
+The user guide describes the Sharing pane step by step.
 
-  const authorizations = store.each(null, ACL('accessTo'), resource, acl.doc())
+## Who has access
 
-  return authorizations.map(auth => ({
-    agent: store.any(auth, ACL('agent'), null, acl.doc())?.uri,
-    agentClass: store.any(auth, ACL('agentClass'), null, acl.doc())?.uri,
-    modes: store.each(auth, ACL('mode'), null, acl.doc()).map(m => m.uri)
-  }))
+```js
+const acl = SolidLogic.solidLogicSingleton.acl
+const doc = 'https://your.pod/public/demo/hello.txt'
+
+const context = await acl.findEffectiveAcl(doc)
+context.resource                // the resource
+context.defaultACLResource      // its own ACL document (may not exist yet)
+context.effectiveACLResource    // the ACL that applies now
+context.inherited               // true when it comes from a folder
+context.authorizations          // the rules that apply to this resource
+```
+
+Each authorization looks like this:
+
+```js
+{
+  id: 'https://your.pod/public/.acl#owner',
+  agent: ['https://your.pod/profile/card#me'],
+  agentClass: [],
+  agentGroup: [],
+  origin: [],
+  mode: ['Read', 'Write', 'Control'],
+  accessTo: ['https://your.pod/public/'],
+  default: ['https://your.pod/public/'],
+  ...
 }
 ```
 
-### Setting Permissions
+`acl.findAccessGrants(doc)` returns the `authorizations` array alone. Turn modes into the role names the interface uses, and back:
 
-```javascript
-async function grantAccess(resourceUri, agentWebId, modes) {
-  const resource = sym(resourceUri)
-  const aclUri = resource.uri + '.acl'
-  const acl = sym(aclUri)
-  const agent = sym(agentWebId)
-
-  // Create authorization
-  const authId = sym(aclUri + '#auth-' + Date.now())
-
-  const statements = [
-    st(authId, RDF('type'), ACL('Authorization'), acl.doc()),
-    st(authId, ACL('accessTo'), resource, acl.doc()),
-    st(authId, ACL('agent'), agent, acl.doc()),
-    ...modes.map(mode => st(authId, ACL('mode'), ACL(mode), acl.doc()))
-  ]
-
-  await store.updater.update([], statements)
-}
-
-// Example: Grant read/write access
-await grantAccess(
-  'https://alice.example/document.ttl',
-  'https://bob.example/profile/card#me',
-  ['Read', 'Write']
-)
+```js
+acl.roleFromModes(['Read', 'Write'])   // 'Editor'
+acl.roleFromModes(['Read', 'Append'])  // 'Poster'
+acl.modesFromRole('Viewer')            // ['Read']
+SolidLogic.ACCESS_ROLES                // ['Owner', 'Editor', 'No Access', 'Viewer', 'Poster', 'Submitter']
 ```
 
-### Public Access
+To learn only what the logged-in user may do, read the response headers instead:
 
-Grant access to everyone:
-
-```javascript
-// Make resource publicly readable
-const statements = [
-  st(authId, ACL('agentClass'), FOAF('Agent'), acl.doc()),
-  st(authId, ACL('mode'), ACL('Read'), acl.doc())
-]
+```js
+const { access } = await SolidLogic.solidLogicSingleton.resource.fetchMetadata($rdf.sym(doc))
+// { canEdit, canManageAccess, isPublic, isPublicKnown }
 ```
 
-### Authenticated Users
+## Changing access
 
-Grant access to any logged-in user:
+Each change is planned first and then applied. `plan…` reads the current ACL and returns `{ target, deletes, inserts }`; `applyPlan` writes it as a PATCH and returns the `Response`. If the resource had no ACL of its own, the first plan copies the inherited rules into a new one, so nothing that applied before is lost.
 
-```javascript
-// Allow any authenticated user to read
-const statements = [
-  st(authId, ACL('agentClass'), ACL('AuthenticatedAgent'), acl.doc()),
-  st(authId, ACL('mode'), ACL('Read'), acl.doc())
-]
+A person, group or class is given as `{ type, iri }`, where `type` is `agent`, `agentGroup`, `agentClass` or `origin`. `SolidLogic.Public` (everyone) and `SolidLogic.Authenticated` (anyone logged in) are ready-made.
+
+### Share a file with one person
+
+```js
+const acl = SolidLogic.solidLogicSingleton.acl
+const doc = 'https://your.pod/public/demo/hello.txt'
+const friend = { type: 'agent', iri: 'https://friend.example/profile/card#me' }
+
+await acl.applyPlan(await acl.planGrant(doc, friend, acl.modesFromRole('Viewer')))
 ```
 
-### Group Access
+### Stop sharing it
 
-```javascript
-// Grant access to a group
-const group = sym('https://alice.example/groups/friends#group')
-const statements = [
-  st(authId, ACL('agentGroup'), group, acl.doc()),
-  st(authId, ACL('mode'), ACL('Read'), acl.doc())
-]
+```js
+await acl.applyPlan(await acl.planRevoke(doc, friend))
 ```
 
-## Default Permissions
+### Make it private, or public again
 
-Default permissions apply to new resources in a container:
-
-```javascript
-// Set default for container
-const statements = [
-  st(authId, ACL('default'), container, acl.doc()),
-  st(authId, ACL('agent'), agent, acl.doc()),
-  st(authId, ACL('mode'), ACL('Read'), acl.doc())
-]
+```js
+await acl.applyPlan(await acl.planPublicRead(doc, false))   // no public read
+await acl.applyPlan(await acl.planPublicRead(doc, true))    // public read
 ```
 
-## Using solid-ui
+In the test, a request without login got `401` after the first line.
 
-solid-ui provides widgets for access control:
+### Share a folder
 
-```javascript
-import { widgets } from 'solid-ui'
+```js
+const folder = 'https://your.pod/public/demo/'
 
-// Render ACL editor
-const aclEditor = widgets.aclControl.ACLControlBox(
-  resource,
-  context,
-  'resource',
-  store
-)
-container.appendChild(aclEditor)
+await acl.applyPlan(await acl.planGrantContainerAndContents(folder, friend, acl.modesFromRole('Editor')))
 ```
 
-## Checking Access
+The friend then had `Editor` on the folder and, through `acl:default`, on `hello.txt` inside it. `planGrantContainer` covers the folder only, and `planGrantContainerContents` the contents only. `planRevoke(folder, friend)` removed both; `planRevokeContainerContents` removes the contents rule only.
 
-Before performing operations, check if user has access:
+`acl.classifyContainerScope(context)` (or `SolidLogic.analyzeContainerAccessScope(context)` for more detail) says which of `folder+contents`, `folder` and `contents` the folder's rules cover.
 
-```javascript
-import { authn } from 'solid-logic'
+### Back to inherited access
 
-async function canWrite(resourceUri) {
-  const resource = sym(resourceUri)
-
-  try {
-    // Try a HEAD request to check permissions
-    const response = await store.fetcher.webOperation('HEAD', resource.uri)
-    const wacAllow = response.headers.get('WAC-Allow')
-
-    if (wacAllow) {
-      return wacAllow.includes('write')
-    }
-  } catch (e) {
-    return false
-  }
-
-  return false
-}
+```js
+await acl.resetToDefault(doc)   // deletes the resource's own ACL document
 ```
 
-## Trusted Apps
+`acl.isProtectedResource(url)` is true for a storage root: the root of the origin, or a container typed `pim:Storage`. A plan for a storage root throws if it would leave no `Control` rule.
 
-Users can grant apps specific permissions via their profile:
+## The Manage Access dialog
 
-```turtle
-<#me>
-    acl:trustedApp [
-        acl:mode acl:Read, acl:Write ;
-        acl:origin <https://myapp.example>
-    ] .
+The newer dialog uses the plan API above. It takes the resource and its current grants:
+
+```js
+const AccessControlModal = customElements.get('solid-ui-access-control-modal')
+const doc = $rdf.sym('https://your.pod/public/demo/hello.txt').doc()
+const accessGrants = await SolidLogic.solidLogicSingleton.acl.findAccessGrants(doc)
+UI.showDialog(AccessControlModal, { props: { subjectUri: doc.uri, accessGrants } })
 ```
 
-```javascript
-// Check if current app is trusted
-async function isAppTrusted(webId, origin) {
-  const person = sym(webId)
-  await store.fetcher.load(person.doc())
+![The Manage Access dialog for hello.txt: a field to add a person, group or software agent URL with a role, the Shared with list, General Access settings for logged-in users and for anyone with the link, and Cancel and Save Changes buttons](/img/libraries/manage-access-modal.png)
 
-  const trustedApps = store.each(person, ACL('trustedApp'))
-  for (const app of trustedApps) {
-    const appOrigin = store.any(app, ACL('origin'))
-    if (appOrigin?.uri === origin) {
-      return store.each(app, ACL('mode')).map(m => m.uri)
-    }
-  }
-  return []
-}
+The mashlib 3.1 bundle registers the component at start-up. Elsewhere, load `solid-ui/components/access-control-modal` first, or `customElements.get` returns `undefined`.
+
+## The older editor in code
+
+The Sharing pane is `UI.aclControl.ACLControlBox5`:
+
+```js
+const subject = $rdf.sym('https://your.pod/public/demo/')
+const context = panes.getOutliner(document).context
+await SolidLogic.store.fetcher.load(subject)
+const box = UI.aclControl.ACLControlBox5(subject, context, 'Folder', SolidLogic.store)
+document.querySelector('#OutlineView').prepend(box)
 ```
 
-## Common Patterns
+It and the other `UI.acl` helpers (`getACL`, `readACL`, `putACLbyCombo`, …) save ACL documents with a `PUT` of Turtle.
 
-### Private by Default
+## JavaScriptSolidServer pods
 
-```javascript
-// Only owner has access
-const ownerAuth = [
-  st(authId, ACL('agent'), owner, acl.doc()),
-  st(authId, ACL('mode'), ACL('Read'), acl.doc()),
-  st(authId, ACL('mode'), ACL('Write'), acl.doc()),
-  st(authId, ACL('mode'), ACL('Control'), acl.doc())
-]
-```
+JavaScriptSolidServer (JSS) stores ACL documents as JSON-LD. A Turtle `PUT` to an ACL is refused with `415` and `Accept-Put: application/ld+json, application/json`. On a JSS pod this affects the older editor and `UI.acl` helpers. The plan API writes with PATCH; on the JSS test pod, `planGrant`, `planRevoke`, `planPublicRead`, the folder plans and `resetToDefault` all succeeded.
 
-### Share with Specific People
+## See also
 
-```javascript
-// Owner + specific friends
-const friendAuth = [
-  st(friendAuthId, ACL('agent'), friend1, acl.doc()),
-  st(friendAuthId, ACL('agent'), friend2, acl.doc()),
-  st(friendAuthId, ACL('mode'), ACL('Read'), acl.doc())
-]
-```
-
-### Public Read, Owner Write
-
-```javascript
-// Common blog pattern
-const publicRead = [
-  st(publicAuthId, ACL('agentClass'), FOAF('Agent'), acl.doc()),
-  st(publicAuthId, ACL('mode'), ACL('Read'), acl.doc())
-]
-
-const ownerWrite = [
-  st(ownerAuthId, ACL('agent'), owner, acl.doc()),
-  st(ownerAuthId, ACL('mode'), ACL('Read'), acl.doc()),
-  st(ownerAuthId, ACL('mode'), ACL('Write'), acl.doc()),
-  st(ownerAuthId, ACL('mode'), ACL('Control'), acl.doc())
-]
-```
-
-## See Also
-
-- [WAC Specification](https://solid.github.io/web-access-control-spec/)
-- [Sharing View](https://solidos.org/userguide/views/sharing) - UI for managing permissions
-- [Authentication](/cookbook/authentication) - User login
+- [solid-logic](../libraries/solid-logic.md#access-control): the full `acl` API
+- [solid-ui](../libraries/solid-ui.md): the dialog and other components
+- [Authentication](./authentication.md): logging in before changing access
+- [WAC specification](https://solidproject.org/TR/wac)
