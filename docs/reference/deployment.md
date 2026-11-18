@@ -46,7 +46,7 @@ If your page lives in a sub-folder, or on a site whose root you do not control, 
 
 The first line is a short script that sends mashlib's requests for its extra files to jsDelivr, and the worker to a copy beside your page (a worker must come from the page's own origin). Take [mashlib-files.js](pathname:///docs/browser/mashlib-files.js) and [5fb2ef310e691f59285b.js](pathname:///docs/browser/5fb2ef310e691f59285b.js) from this site's demo, or the worker from `node_modules/mashlib/dist/`. [Embedding mashlib](/docs/guides/embedding-mashlib) has the rest of the page.
 
-The demos on this site are deployed this way: [SolidOS Browser](https://solidos.org/docs/browser/), [Data island](https://solidos.org/docs/data-island/), [Custom pane](https://solidos.org/docs/pane-demo/).
+The demos on this site are deployed this way: [Data island](https://solidos.org/docs/data-island/), [Custom pane](https://solidos.org/docs/pane-demo/).
 
 ## On a pod server
 

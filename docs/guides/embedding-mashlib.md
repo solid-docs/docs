@@ -8,9 +8,9 @@ description: Put the SolidOS data browser in your own page with mashlib 3.1 - gl
 
 mashlib is one script and one stylesheet. Load them into a page and the whole SolidOS data browser is there: the libraries as globals, the built-in panes, the login, the header. This page shows the two ways to use it, walks through the browse page that ships with mashlib 3.1.0, and shows how to draw data that is inside the page itself.
 
-Three working pages on this site use everything below. Open them and view their source:
+Three working pages use everything below. Open them and view their source:
 
-- [SolidOS Browser](https://solidos.org/docs/browser/): an address bar and the data browser.
+- [mashlib.com](https://mashlib.com/): an address bar and the data browser.
 - [Data island demo](https://solidos.org/docs/data-island/): Turtle inside the page, drawn by SolidOS.
 - [Custom pane demo](https://solidos.org/docs/pane-demo/): a pane registered with `panes.register` and drawn for a real resource.
 
@@ -100,7 +100,7 @@ This is the markup of mashlib 3.1.0's `databrowser.html`, with the files loaded 
 
 ## The browse page, line by line
 
-mashlib 3.1.0's `static/browse.html` (published as `dist/browse.html`), with comments. [SolidOS Browser](https://solidos.org/docs/browser/) and [mashlib.com](https://mashlib.com/) are built on it.
+mashlib 3.1.0's `static/browse.html` (published as `dist/browse.html`), with comments. [mashlib.com](https://mashlib.com/) is built on it. The [SolidOS Browser](https://solidos.org/docs/browser/) on this site is the same page for SolidOS loaded as ES modules, where a link can also add a pane: see [Dynamic panes](/docs/panes/dynamic-panes).
 
 ### Markup
 

@@ -15,7 +15,7 @@ This page is the reference. For walk-throughs, see:
 - [mashlib.com and the no-build data browser](/docs/guides/mashlib-com)
 - [Running SolidOS on JSS](/docs/guides/running-on-jss)
 
-Try it: [mashlib.com](https://mashlib.com/) runs the 3.1.0 bundle. The [SolidOS Browser](https://solidos.org/docs/browser/), [Data island](https://solidos.org/docs/data-island/) and [Custom pane](https://solidos.org/docs/pane-demo/) demos on this site load it from jsDelivr.
+Try it: [mashlib.com](https://mashlib.com/) runs the 3.1.0 bundle. The [Data island](https://solidos.org/docs/data-island/) and [Custom pane](https://solidos.org/docs/pane-demo/) demos on this site load it from jsDelivr. The [SolidOS Browser](https://solidos.org/docs/browser/) runs SolidOS 3.1 as ES modules from [mashlib.com/dynamic](https://mashlib.com/dynamic/), so a link can add a pane.
 
 ## Version 3.1.0
 

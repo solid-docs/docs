@@ -1,199 +1,332 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>SolidOS Browser: mashlib 3.1.0 demo</title>
-  <meta name="description" content="Browse a Solid pod, a folder or a profile with SolidOS (mashlib 3.1.0), loaded from a CDN into one HTML page.">
-  <link rel="canonical" href="https://solidos.org/docs/browser/">
-  <link rel="icon" href="logo.png" type="image/png">
+  <head>
+    <!-- The SolidOS browse page. SolidOS 3.1 as plain ES modules, loaded from https://mashlib.com/dynamic/
+         (github.com/mashlib/dynamic); this file is that tree's own browse page with absolute addresses. -->
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+    <title>SolidOS Browser · browse a Solid pod, add panes by link</title>
+    <meta name="description" content="Browse a Solid pod, a folder or a profile with SolidOS 3.1. Nothing to install, and a link can add a new pane: ?pane= loads it after asking you first."/>
+    <link rel="canonical" href="https://solidos.org/docs/browser/"/>
+    <link rel="icon" href="logo.png" type="image/png"/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:site_name" content="SolidOS Docs"/>
+    <meta property="og:title" content="SolidOS Browser · browse a Solid pod, add panes by link"/>
+    <meta property="og:description" content="Browse a Solid pod, a folder or a profile with SolidOS 3.1, and add a new view of your data from a link."/>
+    <meta property="og:url" content="https://solidos.org/docs/browser/"/>
+    <meta property="og:image" content="https://solidos.org/docs/img/solidos-social-card.png"/>
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:image" content="https://solidos.org/docs/img/solidos-social-card.png"/>
+    <script>
+      // This page is light. SolidOS follows the system theme unless a choice is saved,
+      // so save "light" when nothing has been chosen yet.
+      try { if (!localStorage.getItem('mashlib-theme')) localStorage.setItem('mashlib-theme', 'light') } catch (e) {}
+    </script>
+    <!-- The data browser with an address bar: type or paste the address of anything on a
+         Solid pod and look at it. Upstream's static/browse.html, with the address bar in
+         the header beside the account buttons instead of a grey strip above them.
+         ?uri=<address> opens one straight away, and is kept in step as you move around,
+         so the page's own address can be bookmarked or sent to someone.
+         ?pane=<address of a pane module> adds a pane (may be repeated). A pane is code, so
+         one from a site this browser has not allowed before is asked about first. -->
+    <script src="https://mashlib.com/dynamic/dist/manifest.js"></script>
+    <script src="https://mashlib.com/dynamic/src/importmap.js"></script>
+    <style>
+      :root { --browse-bar-height: 56px }
+      /* mashlib's stylesheet arrives after this one and has rules of its own for body: the id
+         makes these win. The bar's real height is kept in --app-header-height (set by the
+         script below), the variable the data browser's own layout reads. */
+      body#PageBody { margin: 0; padding-top: var(--app-header-height, var(--browse-bar-height)); background: var(--color-background, #f8f9fb) }
 
-  <meta property="og:title" content="SolidOS Browser: mashlib 3.1.0 demo">
-  <meta property="og:description" content="Browse a Solid pod, a folder or a profile with SolidOS (mashlib 3.1.0).">
-  <meta property="og:image" content="https://solidos.org/docs/img/solidos-social-card.png">
-  <meta property="og:url" content="https://solidos.org/docs/browser/">
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="SolidOS Docs">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https://solidos.org/docs/img/solidos-social-card.png">
-
-  <script>
-    // This page is light. mashlib follows the system theme unless a choice is saved,
-    // so save "light" when nothing has been chosen yet.
-    try { if (!localStorage.getItem('mashlib-theme')) localStorage.setItem('mashlib-theme', 'light') } catch (e) {}
-  </script>
-  <!-- Must come before mashlib: sends the files mashlib asks for at the site root to the right place. -->
-  <script src="mashlib-files.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mashlib@3.1.0/dist/mash.css">
-  <script src="https://cdn.jsdelivr.net/npm/mashlib@3.1.0/dist/mashlib.min.js"></script>
-  <style>
-    :root {
-      --primary: #7C3AED;
-      --secondary: #2563EB;
-      --text: #1e293b;
-      --muted: #64748b;
-    }
-    body#PageBody {
-      margin: 0;
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-      background: #f8fafc;
-      color: var(--text);
-    }
-    .demo-header {
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: #fff;
-      padding: 1.25rem 2rem 1rem;
-    }
-    .demo-header-inner { max-width: 1400px; margin: 0 auto; }
-    .demo-title { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-    .demo-title h1 { margin: 0; font-size: 1.5rem; font-weight: 600; color: #fff; display: flex; align-items: center; gap: .5rem; }
-    .demo-title h1 img { width: 30px; height: 30px; }
-    .demo-title .version { font-size: .8rem; opacity: .85; font-weight: 400; }
-    .search { margin-top: 1rem; display: flex; gap: .75rem; flex-wrap: wrap; }
-    #uriField {
-      flex: 1; min-width: 260px; padding: .75rem 1.1rem; font-size: 1rem;
-      border: 2px solid rgba(255,255,255,.3); border-radius: 12px; background: #fff; color: var(--text); outline: none;
-    }
-    #uriField:focus { border-color: #fff; box-shadow: 0 0 0 4px rgba(255,255,255,.25); }
-    #goButton {
-      padding: .75rem 1.75rem; font-size: 1rem; font-weight: 600; background: #fff; color: var(--primary);
-      border: 0; border-radius: 12px; cursor: pointer;
-    }
-    .quick { margin-top: .85rem; display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; font-size: .85rem; }
-    .quick span { opacity: .85; }
-    .quick a {
-      padding: .35rem .85rem; background: rgba(255,255,255,.18); color: #fff; text-decoration: none;
-      border-radius: 20px; border: 1px solid rgba(255,255,255,.3);
-    }
-    .quick a:hover { background: rgba(255,255,255,.32); }
-    .demo-main { max-width: 1400px; margin: 0 auto; padding: 1.25rem 2rem; }
-    .welcome { text-align: center; padding: 3rem 1rem; color: var(--muted); }
-    .welcome h2 { color: var(--text); margin: 0 0 .5rem; }
-    .welcome[hidden] { display: none; }
-    #OutlineView { width: 100%; }
-    .demo-footer { text-align: center; padding: 2rem 1rem; color: var(--muted); font-size: .85rem; }
-    .demo-footer a { color: var(--primary); text-decoration: none; }
-    @media (max-width: 640px) {
-      .demo-header { padding: 1rem; }
-      .demo-main { padding: 1rem; }
-      #uriField { min-width: 100%; }
-    }
-  </style>
-  <script>
-  // The same steps as mashlib 3.1.0's own browse page (dist/browse.html).
-  document.addEventListener('DOMContentLoaded', function () {
-    const dom = document
-    const outliner = panes.getOutliner(dom)
-    const { store, resource } = SolidLogic.solidLogicSingleton
-    const uriField = dom.getElementById('uriField')
-    const welcome = dom.getElementById('welcome')
-    const shown = () => new URLSearchParams(location.search).get('uri') || ''
-    // The profile heading (name and picture above a person's pages) follows ?uri=, not this page's URL.
-    const ready = panes.initializeProfileHeading(() => shown() || location.href)
-    let request = 0
-
-    async function go (address) {
-      const mine = ++request
-      const target = new URL(address, location.href)
-      await ready
-      if (mine !== request) return
-
-      // Load the document first, so a folder is shown as a folder and a redirect is followed.
-      const subject = $rdf.sym(target.href)
-      let canonicalSubject = subject
-      let isContainer = false
-      try {
-        const response = await store.fetcher.load(subject.doc())
-        const canonical = new URL(response.url || target.href)
-        canonical.hash = target.hash
-        canonicalSubject = $rdf.sym(canonical.href)
-        isContainer = resource.isContainer(subject.doc()) || resource.isContainer(canonicalSubject.doc())
-        if (isContainer) {
-          if (!canonical.pathname.endsWith('/')) canonical.pathname += '/'
-          target.href = canonical.href
-        }
-      } catch (error) {
-        console.warn('Could not preload the resource; the outline shows why.', error)
+      .browse-bar {
+        position: fixed; inset: 0 0 auto 0; z-index: 100;
+        box-sizing: border-box; min-height: var(--browse-bar-height);
+        display: flex; align-items: center; gap: 16px;
+        padding: 8px 20px;
+        background: var(--solid-ui-color-slate-800, #1d293d);
+        color: #fff;
+        font-family: 'Atkinson Hyperlegible Next', system-ui, sans-serif;
       }
-      if (mine !== request) return
+      .browse-home { display: inline-flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; font-weight: 600; font-size: 17px; flex: none }
+      .browse-home solid-ui-solid-emblem { width: 36px; height: 36px; display: inline-flex }
 
-      uriField.value = target.href
-      const page = new URL(location.href)
-      page.searchParams.set('uri', target.href)
-      history.replaceState({}, '', page)
-      welcome.hidden = true
-      dom.title = 'SolidOS Browser: ' + target.href
+      .browse-address { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; margin: 0 }
+      .browse-field {
+        flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px;
+        height: 40px; padding: 0 6px 0 14px;
+        background: #fff; color: #0f172b;
+        border-radius: 999px;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, .16);
+      }
+      .browse-field:focus-within { box-shadow: 0 0 0 3px #a48bff }
+      .browse-field svg { flex: none; width: 18px; height: 18px; color: #62748e }
+      .browse-field input {
+        flex: 1 1 auto; min-width: 0; height: 100%;
+        border: 0; outline: 0; background: transparent; color: inherit;
+        font: inherit; font-size: 15px;
+      }
+      .browse-field input::placeholder { color: #90a1b9 }
+      .browse-go {
+        flex: none; height: 30px; padding: 0 16px;
+        border: 0; border-radius: 999px; cursor: pointer;
+        background: #7c4dff; color: #fff;
+        font: inherit; font-size: 14px; font-weight: 600;
+      }
+      .browse-go:hover, .browse-go:focus-visible { background: #6a3bf0; outline: none }
+      .browse-account { flex: none; display: flex; align-items: center }
 
-      const isStorageRoot = resource.isStorageRoot(subject) || resource.isStorageRoot(canonicalSubject)
-      const options = isContainer
-        ? { folderView: isStorageRoot ? 'explorer' : 'container', preserveUrl: true }
-        : { preserveUrl: true }
-      outliner.GotoSubject($rdf.sym(target.href), true, undefined, true, undefined, undefined, options)
-      await panes.refreshProfileHeading(true)
-    }
+      /* The header takes the place of the data browser's own: the outline starts below it. */
+      .browse-main { margin: 0; padding: 0 }
+      .browse-main .outline-view { width: 100% }
 
-    function navigate (address) {
-      address = (address || uriField.value).trim()
-      if (!address) return
-      if (!/^[a-z][a-z0-9+.-]*:/i.test(address)) address = 'https://' + address
-      go(address).catch(error => console.error('Failed to browse the resource.', error))
-    }
+      .browse-welcome[hidden] { display: none }
+      .browse-welcome { max-width: 640px; margin: 12vh auto 0; padding: 0 24px; text-align: center; color: #314158; font-family: 'Atkinson Hyperlegible Next', system-ui, sans-serif }
+      .browse-welcome h1 { margin: 0 0 8px; font-size: 30px; font-weight: 700; color: #0f172b; text-wrap: balance }
+      .browse-welcome p { margin: 0 0 24px; font-size: 16px; line-height: 1.5 }
+      .browse-examples { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 0; padding: 0; list-style: none }
+      .browse-examples a {
+        display: inline-block; padding: 8px 16px; border-radius: 999px;
+        background: #fff; color: #5b34d6; text-decoration: none; font-weight: 600; font-size: 14px;
+        box-shadow: 0 0 0 1px #e2e8f0;
+      }
+      .browse-examples a:hover, .browse-examples a:focus-visible { background: #7c4dff; color: #fff; outline: none }
 
-    dom.getElementById('browseForm').addEventListener('submit', event => { event.preventDefault(); navigate() })
-    for (const link of dom.querySelectorAll('.quick a')) {
-      link.addEventListener('click', event => { event.preventDefault(); navigate(link.dataset.uri) })
-    }
+      .browse-welcome .browse-more { margin: 28px 0 0; font-size: 14px; color: #62748e }
+      .browse-more a { color: #5b34d6; text-decoration: none }
+      .browse-more a:hover { text-decoration: underline }
 
-    // Logging in or out changes what can be seen: show the same resource again.
-    for (const name of ['login', 'sessionRestore', 'logout', 'sessionChange', 'identityReplaced']) {
-      SolidLogic.authn.authSession.events.on(name, () => { if (shown()) navigate(shown()) })
-    }
+      .browse-ask[hidden] { display: none }
+      .browse-ask {
+        max-width: 760px; margin: 20px auto 0; padding: 18px 20px;
+        background: #fff; border-radius: 14px; box-shadow: 0 0 0 1px #e2e8f0, 0 8px 24px rgba(15, 23, 43, .08);
+        border-left: 5px solid #7c4dff;
+        font-family: 'Atkinson Hyperlegible Next', system-ui, sans-serif; color: #314158; font-size: 15px; line-height: 1.5;
+      }
+      .browse-ask h2 { margin: 0 0 6px; font-size: 18px; font-weight: 700; color: #0f172b }
+      .browse-ask p { margin: 0 0 10px }
+      .browse-ask code { display: block; white-space: pre-wrap; margin: 0 0 10px; padding: 8px 10px; border-radius: 8px; background: #f1f5f9; color: #0f172b; font-size: 13px; overflow-wrap: anywhere }
+      .browse-ask div { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px }
+      .browse-ask button { height: 36px; padding: 0 18px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 14px; font-weight: 600 }
+      .browse-ask .yes { border: 0; background: #7c4dff; color: #fff }
+      .browse-ask .yes:hover, .browse-ask .yes:focus-visible { background: #6a3bf0; outline: none }
+      .browse-ask .no { border: 1px solid #cad5e2; background: #fff; color: #314158 }
+      .browse-ask .no:hover, .browse-ask .no:focus-visible { background: #f1f5f9; outline: none }
 
-    if (shown()) navigate(shown())
-    else welcome.hidden = false
-  })
-  </script>
-</head>
-<body id="PageBody">
-  <solid-ui-provider>
-    <header class="demo-header" role="banner">
-      <div class="demo-header-inner">
-        <div class="demo-title">
-          <h1><img src="logo.png" alt="">SolidOS Browser <span class="version">mashlib 3.1.0</span></h1>
-          <solid-ui-account></solid-ui-account>
-        </div>
-        <form class="search" id="browseForm" role="search">
-          <input type="text" id="uriField" inputmode="url" autocomplete="off" spellcheck="false"
-                 aria-label="Address of a resource on a Solid pod"
-                 placeholder="Address of a pod, a folder or a profile, e.g. https://you.solidcommunity.net/">
-          <button id="goButton" type="submit">Browse</button>
+      @media (max-width: 720px) {
+        :root { --browse-bar-height: 104px }
+        .browse-bar { flex-wrap: wrap; gap: 8px 12px; padding: 8px 12px }
+        .browse-home span { display: none }
+        .browse-account { margin-left: auto }
+        .browse-address { order: 3; flex-basis: 100% }
+      }
+    </style>
+    <script type="module">
+      await import('https://mashlib.com/dynamic/dist/mashlib.js')
+
+      const dom = document
+      const outliner = panes.getOutliner(dom)
+      const { store, resource } = SolidLogic.solidLogicSingleton
+      const field = dom.getElementById('uriField')
+      const welcome = dom.getElementById('browseWelcome')
+      const here = () => new URLSearchParams(location.search).get('uri') || ''
+      const ready = panes.initializeProfileHeading(() => here() || location.href) // as upstream: with nothing on show, the page itself
+      let request = 0
+
+      // The page's address says what is on show (?uri=…), one history entry per thing visited.
+      function remember (uri, replace) {
+        const page = new URL(location.href)
+        if (page.searchParams.get('uri') === uri) return
+        page.searchParams.set('uri', uri)
+        history[replace ? 'replaceState' : 'pushState'](history.state, '', page)
+      }
+
+      // Links inside a pane call GotoSubject themselves. Keep the address bar and the page's
+      // address with them, and stop the outliner writing the resource's own URL over ours.
+      const gotoSubject = outliner.GotoSubject.bind(outliner)
+      outliner.GotoSubject = function (subject, expand, pane, solo, referrer, table, options) {
+        if (solo && subject && subject.uri) {
+          field.value = subject.uri
+          remember(subject.uri, false)
+          welcome.hidden = true
+          options = { ...(options && typeof options === 'object' ? options : {}), preserveUrl: true }
+        }
+        return gotoSubject(subject, expand, pane, solo, referrer, table, options)
+      }
+
+      // As upstream's browse.html: load the resource first, so a folder is shown as a folder
+      // and an address the server redirects is shown as where it led.
+      async function show (address, replace) {
+        const mine = ++request
+        const target = new URL(address, location.href)
+        await ready
+        if (mine !== request) return
+
+        const subject = $rdf.sym(target.href)
+        let canonicalSubject = subject
+        let isContainer = false
+        try {
+          const response = await store.fetcher.load(subject.doc())
+          const canonical = new URL(response.url || target.href)
+          canonical.hash = target.hash
+          canonicalSubject = $rdf.sym(canonical.href)
+          isContainer = resource.isContainer(subject.doc()) || resource.isContainer(canonicalSubject.doc())
+          if (isContainer) {
+            if (!canonical.pathname.endsWith('/')) canonical.pathname += '/'
+            target.href = canonical.href
+          }
+        } catch (error) {
+          console.warn('Could not preload the resource; the outline shows why.', error) // access denied, not found
+        }
+        if (mine !== request) return
+
+        field.value = target.href
+        remember(target.href, replace)
+        welcome.hidden = true
+        dom.title = 'Browse · ' + target.href
+
+        const isStorageRoot = resource.isStorageRoot(subject) || resource.isStorageRoot(canonicalSubject)
+        const options = isContainer ? { folderView: isStorageRoot ? 'explorer' : 'container' } : {}
+        outliner.GotoSubject($rdf.sym(target.href), true, undefined, true, undefined, undefined, options)
+        await panes.refreshProfileHeading(true)
+      }
+      const go = (address, replace) => show(address, replace).catch(error => console.error('Failed to browse the resource.', error))
+
+      dom.getElementById('browseForm').addEventListener('submit', (event) => {
+        event.preventDefault()
+        const address = field.value.trim()
+        if (address) go(/^[a-z][a-z0-9+.-]*:/i.test(address) ? address : 'https://' + address, false)
+      })
+      for (const link of dom.querySelectorAll('.browse-examples a:not([data-reload])')) {
+        link.addEventListener('click', (event) => { event.preventDefault(); go(new URL(link.href).searchParams.get('uri'), false) })
+      }
+
+      // The bar can wrap on a narrow screen: tell the layout how tall it really is.
+      const bar = dom.querySelector('.browse-bar')
+      const measure = () => dom.documentElement.style.setProperty('--app-header-height', bar.getBoundingClientRect().height + 'px')
+      measure()
+      new ResizeObserver(measure).observe(bar)
+
+      // ?pane=<address>: panes named by the link. A pane is code that runs as the person looking,
+      // so a link cannot add one silently. One from this page's own site, or from a site allowed
+      // here before, is loaded before the first view; any other is asked about, and the
+      // resource is shown meanwhile without it.
+      const ALLOWED = 'mashlib.panes.allowed' // sites whose panes this browser has allowed
+      const allowed = () => { try { return JSON.parse(localStorage.getItem(ALLOWED)) || [] } catch { return [] } }
+      const allow = (origin) => { try { localStorage.setItem(ALLOWED, JSON.stringify([...new Set([...allowed(), origin])])) } catch { /* private window: this visit only */ } }
+
+      const named = [...new Set(new URLSearchParams(location.search).getAll('pane'))].slice(0, 10).map((address) => {
+        try {
+          const url = new URL(address)
+          return /^https?:$/.test(url.protocol) && !url.username && !url.password ? url : null
+        } catch { return null }
+      }).filter(Boolean)
+
+      async function addPane (url) {
+        try {
+          const module = await import(url.href)
+          const pane = module.default
+          if (!pane || typeof pane.label !== 'function' || typeof pane.render !== 'function' || !pane.name) throw new Error('its default export is not a pane (name, label, render)')
+          if (!panes.byName(pane.name)) panes.register(pane)
+          console.info('[browse] pane "' + pane.name + '" added from ' + url.href)
+          return true
+        } catch (error) {
+          console.warn('[browse] pane not added: ' + url.href + ': ' + (error && error.message ? error.message : error))
+          return false
+        }
+      }
+
+      // Ask about one site at a time; the answer covers every pane the link names from it.
+      function ask (origin, urls) {
+        return new Promise((resolve) => {
+          const box = dom.getElementById('browseAsk')
+          dom.getElementById('browseAskSite').textContent = new URL(origin).host
+          dom.getElementById('browseAskFiles').textContent = urls.map(u => u.href).join('\n')
+          box.hidden = false
+          const answer = (yes) => { box.hidden = true; yesButton.onclick = noButton.onclick = null; resolve(yes) }
+          const yesButton = dom.getElementById('browseAskYes'); const noButton = dom.getElementById('browseAskNo')
+          yesButton.onclick = () => answer(true)
+          noButton.onclick = () => answer(false)
+        })
+      }
+
+      const trusted = named.filter(url => url.origin === location.origin || allowed().includes(url.origin))
+      const unknown = named.filter(url => !trusted.includes(url))
+      // Allowed panes: in before the first view, but never hold the page up for long.
+      await Promise.race([Promise.all(trusted.map(addPane)), new Promise(resolve => setTimeout(resolve, 5000))])
+      ;(async () => {
+        for (const origin of [...new Set(unknown.map(url => url.origin))]) {
+          const urls = unknown.filter(url => url.origin === origin)
+          if (!await ask(origin, urls)) continue
+          allow(origin)
+          const added = await Promise.all(urls.map(addPane))
+          if (added.some(Boolean) && here()) go(here(), true) // show the same thing again, with the new pane
+        }
+      })()
+
+      // Back and forward: show what the page's address now says. (mashlib's own handler would
+      // show the page itself.)
+      window.onpopstate = null
+      window.addEventListener('popstate', () => {
+        const uri = here()
+        if (uri) go(uri, true)
+        else { field.value = ''; welcome.hidden = false; dom.getElementById('OutlineView').replaceChildren() }
+      })
+
+      // Logging in or out changes what can be seen: show the same thing again.
+      for (const event of ['login', 'sessionRestore', 'logout', 'sessionChange', 'identityReplaced']) {
+        SolidLogic.authn.authSession.events.on(event, () => { if (here()) go(here(), true) })
+      }
+
+      if (here()) go(here(), true)
+      else { welcome.hidden = false; field.focus() }
+    </script>
+  </head>
+  <body id="PageBody" data-app-shell="browse">
+    <solid-ui-provider>
+      <header class="browse-bar" role="banner">
+        <a class="browse-home" href="./" title="Start again">
+          <solid-ui-solid-emblem></solid-ui-solid-emblem><span>SolidOS</span>
+        </a>
+        <form class="browse-address" id="browseForm" role="search">
+          <label class="browse-field">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.500 14.500 0 0 0 0 20 14.500 14.500 0 0 0 0-20M2 12h20"/></svg>
+            <span class="sr-only">Address of a resource on a Solid pod</span>
+            <input id="uriField" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Address of a pod, a folder, a profile… e.g. you.solidcommunity.net"/>
+            <button class="browse-go" type="submit">Go</button>
+          </label>
         </form>
-        <div class="quick">
-          <span>Try:</span>
-          <a href="?uri=https%3A%2F%2Ftestingsolidos.solidcommunity.net%2Fprofile%2Fcard%23me" data-uri="https://testingsolidos.solidcommunity.net/profile/card#me">A profile</a>
-          <a href="?uri=https%3A%2F%2Ftestingsolidos.solidcommunity.net%2Fpublic%2F" data-uri="https://testingsolidos.solidcommunity.net/public/">A folder</a>
-          <a href="?uri=https%3A%2F%2Fsolidos.solidcommunity.net%2Fpublic%2FRoadmap%2F" data-uri="https://solidos.solidcommunity.net/public/Roadmap/">SolidOS roadmap</a>
-          <a href="?uri=https%3A%2F%2Ftimbl.solidcommunity.net%2Fprofile%2Fcard%23me" data-uri="https://timbl.solidcommunity.net/profile/card#me">Tim Berners-Lee</a>
-        </div>
-      </div>
-    </header>
+        <div class="browse-account"><solid-ui-account></solid-ui-account></div>
+      </header>
 
-    <main id="MainContent" class="demo-main" tabindex="-1" aria-live="polite">
-      <section class="welcome" id="welcome" hidden>
-        <h2>Browse the Solid web</h2>
-        <p>Paste the address of a pod, a folder or a profile above, or pick one of the examples.</p>
-        <p>Log in to see and edit what your WebID has access to.</p>
-      </section>
-      <div id="OutlineView" class="outline-view" aria-label="Resource browser"></div>
-    </main>
-  </solid-ui-provider>
-
-  <footer class="demo-footer">
-    mashlib 3.1.0 from jsDelivr |
-    <a href="/docs/guides/embedding-mashlib">How this page works</a> |
-    <a href="https://mashlib.com/">mashlib.com</a> |
-    <a href="../data-island/">Data island demo</a> |
-    <a href="../pane-demo/">Custom pane demo</a>
-  </footer>
-</body>
+      <main id="MainContent" tabindex="-1" aria-live="polite" class="app-view browse-main">
+        <section class="browse-ask" id="browseAsk" role="alertdialog" aria-labelledby="browseAskTitle" hidden>
+          <h2 id="browseAskTitle">This link adds a pane from <span id="browseAskSite"></span></h2>
+          <p>A pane is a small program that draws what you are looking at. It runs as you: once you are logged in it can read and change whatever you can on your pod. Allow it only if you trust that site.</p>
+          <code id="browseAskFiles"></code>
+          <div>
+            <button class="yes" id="browseAskYes" type="button">Allow panes from this site</button>
+            <button class="no" id="browseAskNo" type="button">Not now</button>
+          </div>
+        </section>
+        <section class="browse-welcome" id="browseWelcome" hidden>
+          <h1>Browse the Solid web</h1>
+          <p>Paste the address of a pod, a folder, a profile or any document on one, and look at it with SolidOS.</p>
+          <ul class="browse-examples">
+            <li><a href="./?uri=https%3A%2F%2Ftestingsolidos.solidcommunity.net%2Fprofile%2Fcard%23me">A profile</a></li>
+            <li><a href="./?uri=https%3A%2F%2Ftestingsolidos.solidcommunity.net%2Fpublic%2F">A folder</a></li>
+            <li><a href="./?uri=https%3A%2F%2Ftimbl.solidcommunity.net%2Fprofile%2Fcard%23me">Tim Berners-Lee</a></li>
+            <li><a data-reload href="./?pane=https%3A%2F%2Fsolid-panes.github.io%2Fchess%2Fchess-pane.js&uri=https%3A%2F%2Fsolid-panes.github.io%2Fchess%2Fgames%2Fopera.ttl">A chess game, with a pane added by the link</a></li>
+          </ul>
+          <p class="browse-more">
+            <a href="/docs/panes/dynamic-panes">How panes by link work</a> ·
+            <a href="/docs/guides/embedding-mashlib">Embedding SolidOS</a> ·
+            <a href="../data-island/">Data island demo</a> ·
+            <a href="../pane-demo/">Custom pane demo</a> ·
+            <a href="https://mashlib.com/dynamic/">mashlib.com/dynamic</a>
+          </p>
+        </section>
+        <div id="OutlineView" class="outline-view" aria-label="Resource browser"></div>
+      </main>
+    </solid-ui-provider>
+  </body>
 </html>
