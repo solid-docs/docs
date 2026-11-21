@@ -96,6 +96,10 @@
       .browse-more a:hover { text-decoration: underline }
 
       .browse-ask[hidden] { display: none }
+      .browse-open-with { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 16px 0 }
+      .browse-open-with[hidden] { display: none }
+      .browse-open-with a { padding: 6px 14px; border: 1px solid #cfd4e0; border-radius: 999px; background: #fff; color: #4b3bd6; font-size: 14px; font-weight: 600; text-decoration: none }
+      .browse-open-with a:hover { background: #f3f1ff }
       .browse-ask {
         max-width: 760px; margin: 20px auto 0; padding: 18px 20px;
         background: #fff; border-radius: 14px; box-shadow: 0 0 0 1px #e2e8f0, 0 8px 24px rgba(15, 23, 43, .08);
@@ -200,6 +204,7 @@
         const options = isContainer ? { folderView: isStorageRoot ? 'explorer' : 'container' } : {}
         outliner.GotoSubject($rdf.sym(target.href), true, undefined, true, undefined, undefined, options)
         await panes.refreshProfileHeading(true)
+        offerApps()
       }
       const go = (address, replace) => show(address, replace).catch(error => console.error('Failed to browse the resource.', error))
 
@@ -285,17 +290,44 @@
 
       // The person's own panes: once logged in, the ones registered in their tool index
       // (toolIndex.js, beside mashlib.js). The same rule applies: a pane from a site not allowed here is asked about.
+      // The person's own apps, from the same index: an external app is a link made from a
+      // template, offered when what is on show is of a kind the app is registered for.
+      let apps = []
+      function offerApps () {
+        const bar = dom.getElementById('browseOpenWith')
+        bar.replaceChildren()
+        const uri = here()
+        if (uri && apps.length) {
+          const subject = $rdf.sym(uri)
+          const type = $rdf.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
+          const fits = (app) => !app.resourceTypes.length || app.resourceTypes.some(kind => store.holds(subject, type, $rdf.sym(kind)) || store.holds(null, type, $rdf.sym(kind), subject.doc()))
+          for (const app of apps.filter(fits)) {
+            const address = app.address(uri)
+            if (!address) continue
+            const link = dom.createElement('a')
+            link.href = address
+            link.target = '_blank'
+            link.rel = 'noopener noreferrer'
+            link.textContent = 'Open with ' + app.name
+            bar.appendChild(link)
+          }
+        }
+        bar.hidden = !bar.childElementCount
+      }
+
       let indexReadFor = ''
       async function fromToolIndex () {
         const me = SolidLogic.authn.currentUser()
-        if (!me) { indexReadFor = ''; return }
+        if (!me) { indexReadFor = ''; apps = []; offerApps(); return }
         if (indexReadFor === me.uri) return
         indexReadFor = me.uri
         try {
-          const { paneRegistrations } = await import('https://mashlib.com/dynamic/dist/toolIndex.js')
+          const { paneRegistrations, appRegistrations, appAddress } = await import('https://mashlib.com/dynamic/dist/toolIndex.js')
           const registered = await paneRegistrations({ store, $rdf, me })
+          apps = (await appRegistrations({ store, $rdf, me })).map(app => ({ ...app, address: (resource) => appAddress(app, resource) }))
+          offerApps()
           const urls = [...new Map(registered.map(entry => paneAddress(entry.url)).filter(Boolean).map(url => [url.href, url])).values()].slice(0, 20)
-          console.info('[browse] tool index of ' + me.uri + ': ' + urls.length + ' pane(s)')
+          console.info('[browse] tool index of ' + me.uri + ': ' + urls.length + ' pane(s), ' + apps.length + ' app(s)')
           if (await addTrusted(urls.filter(isTrusted)) && here()) go(here(), true)
           askAbout(urls.filter(url => !isTrusted(url)), 'Your tool index')
         } catch (error) {
@@ -365,6 +397,7 @@
             <a href="../pane-demo/">Custom pane demo</a>
           </p>
         </section>
+        <nav class="browse-open-with" id="browseOpenWith" aria-label="Open with an app" hidden></nav>
         <div id="OutlineView" class="outline-view" aria-label="Resource browser"></div>
       </main>
     </solid-ui-provider>
