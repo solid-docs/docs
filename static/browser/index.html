@@ -214,12 +214,13 @@
       const allowed = () => { try { return JSON.parse(localStorage.getItem(ALLOWED)) || [] } catch { return [] } }
       const allow = (origin) => { try { localStorage.setItem(ALLOWED, JSON.stringify([...new Set([...allowed(), origin])])) } catch { /* private window: this visit only */ } }
 
-      const named = [...new Set(new URLSearchParams(location.search).getAll('pane'))].slice(0, 10).map((address) => {
+      const paneAddress = (address) => {
         try {
           const url = new URL(address)
           return /^https?:$/.test(url.protocol) && !url.username && !url.password ? url : null
         } catch { return null }
-      }).filter(Boolean)
+      }
+      const named = [...new Set(new URLSearchParams(location.search).getAll('pane'))].slice(0, 10).map(paneAddress).filter(Boolean)
 
       async function addPane (url) {
         try {
@@ -236,9 +237,10 @@
       }
 
       // Ask about one site at a time; the answer covers every pane the link names from it.
-      function ask (origin, urls) {
+      function ask (origin, urls, from) {
         return new Promise((resolve) => {
           const box = dom.getElementById('browseAsk')
+          dom.getElementById('browseAskFrom').textContent = from
           dom.getElementById('browseAskSite').textContent = new URL(origin).host
           dom.getElementById('browseAskFiles').textContent = urls.map(u => u.href).join('\n')
           box.hidden = false
@@ -249,19 +251,45 @@
         })
       }
 
-      const trusted = named.filter(url => url.origin === location.origin || allowed().includes(url.origin))
-      const unknown = named.filter(url => !trusted.includes(url))
-      // Allowed panes: in before the first view, but never hold the page up for long.
-      await Promise.race([Promise.all(trusted.map(addPane)), new Promise(resolve => setTimeout(resolve, 5000))])
-      ;(async () => {
-        for (const origin of [...new Set(unknown.map(url => url.origin))]) {
-          const urls = unknown.filter(url => url.origin === origin)
-          if (!await ask(origin, urls)) continue
-          allow(origin)
-          const added = await Promise.all(urls.map(addPane))
+      const isTrusted = (url) => url.origin === location.origin || allowed().includes(url.origin)
+      // Allowed panes go straight in, but never hold the page up for long. True if one was added.
+      const addTrusted = async (urls) => (await Promise.race([Promise.all(urls.map(addPane)), new Promise(resolve => setTimeout(() => resolve([]), 5000))])).some(Boolean)
+      // The rest are asked about, one site at a time and one question on screen at a time.
+      let asking = Promise.resolve()
+      const askAbout = (urls, from) => (asking = asking.then(async () => {
+        for (const origin of [...new Set(urls.map(url => url.origin))]) {
+          const fromSite = urls.filter(url => url.origin === origin)
+          if (!allowed().includes(origin)) {
+            if (!await ask(origin, fromSite, from)) continue
+            allow(origin)
+          }
+          const added = await Promise.all(fromSite.map(addPane))
           if (added.some(Boolean) && here()) go(here(), true) // show the same thing again, with the new pane
         }
-      })()
+      }))
+
+      await addTrusted(named.filter(isTrusted)) // in before the first view
+      askAbout(named.filter(url => !isTrusted(url)), 'This link')
+
+      // The person's own panes: once logged in, the ones registered in their tool index
+      // (toolIndex.js, beside mashlib.js). The same rule applies: a pane from a site not allowed here is asked about.
+      let indexReadFor = ''
+      async function fromToolIndex () {
+        const me = SolidLogic.authn.currentUser()
+        if (!me) { indexReadFor = ''; return }
+        if (indexReadFor === me.uri) return
+        indexReadFor = me.uri
+        try {
+          const { paneRegistrations } = await import('https://mashlib.com/dynamic/dist/toolIndex.js')
+          const registered = await paneRegistrations({ store, $rdf, me })
+          const urls = [...new Map(registered.map(entry => paneAddress(entry.url)).filter(Boolean).map(url => [url.href, url])).values()].slice(0, 20)
+          console.info('[browse] tool index of ' + me.uri + ': ' + urls.length + ' pane(s)')
+          if (await addTrusted(urls.filter(isTrusted)) && here()) go(here(), true)
+          askAbout(urls.filter(url => !isTrusted(url)), 'Your tool index')
+        } catch (error) {
+          console.warn('[browse] tool index not read: ' + (error && error.message ? error.message : error))
+        }
+      }
 
       // Back and forward: show what the page's address now says. (mashlib's own handler would
       // show the page itself.)
@@ -274,11 +302,12 @@
 
       // Logging in or out changes what can be seen: show the same thing again.
       for (const event of ['login', 'sessionRestore', 'logout', 'sessionChange', 'identityReplaced']) {
-        SolidLogic.authn.authSession.events.on(event, () => { if (here()) go(here(), true) })
+        SolidLogic.authn.authSession.events.on(event, () => { if (here()) go(here(), true); fromToolIndex() })
       }
 
       if (here()) go(here(), true)
       else { welcome.hidden = false; field.focus() }
+      fromToolIndex() // already logged in when the page opened
     </script>
   </head>
   <body id="PageBody" data-app-shell="browse">
@@ -300,7 +329,7 @@
 
       <main id="MainContent" tabindex="-1" aria-live="polite" class="app-view browse-main">
         <section class="browse-ask" id="browseAsk" role="alertdialog" aria-labelledby="browseAskTitle" hidden>
-          <h2 id="browseAskTitle">This link adds a pane from <span id="browseAskSite"></span></h2>
+          <h2 id="browseAskTitle"><span id="browseAskFrom">This link</span> adds a pane from <span id="browseAskSite"></span></h2>
           <p>A pane is a small program that draws what you are looking at. It runs as you: once you are logged in it can read and change whatever you can on your pod. Allow it only if you trust that site.</p>
           <code id="browseAskFiles"></code>
           <div>
