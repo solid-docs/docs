@@ -95,26 +95,6 @@
       .browse-more a { color: #5b34d6; text-decoration: none }
       .browse-more a:hover { text-decoration: underline }
 
-      .browse-ask[hidden] { display: none }
-      .browse-open-with { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 16px 0 }
-      .browse-open-with[hidden] { display: none }
-      .browse-open-with a { padding: 6px 14px; border: 1px solid #cfd4e0; border-radius: 999px; background: #fff; color: #4b3bd6; font-size: 14px; font-weight: 600; text-decoration: none }
-      .browse-open-with a:hover { background: #f3f1ff }
-      .browse-ask {
-        max-width: 760px; margin: 20px auto 0; padding: 18px 20px;
-        background: #fff; border-radius: 14px; box-shadow: 0 0 0 1px #e2e8f0, 0 8px 24px rgba(15, 23, 43, .08);
-        border-left: 5px solid #7c4dff;
-        font-family: 'Atkinson Hyperlegible Next', system-ui, sans-serif; color: #314158; font-size: 15px; line-height: 1.5;
-      }
-      .browse-ask h2 { margin: 0 0 6px; font-size: 18px; font-weight: 700; color: #0f172b }
-      .browse-ask p { margin: 0 0 10px }
-      .browse-ask code { display: block; white-space: pre-wrap; margin: 0 0 10px; padding: 8px 10px; border-radius: 8px; background: #f1f5f9; color: #0f172b; font-size: 13px; overflow-wrap: anywhere }
-      .browse-ask div { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px }
-      .browse-ask button { height: 36px; padding: 0 18px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 14px; font-weight: 600 }
-      .browse-ask .yes { border: 0; background: #7c4dff; color: #fff }
-      .browse-ask .yes:hover, .browse-ask .yes:focus-visible { background: #6a3bf0; outline: none }
-      .browse-ask .no { border: 1px solid #cad5e2; background: #fff; color: #314158 }
-      .browse-ask .no:hover, .browse-ask .no:focus-visible { background: #f1f5f9; outline: none }
 
       @media (max-width: 720px) {
         :root { --browse-bar-height: 104px }
@@ -147,6 +127,7 @@
       const here = () => new URLSearchParams(location.search).get('uri') || ''
       const ready = panes.initializeProfileHeading(() => here() || location.href) // as upstream: with nothing on show, the page itself
       let request = 0
+      let tools = null // set below, once SolidOS is up (userTools.js, beside mashlib.js)
 
       // The page's address says what is on show (?uri=…), one history entry per thing visited.
       function remember (uri, replace) {
@@ -204,7 +185,7 @@
         const options = isContainer ? { folderView: isStorageRoot ? 'explorer' : 'container' } : {}
         outliner.GotoSubject($rdf.sym(target.href), true, undefined, true, undefined, undefined, options)
         await panes.refreshProfileHeading(true)
-        offerApps()
+        if (tools) tools.refresh()
       }
       const go = (address, replace) => show(address, replace).catch(error => console.error('Failed to browse the resource.', error))
 
@@ -223,117 +204,16 @@
       measure()
       new ResizeObserver(measure).observe(bar)
 
-      // ?pane=<address>: panes named by the link. A pane is code that runs as the person looking,
-      // so a link cannot add one silently. One from this page's own site, or from a site allowed
-      // here before, is loaded before the first view; any other is asked about, and the
-      // resource is shown meanwhile without it.
-      const ALLOWED = 'mashlib.panes.allowed' // sites whose panes this browser has allowed
-      const allowed = () => { try { return JSON.parse(localStorage.getItem(ALLOWED)) || [] } catch { return [] } }
-      const allow = (origin) => { try { localStorage.setItem(ALLOWED, JSON.stringify([...new Set([...allowed(), origin])])) } catch { /* private window: this visit only */ } }
-
-      const paneAddress = (address) => {
-        try {
-          const url = new URL(address)
-          return /^https?:$/.test(url.protocol) && !url.username && !url.password ? url : null
-        } catch { return null }
-      }
-      const named = [...new Set(new URLSearchParams(location.search).getAll('pane'))].slice(0, 10).map(paneAddress).filter(Boolean)
-
-      async function addPane (url) {
-        try {
-          const module = await import(url.href)
-          const pane = module.default
-          if (!pane || typeof pane.label !== 'function' || typeof pane.render !== 'function' || !pane.name) throw new Error('its default export is not a pane (name, label, render)')
-          if (!panes.byName(pane.name)) panes.register(pane)
-          console.info('[browse] pane "' + pane.name + '" added from ' + url.href)
-          return true
-        } catch (error) {
-          console.warn('[browse] pane not added: ' + url.href + ': ' + (error && error.message ? error.message : error))
-          return false
-        }
-      }
-
-      // Ask about one site at a time; the answer covers every pane the link names from it.
-      function ask (origin, urls, from) {
-        return new Promise((resolve) => {
-          const box = dom.getElementById('browseAsk')
-          dom.getElementById('browseAskFrom').textContent = from
-          dom.getElementById('browseAskSite').textContent = new URL(origin).host
-          dom.getElementById('browseAskFiles').textContent = urls.map(u => u.href).join('\n')
-          box.hidden = false
-          const answer = (yes) => { box.hidden = true; yesButton.onclick = noButton.onclick = null; resolve(yes) }
-          const yesButton = dom.getElementById('browseAskYes'); const noButton = dom.getElementById('browseAskNo')
-          yesButton.onclick = () => answer(true)
-          noButton.onclick = () => answer(false)
-        })
-      }
-
-      const isTrusted = (url) => url.origin === location.origin || allowed().includes(url.origin)
-      // Allowed panes go straight in, but never hold the page up for long. True if one was added.
-      const addTrusted = async (urls) => (await Promise.race([Promise.all(urls.map(addPane)), new Promise(resolve => setTimeout(() => resolve([]), 5000))])).some(Boolean)
-      // The rest are asked about, one site at a time and one question on screen at a time.
-      let asking = Promise.resolve()
-      const askAbout = (urls, from) => (asking = asking.then(async () => {
-        for (const origin of [...new Set(urls.map(url => url.origin))]) {
-          const fromSite = urls.filter(url => url.origin === origin)
-          if (!allowed().includes(origin)) {
-            if (!await ask(origin, fromSite, from)) continue
-            allow(origin)
-          }
-          const added = await Promise.all(fromSite.map(addPane))
-          if (added.some(Boolean) && here()) go(here(), true) // show the same thing again, with the new pane
-        }
-      }))
-
-      await addTrusted(named.filter(isTrusted)) // in before the first view
-      askAbout(named.filter(url => !isTrusted(url)), 'This link')
-
-      // The person's own panes: once logged in, the ones registered in their tool index
-      // (toolIndex.js, beside mashlib.js). The same rule applies: a pane from a site not allowed here is asked about.
-      // The person's own apps, from the same index: an external app is a link made from a
-      // template, offered when what is on show is of a kind the app is registered for.
-      let apps = []
-      function offerApps () {
-        const bar = dom.getElementById('browseOpenWith')
-        bar.replaceChildren()
-        const uri = here()
-        if (uri && apps.length) {
-          const subject = $rdf.sym(uri)
-          const type = $rdf.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
-          const fits = (app) => !app.resourceTypes.length || app.resourceTypes.some(kind => store.holds(subject, type, $rdf.sym(kind)) || store.holds(null, type, $rdf.sym(kind), subject.doc()))
-          for (const app of apps.filter(fits)) {
-            const address = app.address(uri)
-            if (!address) continue
-            const link = dom.createElement('a')
-            link.href = address
-            link.target = '_blank'
-            link.rel = 'noopener noreferrer'
-            link.textContent = 'Open with ' + app.name
-            bar.appendChild(link)
-          }
-        }
-        bar.hidden = !bar.childElementCount
-      }
-
-      let indexReadFor = ''
-      async function fromToolIndex () {
-        const me = SolidLogic.authn.currentUser()
-        if (!me) { indexReadFor = ''; apps = []; offerApps(); return }
-        if (indexReadFor === me.uri) return
-        indexReadFor = me.uri
-        try {
-          const { paneRegistrations, appRegistrations, appAddress } = await import('https://mashlib.com/dynamic/dist/toolIndex.js')
-          const registered = await paneRegistrations({ store, $rdf, me })
-          apps = (await appRegistrations({ store, $rdf, me })).map(app => ({ ...app, address: (resource) => appAddress(app, resource) }))
-          offerApps()
-          const urls = [...new Map(registered.map(entry => paneAddress(entry.url)).filter(Boolean).map(url => [url.href, url])).values()].slice(0, 20)
-          console.info('[browse] tool index of ' + me.uri + ': ' + urls.length + ' pane(s), ' + apps.length + ' app(s)')
-          if (await addTrusted(urls.filter(isTrusted)) && here()) go(here(), true)
-          askAbout(urls.filter(url => !isTrusted(url)), 'Your tool index')
-        } catch (error) {
-          console.warn('[browse] tool index not read: ' + (error && error.message ? error.message : error))
-        }
-      }
+      // The person's own panes and apps (userTools.js, beside mashlib.js): the panes named by ?pane=, and, once
+      // logged in, those registered in their tool index; the apps in it as "Open with" links.
+      // A pane from a site this browser has not allowed before is asked about first.
+      const { userTools, paneAddress } = await import('https://mashlib.com/dynamic/dist/userTools.js')
+      tools = await userTools({
+        dom, panes, store, $rdf, authn: SolidLogic.authn,
+        subject: here,
+        show: () => go(here(), true),
+        linkPanes: [...new Set(new URLSearchParams(location.search).getAll('pane'))].map(paneAddress)
+      })
 
       // Back and forward: show what the page's address now says. (mashlib's own handler would
       // show the page itself.)
@@ -346,12 +226,11 @@
 
       // Logging in or out changes what can be seen: show the same thing again.
       for (const event of ['login', 'sessionRestore', 'logout', 'sessionChange', 'identityReplaced']) {
-        SolidLogic.authn.authSession.events.on(event, () => { if (here()) go(here(), true); fromToolIndex() })
+        SolidLogic.authn.authSession.events.on(event, () => { if (here()) go(here(), true) })
       }
 
       if (here()) go(here(), true)
       else { welcome.hidden = false; field.focus() }
-      fromToolIndex() // already logged in when the page opened
     </script>
   </head>
   <body id="PageBody" data-app-shell="browse">
@@ -372,15 +251,6 @@
       </header>
 
       <main id="MainContent" tabindex="-1" aria-live="polite" class="app-view browse-main">
-        <section class="browse-ask" id="browseAsk" role="alertdialog" aria-labelledby="browseAskTitle" hidden>
-          <h2 id="browseAskTitle"><span id="browseAskFrom">This link</span> adds a pane from <span id="browseAskSite"></span></h2>
-          <p>A pane is a small program that draws what you are looking at. It runs as you: once you are logged in it can read and change whatever you can on your pod. Allow it only if you trust that site.</p>
-          <code id="browseAskFiles"></code>
-          <div>
-            <button class="yes" id="browseAskYes" type="button">Allow panes from this site</button>
-            <button class="no" id="browseAskNo" type="button">Not now</button>
-          </div>
-        </section>
         <section class="browse-welcome" id="browseWelcome" hidden>
           <h1>Browse the Solid web</h1>
           <p>Paste the address of a pod, a folder, a profile or any document on one, and look at it with SolidOS.</p>
@@ -397,7 +267,6 @@
             <a href="../pane-demo/">Custom pane demo</a>
           </p>
         </section>
-        <nav class="browse-open-with" id="browseOpenWith" aria-label="Open with an app" hidden></nav>
         <div id="OutlineView" class="outline-view" aria-label="Resource browser"></div>
       </main>
     </solid-ui-provider>
