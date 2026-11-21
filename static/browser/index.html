@@ -121,6 +121,18 @@
       }
     </style>
     <script type="module">
+      // Logging in leaves this page and comes back to it, and the address must be the same,
+      // character for character, both times. The login library writes the query in its encoded
+      // form on the way back, so a link with a plain ?uri=http://… would not match and the login
+      // would be refused. Put the address in that form now, before anyone can log in. (Not while
+      // a login is coming back: that address is left as it is.)
+      {
+        const query = new URLSearchParams(location.search)
+        const encoded = query.toString()
+        if (encoded && '?' + encoded !== location.search && !query.has('code') && !query.has('state')) {
+          history.replaceState(history.state, '', location.pathname + '?' + encoded + location.hash)
+        }
+      }
       await import('https://mashlib.com/dynamic/dist/mashlib.js')
 
       const dom = document
