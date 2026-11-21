@@ -136,7 +136,7 @@ From `context.session.logic` (solid-logic) a pane can also read who is logged in
 
 ## 5. Try it in a running SolidOS
 
-Serve `recipe-pane.js`, `recipe.svg` and `recipe.ttl` from anywhere the browser can fetch them as JavaScript with cross-origin access allowed, such as a folder on your pod or GitHub Pages ([details](./dynamic-panes.md#serving-a-pane-module)). Open SolidOS 3.1, for example https://mashlib.com/ or your pod's own data browser, and in the browser console run:
+Serve `recipe-pane.js`, `recipe.svg` and `recipe.ttl` from anywhere the browser can fetch them as JavaScript with cross-origin access allowed, such as a folder on your pod or GitHub Pages ([details](./dynamic-panes.md#serving-a-pane-module)). Open SolidOS 3.1, for example the [SolidOS Browser](https://solidos.org/docs/browser/) or your pod's own data browser, and in the browser console run:
 
 ```javascript
 const pane = (await import('https://alice.example/public/panes/recipe-pane.js')).default
@@ -184,7 +184,7 @@ test('stays out of the way for anything else', () => {
 
 ## 7. Ship it
 
-- **As a dynamic pane** (no fork, no rebuild): publish the module and load it with `panes.register`, JSS `--panes`, or a `?pane=` link on mashlib.com/dynamic. See [Dynamic Panes](./dynamic-panes.md).
+- **As a dynamic pane** (no fork, no rebuild): publish the module and load it with `panes.register`, JSS `--panes`, or a `?pane=` link to the SolidOS Browser. See [Dynamic Panes](./dynamic-panes.md).
 - **As a built-in pane**: built-in panes are imported and registered in solid-panes' [`src/registerPanes.js`](https://github.com/SolidOS/solid-panes/blob/main/src/registerPanes.js), where the order of the `register` calls is the order of preference. That needs a solid-panes release and a mashlib build. Larger panes are published as their own npm packages (folder-pane, contacts-pane and others) and imported there.
 
 ## Style the pane

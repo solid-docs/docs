@@ -21,9 +21,9 @@ Most apps keep your data on their own servers: your contacts in one place, your 
 
 ### Step 1: Open SolidOS
 
-Open **[mashlib.com](https://mashlib.com/?uri=https%3A%2F%2Ftestingsolidos.solidcommunity.net%2Fprofile%2Fcard%23me)**. It runs the official SolidOS 3.1 release and opens a public test profile.
+Open the **[SolidOS Browser](https://solidos.org/docs/browser/?uri=https%3A%2F%2Ftestingsolidos.solidcommunity.net%2Fprofile%2Fcard%23me)**. It runs SolidOS 3.1 and opens a public test profile.
 
-![mashlib.com showing the public test profile: name and role at the top, then Bio, Resume, Follow me on, Skills and Languages cards](/img/getting-started/mashlib-com-profile.png)
+![The SolidOS Browser showing the public test profile: name and role at the top, then Bio, Resume, Follow me on, Skills and Languages cards](/img/getting-started/mashlib-com-profile.png)
 
 ### Step 2: Look around
 
@@ -63,7 +63,7 @@ Everything you see is ordinary data on the web, not rows in one company's databa
 
 ## Next steps
 
-**Get a pod.** [Get a Pod](https://solidproject.org/users/get-a-pod) lists providers. Then open your pod's address on [mashlib.com](https://mashlib.com/) and use **Log In** at the top right.
+**Get a pod.** [Get a Pod](https://solidproject.org/users/get-a-pod) lists providers. Then open your pod's address in the [SolidOS Browser](https://solidos.org/docs/browser/) and use **Log In** at the top right.
 
 **Learn to use SolidOS.** The [SolidOS user guide](https://solidos.org/userguide/) covers logging in, folders, sharing and each view.
 

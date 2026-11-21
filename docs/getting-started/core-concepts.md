@@ -56,7 +56,7 @@ A **WebID** is a URL that names a person, such as `https://alice.example/profile
 
 ## The page globals
 
-mashlib puts its libraries on the page as globals, so you can try everything below in the browser console on [mashlib.com](https://mashlib.com/):
+mashlib puts its libraries on the page as globals, so you can try everything below in the browser console in the [SolidOS Browser](https://solidos.org/docs/browser/):
 
 | Global | What it is |
 |--------|------------|

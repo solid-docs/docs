@@ -14,7 +14,7 @@ There are three ways to load one:
 |---|---|---|
 | Any page running SolidOS 3.1 | `panes.register(pane)`, or pane-loader's `loadPanes([url])` | The page's code, or you in the console |
 | A JSS pod | `jss start --mashlib-cdn --panes <url>` | Whoever runs the server |
-| A link | `https://mashlib.com/dynamic/?pane=<url>&uri=<resource>` | The person who opens the link, after a prompt |
+| A link | `https://solidos.org/docs/browser/?pane=<url>&uri=<resource>` | The person who opens the link, after a prompt |
 
 ## A pane module
 
@@ -93,14 +93,14 @@ export default {
 .folder-summary[data-theme="dark"] dd { color: var(--solid-ui-color-lavender-400, #cbb9ff); }
 ```
 
-The same module was loaded into the official mashlib 3.1.0 bundle (https://mashlib.com/), into the no-build tree (https://mashlib.com/dynamic/) and into a JSS pod's data browser, and rendered on all three:
+The same module was loaded into the official mashlib 3.1.0 bundle, into the no-build tree and into a JSS pod's data browser, and rendered on all three:
 
-![The folder summary pane on mashlib.com/dynamic: "What this folder holds", with counts of .js, .svg, .css and .ttl files](/img/panes-dev/dynamic-summary.png)
+![The folder summary pane in the SolidOS Browser: "What this folder holds", with counts of .js, .svg, .css and .ttl files](/img/panes-dev/dynamic-summary.png)
 
 ### Rules for a pane loaded at run time
 
 - **Default export.** The pane is the module's default export. Loaders check that it has a non-empty `name`, a `label` function and a `render` function, and skip it otherwise.
-- **Import nothing from SolidOS.** Take the store, the session and the document from `context`. On the official bundle a bare specifier such as `import 'rdflib'` does not resolve, and a second copy of solid-logic would have its own store and no login. The page globals `$rdf`, `UI`, `SolidLogic` and `panes` are there if you need them ([list](./creating-panes.md#4-what-a-pane-can-use-without-importing)). On mashlib.com/dynamic only, an import map resolves `rdflib`, `solid-logic`, `solid-ui`, `solid-panes`, `lit` and `lit-html` to the copies already loaded.
+- **Import nothing from SolidOS.** Take the store, the session and the document from `context`. On the official bundle a bare specifier such as `import 'rdflib'` does not resolve, and a second copy of solid-logic would have its own store and no login. The page globals `$rdf`, `UI`, `SolidLogic` and `panes` are there if you need them ([list](./creating-panes.md#4-what-a-pane-can-use-without-importing)). In the no-build tree only, which the SolidOS Browser runs, an import map resolves `rdflib`, `solid-logic`, `solid-ui`, `solid-panes`, `lit` and `lit-html` to the copies already loaded.
 - **Refer to your own files relative to the module**, with `new URL('file', import.meta.url)`, as the icon and stylesheet above do.
 - **A unique `name`.** A loader will not register a second, different pane under a name already in the registry.
 
@@ -115,7 +115,7 @@ GitHub Pages and JSS pods do both, so a file in a public folder of a JSS pod wor
 
 ## On any page: `panes.register`
 
-On a page running mashlib 3.1 (mashlib.com, a pod's data browser, your own page), `window.panes` is solid-panes. Import the module, register the pane, and show the subject again so that the new pane is considered:
+On a page running mashlib 3.1 (the SolidOS Browser, a pod's data browser, your own page), `window.panes` is solid-panes. Import the module, register the pane, and show the subject again so that the new pane is considered:
 
 ```javascript
 const pane = (await import('https://alice.example/public/panes/folder-summary-pane.js')).default
@@ -169,15 +169,15 @@ jss start --mashlib-cdn --conneg --panes https://alice.example/public/panes/fold
 
 JSS serves its copy of pane-loader at `/.well-known/jss/pane-loader.js`. That copy leaves out the upstream `?pane=` shortcut, so a JSS page loads only the panes in the server's list. See the [JSS dynamic panes guide](https://jss.live/docs/guides/dynamic-panes).
 
-## By link: `?pane=` on mashlib.com/dynamic
+## By link: `?pane=` in the SolidOS Browser
 
-https://mashlib.com/dynamic/ is SolidOS 3.1 as plain ES modules, with an address bar. It takes two query parameters:
+The [SolidOS Browser](https://solidos.org/docs/browser/) is SolidOS 3.1 as plain ES modules, with an address bar. It takes two query parameters:
 
 - `uri=<resource>`: the thing to show;
 - `pane=<module URL>`: a pane to add. It may be repeated, up to 10.
 
 ```text
-https://mashlib.com/dynamic/?pane=https%3A%2F%2Falice.example%2Fpublic%2Fpanes%2Ffolder-summary-pane.js&uri=https%3A%2F%2Falice.example%2Fpublic%2F
+https://solidos.org/docs/browser/?pane=https%3A%2F%2Falice.example%2Fpublic%2Fpanes%2Ffolder-summary-pane.js&uri=https%3A%2F%2Falice.example%2Fpublic%2F
 ```
 
 Encode both values with `encodeURIComponent`.
@@ -190,7 +190,7 @@ A pane is code. It runs in the page as the person looking at it: once they are l
 - A pane from the page's own site, or from a site this browser has allowed before, is loaded before the first view. The page waits at most 5 seconds for it.
 - For a pane from any other site, the page shows the resource without it and asks, once per site, listing the module URLs:
 
-![The prompt on mashlib.com/dynamic: "This link adds a pane from 127.0.0.1:8732", explaining that a pane runs as you, listing the module URL, with the buttons "Allow panes from this site" and "Not now"](/img/panes-dev/dynamic-ask.png)
+![The prompt in the SolidOS Browser: "This link adds a pane from 127.0.0.1:8732", explaining that a pane runs as you, listing the module URL, with the buttons "Allow panes from this site" and "Not now"](/img/panes-dev/dynamic-ask.png)
 
 - **Allow panes from this site** loads the panes, shows the resource again with them, and remembers the site in this browser (the `localStorage` key `mashlib.panes.allowed`), so later links from that site are not asked about.
 - **Not now** loads nothing and remembers nothing.
@@ -207,7 +207,7 @@ The element a pane returns is put inside `<solid-ui-file-explorer-provider>` as 
 - load a stylesheet once per page, as `render` above does, rather than adding a `<style>` element on every render;
 - use solid-ui's CSS custom properties, such as `--solid-ui-color-primary` and `--solid-ui-font-size-xl`, with a fallback value, to match the rest of SolidOS. See [Theming](../reference/theming.md).
 
-`context.environment` says whether the page is in the `light` or `dark` theme and the `desktop` or `mobile` layout. Read it in `render` every time. On a page started with `panes.runDataBrowser()` (mashlib.com, a pod's data browser), a theme or layout change renders the pane on show again with the new values. Pages that show subjects themselves, such as the browse page at mashlib.com/dynamic, update `context.environment` but do not redraw the pane.
+`context.environment` says whether the page is in the `light` or `dark` theme and the `desktop` or `mobile` layout. Read it in `render` every time. On a page started with `panes.runDataBrowser()` (a pod's data browser, for example), a theme or layout change renders the pane on show again with the new values. Pages that show subjects themselves, such as the SolidOS Browser, update `context.environment` but do not redraw the pane.
 
 ## See also
 

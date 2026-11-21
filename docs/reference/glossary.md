@@ -25,13 +25,13 @@ Terms used throughout the SolidOS documentation. Versions are those shipped in m
 |------|-----------|
 | **SolidOS** | An open-source data browser for Solid pods, built from mashlib, solid-panes, solid-ui, solid-logic, pane-registry and rdflib |
 | **Data browser** | The page that runs SolidOS: it shows any resource on the web with the panes that can render it. In mashlib it is `databrowser.html` |
-| **mashlib.com** | A site that serves the official mashlib 3.1.0 bundle with a page to browse any pod. [mashlib.com/dynamic/](https://mashlib.com/dynamic/) serves the same data browser as plain ES modules, with no build step |
+| **SolidOS Browser** | The [SolidOS Browser](https://solidos.org/docs/browser/) on this site: SolidOS 3.1 as plain ES modules with an address bar, to browse any pod. It takes `?uri=<address>` to open a resource and `?pane=<module URL>` to add a pane |
 | **Data Kitchen** | A desktop application that wraps SolidOS in Electron |
 | **Pane** | A view for one kind of resource. It is an object with `name`, `icon`, `label(subject, context)` and `render(subject, context)` |
 | **Pane registry** | The list of registered panes, kept by the pane-registry package. Panes are added with `panes.register(pane)` |
 | **Relevant panes** | The panes whose `label()` returns a string for the subject on show, in registration order. The user's roles (the `audience` field) can narrow the list |
 | **Default pane** | The pane shown first: the one matching the resource's `ui:mintClass`, otherwise the first relevant pane whose `shouldGetFocus(subject)` returns true, otherwise the first relevant pane |
-| **Dynamic pane** | A pane loaded at run time from a URL as an ES module, instead of being compiled into mashlib. It can be loaded with `panes.register`, the JSS `--panes` option, or `?pane=` on mashlib.com/dynamic |
+| **Dynamic pane** | A pane loaded at run time from a URL as an ES module, instead of being compiled into mashlib. It can be loaded with `panes.register`, the JSS `--panes` option, or `?pane=` in the SolidOS Browser |
 | **pane-loader** | A small script that fetches pane modules from URLs and registers them before SolidOS starts ([github.com/melvincarvalho/pane-loader](https://github.com/melvincarvalho/pane-loader)). JSS ships a copy |
 | **Outliner** | The object that draws a subject and its panes and handles navigation. Get it with `panes.getOutliner(document)`; `GotoSubject()` on it shows a resource |
 | **Context** | The second argument to `label` and `render`: `{ dom, getOutliner, session: { store, logic, paneRegistry }, environment }` (`DataBrowserContext` in pane-registry) |

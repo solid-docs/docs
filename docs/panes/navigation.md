@@ -144,7 +144,7 @@ For example, `GotoSubject(webId, true, panes.byName('links'), true)` sends `{ ur
 
 On the page started by `panes.runDataBrowser()`, SolidOS handles Back, Forward and pressing Enter on the current URL itself. They show what the URL is: a WebID ending in `#me` with the profile pane, anything else with its default pane. It uses the browser's [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API) where there is one and falls back to `popstate` where there is not. `panes.isHandlingBrowserNavigation()` returns `true` once it has taken this over; mashlib's own `window.onpopstate` then does nothing.
 
-A page that renders subjects itself, without `runDataBrowser`, handles Back and Forward on its own. If it uses `preserveUrl` and keeps the subject in its query string, it should listen for `popstate` and call `GotoSubject` for the subject in the URL. The browse page at https://mashlib.com/ does this, and wraps `GotoSubject` so that links inside panes also keep its `?uri=` in step:
+A page that renders subjects itself, without `runDataBrowser`, handles Back and Forward on its own. If it uses `preserveUrl` and keeps the subject in its query string, it should listen for `popstate` and call `GotoSubject` for the subject in the URL. The [SolidOS Browser](https://solidos.org/docs/browser/) does this, and wraps `GotoSubject` so that links inside panes also keep its `?uri=` in step:
 
 ```javascript
 const outliner = panes.getOutliner(document)

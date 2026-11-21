@@ -24,7 +24,7 @@ SolidOS 3.1 is six packages stacked on each other, plus the pane packages. Each 
 └────────────────────────────────────────────────────────────────────┘
 ```
 
-The snippets below use the page globals that mashlib sets (`$rdf`, `SolidLogic`, `UI`, `panes`), so they run in the browser console on [mashlib.com](https://mashlib.com/).
+The snippets below use the page globals that mashlib sets (`$rdf`, `SolidLogic`, `UI`, `panes`), so they run in the browser console in the [SolidOS Browser](https://solidos.org/docs/browser/).
 
 ## rdflib
 
@@ -155,7 +155,7 @@ The larger panes are separate packages that solid-panes imports and registers: f
 
 | Setup | What serves the page | Read more |
 |-------|----------------------|-----------|
-| mashlib.com | the official bundle with an address bar; `/dynamic/` is the no-build version | [mashlib.com and no-build SolidOS](../guides/mashlib-com.md) |
+| The SolidOS Browser | SolidOS 3.1 as plain ES modules with an address bar | [mashlib.com and no-build SolidOS](../guides/mashlib-com.md) |
 | A pod server | the server answers a browser's request for a resource with `databrowser.html` | [Running SolidOS on JSS](../guides/running-on-jss.md) |
 | Your own page | a page that loads mashlib and points it at a resource | [Embedding mashlib](../guides/embedding-mashlib.md) |
 | Desktop | [Data Kitchen](https://github.com/SolidOS/data-kitchen), mashlib in Electron | |

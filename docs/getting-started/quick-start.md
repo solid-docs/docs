@@ -8,17 +8,17 @@ description: Ways to run SolidOS 3.1, from a link to your own server
 
 Four ways to run SolidOS 3.1, shortest first.
 
-## 1. In the browser: mashlib.com
+## 1. In the browser: the SolidOS Browser
 
-Open **[https://mashlib.com/](https://mashlib.com/)**, paste the address of a pod, folder, profile or document, and press **Go**. Add `?uri=<address>` to the link to open one straight away, for example [the public test profile](https://mashlib.com/?uri=https%3A%2F%2Ftestingsolidos.solidcommunity.net%2Fprofile%2Fcard%23me).
+Open the SolidOS Browser at **[https://solidos.org/docs/browser/](https://solidos.org/docs/browser/)**, paste the address of a pod, folder, profile or document, and press **Go**. Add `?uri=<address>` to the link to open one straight away, for example [the public test profile](https://solidos.org/docs/browser/?uri=https%3A%2F%2Ftestingsolidos.solidcommunity.net%2Fprofile%2Fcard%23me).
 
-This is the official mashlib 3.1.0 bundle, unchanged. In the browser console you can check:
+This is SolidOS 3.1 (mashlib 3.1.0) as plain ES modules, with no build step. In the browser console you can check:
 
 ```javascript
 mashlib.versionInfo.npmInfo.mashlib   // "3.1.0"
 ```
 
-[https://mashlib.com/dynamic/](https://mashlib.com/dynamic/) is the same data browser built from plain ES modules, with no build step. It also takes `?pane=<module URL>` to load an extra pane, which [Your First Pane](./your-first-pane.md) uses.
+The SolidOS Browser also takes `?pane=<module URL>` to load an extra pane, which [Your First Pane](./your-first-pane.md) uses.
 
 ## 2. On your machine, with no build
 
@@ -32,7 +32,7 @@ npx http-server -p 8000 -c-1
 
 Open http://localhost:8000/mashlib/browse.html?uri=https://testingsolidos.solidcommunity.net/profile/card%23me
 
-You see the same profile as on mashlib.com. Every file under `mashlib/`, `src/` and `panes/` is loaded as it is, so you can edit one and reload. The libraries it imports (rdflib, solid-logic, lit and others) come from a CDN through `src/importmap.js`, so the page needs internet access.
+You see the same profile as in the SolidOS Browser. Every file under `mashlib/`, `src/` and `panes/` is loaded as it is, so you can edit one and reload. The libraries it imports (rdflib, solid-logic, lit and others) come from a CDN through `src/importmap.js`, so the page needs internet access.
 
 `mashlib/databrowser.html?uri=<address>` is the same without the address bar. See [mashlib.com and no-build SolidOS](../guides/mashlib-com.md) for what is in the tree.
 

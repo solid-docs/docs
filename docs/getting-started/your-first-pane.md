@@ -14,7 +14,7 @@ You need a browser. For steps 2 to 4 you also need `git` and Node.js.
 
 ## Step 1: Try it in the console
 
-Open [mashlib.com with the test profile document](https://mashlib.com/?uri=https%3A%2F%2Ftestingsolidos.solidcommunity.net%2Fprofile%2Fcard). Open the browser's developer tools, go to the Console, and paste:
+Open [the SolidOS Browser with the test profile document](https://solidos.org/docs/browser/?uri=https%3A%2F%2Ftestingsolidos.solidcommunity.net%2Fprofile%2Fcard). Open the browser's developer tools, go to the Console, and paste:
 
 ```javascript
 panes.register({
@@ -129,15 +129,15 @@ Reload. The profile document now opens in the Hello view. `shouldGetFocus` is on
 
 ## Step 6: Share it
 
-To let other people use your pane, put `hello-pane.js` where a browser can fetch it from another site: a public folder on your pod, GitHub Pages, or any host that serves JavaScript with an `Access-Control-Allow-Origin` header. Then send a link to the no-build data browser at mashlib.com:
+To let other people use your pane, put `hello-pane.js` where a browser can fetch it from another site: a public folder on your pod, GitHub Pages, or any host that serves JavaScript with an `Access-Control-Allow-Origin` header. Then send a link to the SolidOS Browser:
 
 ```
-https://mashlib.com/dynamic/?pane=<your module URL>&uri=<a resource>
+https://solidos.org/docs/browser/?pane=<your module URL>&uri=<a resource>
 ```
 
 For example, this link loads a pane published with [pane-loader](https://github.com/melvincarvalho/pane-loader) and shows a folder:
 
-[https://mashlib.com/dynamic/?pane=https://melvincarvalho.github.io/pane-loader/examples/hello-pane.js&uri=https://testingsolidos.solidcommunity.net/public/](https://mashlib.com/dynamic/?pane=https://melvincarvalho.github.io/pane-loader/examples/hello-pane.js&uri=https://testingsolidos.solidcommunity.net/public/)
+[https://solidos.org/docs/browser/?pane=https://melvincarvalho.github.io/pane-loader/examples/hello-pane.js&uri=https://testingsolidos.solidcommunity.net/public/](https://solidos.org/docs/browser/?pane=https://melvincarvalho.github.io/pane-loader/examples/hello-pane.js&uri=https://testingsolidos.solidcommunity.net/public/)
 
 A pane from another site is code that runs as the person looking at it: once they are logged in it can read and change whatever they can. So the page asks first ("This link adds a pane from …", **Allow panes from this site** or **Not now**) and shows the resource without the pane meanwhile. A pane from the page's own site, as in step 3, is loaded without asking. The answer is remembered in that browser.
 

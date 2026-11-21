@@ -129,7 +129,7 @@ npm start          # http://localhost:3000/docs/
 npm run build      # fails on any broken internal link
 ```
 
-Pages are Markdown (MDX) in `docs/`; a new page also needs an entry in `sidebars.ts`. Code examples should run against the current SolidOS release; try them in the browser console at [mashlib.com](https://mashlib.com/).
+Pages are Markdown (MDX) in `docs/`; a new page also needs an entry in `sidebars.ts`. Code examples should run against the current SolidOS release; try them in the browser console in the [SolidOS Browser](https://solidos.org/docs/browser/).
 
 ## Code of conduct
 

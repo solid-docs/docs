@@ -49,4 +49,4 @@ solid-ui 5.1.0 also has the newer `solid-ui-access-control-modal`. The outline i
 
 ## activitystreams in the no-build tree
 
-The official mashlib 3.1.0 bundle (as served by [mashlib.com](https://mashlib.com/)) registers `activitystreams`. The no-build 3.1 tree used for the screenshots on these pages does not, so it lists 35 panes.
+The official mashlib 3.1.0 bundle registers `activitystreams`. The no-build 3.1 tree used for the screenshots on these pages does not, so it lists 35 panes.

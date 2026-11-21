@@ -196,8 +196,8 @@ const config: Config = {
               value: '<hr style="margin: 0.5rem 0;">',
             },
             {
-              label: 'mashlib.com (SolidOS 3.1 live)',
-              href: 'https://mashlib.com/',
+              label: 'SolidOS Browser (SolidOS 3.1 live)',
+              href: 'https://solidos.org/docs/browser/',
             },
             {
               label: 'JavaScript Solid Server (JSS)',

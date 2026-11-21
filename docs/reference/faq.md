@@ -43,13 +43,13 @@ JSS stores ACL documents only as JSON-LD; see [Troubleshooting](./troubleshootin
 
 ### Where can I try it?
 
-Open [mashlib.com](https://mashlib.com/), which runs the official mashlib 3.1.0 bundle, and enter the address of a pod, a folder or a profile.
+Open the [SolidOS Browser](https://solidos.org/docs/browser/), which runs SolidOS 3.1, and enter the address of a pod, a folder or a profile.
 
 ## Development
 
 ### Do I need a build step?
 
-No. To use SolidOS, load the mashlib bundle from a CDN with a `<script>` tag, or open [mashlib.com/dynamic/](https://mashlib.com/dynamic/), which serves the same data browser as plain ES modules. A pane can also be a single ES module that you load from a URL without building anything. You only need a build to work on the SolidOS libraries themselves; see [Contributing](./contributing.md).
+No. To use SolidOS, load the mashlib bundle from a CDN with a `<script>` tag, or open the [SolidOS Browser](https://solidos.org/docs/browser/), which runs the same data browser as plain ES modules. A pane can also be a single ES module that you load from a URL without building anything. You only need a build to work on the SolidOS libraries themselves; see [Contributing](./contributing.md).
 
 ### How do I add a pane without forking solid-panes?
 
@@ -72,7 +72,7 @@ Then load it in one of three ways:
 
 - On any page with mashlib: `panes.register((await import(url)).default)`.
 - On a JSS server: `jss start --mashlib-cdn --conneg --panes <url>`. The server owner chooses the panes for every user.
-- By link: `https://mashlib.com/dynamic/?pane=<url>&uri=<resource>`. The browser asks the user before it runs a pane from a site it has not allowed yet.
+- By link: `https://solidos.org/docs/browser/?pane=<url>&uri=<resource>`. The browser asks the user before it runs a pane from a site it has not allowed yet.
 
 A pane runs with the logged-in user's session and can do whatever that user can. Load only panes you trust. See [Creating panes](../panes/creating-panes.md) and the [JSS dynamic panes guide](https://jss.live/docs/guides/dynamic-panes).
 
@@ -179,7 +179,7 @@ Yes. Any Solid-OIDC provider works; the user types its URL in the login dialog.
 
 ### How do I deploy SolidOS?
 
-- **mashlib.com**: nothing to deploy; link to `https://mashlib.com/` or `https://mashlib.com/dynamic/`.
+- **SolidOS Browser**: nothing to deploy; link to `https://solidos.org/docs/browser/`.
 - **Static hosting**: serve a page that loads a pinned mashlib bundle, for example from `https://cdn.jsdelivr.net/npm/mashlib@3.1.0/dist/`.
 - **From a Solid server**: JSS with `--mashlib-cdn`, `--mashlib` or `--mashlib-module <url>`.
 - **Desktop**: [Data Kitchen](https://github.com/SolidOS/data-kitchen).

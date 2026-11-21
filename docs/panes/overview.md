@@ -81,7 +81,7 @@ You do not need to fork SolidOS or rebuild mashlib to add a pane. Write the pane
 
 - on any page running SolidOS: `panes.register(pane)`;
 - on a [JSS](https://jss.live/) pod: `jss start --mashlib-cdn --panes <url>`;
-- by link: `https://mashlib.com/dynamic/?pane=<url>&uri=<resource>`.
+- by link: `https://solidos.org/docs/browser/?pane=<url>&uri=<resource>`.
 
 [Dynamic Panes](./dynamic-panes.md) covers all three.
 

@@ -96,7 +96,7 @@ await panes.getOutliner(document).GotoSubject(subject, true, undefined, true)
 
 See the [JSS dynamic panes guide](https://jss.live/docs/guides/dynamic-panes).
 
-### Pane given with `?pane=` on mashlib.com/dynamic is missing
+### Pane given with `?pane=` in the SolidOS Browser is missing
 
 - The page asks before it runs panes from a site you have not allowed yet. If you did not allow it, the pane is not added.
 - The module's default export must have `name`, `label` and `render`; otherwise the console shows "pane not added".
@@ -181,7 +181,7 @@ You are logged in but the resource's access rules do not give you that access. C
 
 ### 415 Unsupported Media Type when changing sharing
 
-JSS stores ACL documents only as JSON-LD and answers a Turtle ACL write with 415. SolidOS 3.1 writes ACLs as Turtle, so with the mashlib 3.1.0 bundle a sharing change on a JSS pod gets a 415. The no-build data browser at [mashlib.com/dynamic/](https://mashlib.com/dynamic/) retries such a write once as JSON-LD.
+JSS stores ACL documents only as JSON-LD and answers a Turtle ACL write with 415. SolidOS 3.1 writes ACLs as Turtle, so with the mashlib 3.1.0 bundle a sharing change on a JSS pod gets a 415. The no-build data browser, which the [SolidOS Browser](https://solidos.org/docs/browser/) runs, retries such a write once as JSON-LD.
 
 ### Network errors on another server
 

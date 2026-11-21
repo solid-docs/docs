@@ -10,7 +10,7 @@ mashlib is one script and one stylesheet. Load them into a page and the whole So
 
 Three working pages use everything below. Open them and view their source:
 
-- [mashlib.com](https://mashlib.com/): an address bar and the data browser.
+- [SolidOS Browser](https://solidos.org/docs/browser/): an address bar and the data browser.
 - [Data island demo](https://solidos.org/docs/data-island/): Turtle inside the page, drawn by SolidOS.
 - [Custom pane demo](https://solidos.org/docs/pane-demo/): a pane registered with `panes.register` and drawn for a real resource.
 
@@ -100,7 +100,7 @@ This is the markup of mashlib 3.1.0's `databrowser.html`, with the files loaded 
 
 ## The browse page, line by line
 
-mashlib 3.1.0's `static/browse.html` (published as `dist/browse.html`), with comments. [mashlib.com](https://mashlib.com/) is built on it. The [SolidOS Browser](https://solidos.org/docs/browser/) on this site is the same page for SolidOS loaded as ES modules, where a link can also add a pane: see [Dynamic panes](/docs/panes/dynamic-panes).
+mashlib 3.1.0's `static/browse.html` (published as `dist/browse.html`), with comments. The [SolidOS Browser](https://solidos.org/docs/browser/) on this site is the same page for SolidOS loaded as ES modules, where a link can also add a pane: see [Dynamic panes](/docs/panes/dynamic-panes).
 
 ### Markup
 
@@ -245,7 +245,7 @@ The upstream file also measures the header's height into `--browse-header-offset
 
 mashlib 3.1 sets `window.onpopstate`. When the page has not called `runDataBrowser()`, that handler shows the page's own URL on back and forward. The browse page above uses `replaceState`, so it never adds history entries and the handler never matters.
 
-If your page adds an entry per resource with `pushState`, replace the handler so that going back shows the previous `?uri=`. This is what [mashlib.com](https://mashlib.com/) does:
+If your page adds an entry per resource with `pushState`, replace the handler so that going back shows the previous `?uri=`. This is what the [SolidOS Browser](https://solidos.org/docs/browser/) does:
 
 ```javascript
 window.onpopstate = null

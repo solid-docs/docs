@@ -10,9 +10,9 @@ SolidOS is a data browser for [Solid](https://solidproject.org/) pods. Give it t
 
 ## What you see
 
-![SolidOS 3.1 at mashlib.com showing a public profile](/img/getting-started/mashlib-com-profile.png)
+![SolidOS 3.1 in the SolidOS Browser showing a public profile](/img/getting-started/mashlib-com-profile.png)
 
-You can try it now at **[mashlib.com](https://mashlib.com/)**, which serves the official mashlib 3.1.0 bundle. Paste an address into the bar and press **Go**.
+You can try it now in the **[SolidOS Browser](https://solidos.org/docs/browser/)**, which runs SolidOS 3.1 as plain ES modules. Paste an address into the bar and press **Go**.
 
 ## The packages
 
@@ -37,7 +37,7 @@ You can add panes of your own without rebuilding SolidOS: a pane is one ES modul
 
 ## Where SolidOS runs
 
-- **mashlib.com.** [mashlib.com](https://mashlib.com/) is the official bundle with an address bar. [mashlib.com/dynamic](https://mashlib.com/dynamic/) is the same data browser built from plain ES modules with no build step, and it can load extra panes from a link. See [mashlib.com and no-build SolidOS](../guides/mashlib-com.md).
+- **The SolidOS Browser.** The [SolidOS Browser](https://solidos.org/docs/browser/) is SolidOS 3.1 as plain ES modules with an address bar and no build step. It can load extra panes from a link. See [mashlib.com and no-build SolidOS](../guides/mashlib-com.md).
 - **On a pod server.** A Solid server can answer a browser's request for a resource with the data browser, so the pod shows itself in SolidOS. solidcommunity.net does this. The JavaScript Solid Server (JSS) does it with one flag. See [Running SolidOS on JSS](../guides/running-on-jss.md).
 - **In your own page.** Load mashlib in a page and point it at a resource. See [Embedding mashlib](../guides/embedding-mashlib.md).
 - **On the desktop.** [Data Kitchen](https://github.com/SolidOS/data-kitchen) wraps mashlib in Electron.

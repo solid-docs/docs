@@ -12,7 +12,7 @@ The SolidOS data browser runs entirely in the browser. Deploying it means servin
 
 | Way | What you host | SolidOS version | Read |
 |---|---|---|---|
-| Use mashlib.com | nothing | 3.1.0 | [mashlib.com](/docs/guides/mashlib-com) |
+| Use the SolidOS Browser | nothing | 3.1 | [mashlib.com](/docs/guides/mashlib-com) |
 | Static site, files at the root | `mashlib/dist/` | the one you copy | [below](#static-site) |
 | Your page, mashlib from a CDN | one HTML page and two small files | the one you pin | [below](#a-page-with-mashlib-from-a-cdn) |
 | JavaScript Solid Server pod | the server | 3.1 with `--mashlib-module` | [Running SolidOS on JSS](/docs/guides/running-on-jss) |
@@ -21,7 +21,7 @@ The SolidOS data browser runs entirely in the browser. Deploying it means servin
 
 ## Static site
 
-Copy all of `dist/` to the root of a site. This is how [mashlib.com](https://mashlib.com/) is served.
+Copy all of `dist/` to the root of a site.
 
 ```bash
 npm install mashlib@3.1.0

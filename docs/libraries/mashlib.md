@@ -15,7 +15,7 @@ This page is the reference. For walk-throughs, see:
 - [mashlib.com and the no-build data browser](/docs/guides/mashlib-com)
 - [Running SolidOS on JSS](/docs/guides/running-on-jss)
 
-Try it: [mashlib.com](https://mashlib.com/) runs the 3.1.0 bundle. The [Data island](https://solidos.org/docs/data-island/) and [Custom pane](https://solidos.org/docs/pane-demo/) demos on this site load it from jsDelivr. The [SolidOS Browser](https://solidos.org/docs/browser/) runs SolidOS 3.1 as ES modules from [mashlib.com/dynamic](https://mashlib.com/dynamic/), so a link can add a pane.
+Try it: the [Data island](https://solidos.org/docs/data-island/) and [Custom pane](https://solidos.org/docs/pane-demo/) demos on this site load the 3.1.0 bundle from jsDelivr. The [SolidOS Browser](https://solidos.org/docs/browser/) runs SolidOS 3.1 as ES modules, so a link can add a pane.
 
 ## Version 3.1.0
 
@@ -166,7 +166,7 @@ With no saved theme, mashlib follows the system's `prefers-color-scheme`. Panes 
 panes.register(myPane)
 ```
 
-A pane is an object with `name`, `icon`, `label(subject, context)` and `render(subject, context)`. Registered panes are offered after the built-in ones. You can also load panes from URLs at run time, from a JSS server's `--panes` list, or with `?pane=` on mashlib.com/dynamic. See [Dynamic panes](/docs/panes/dynamic-panes) and the [Custom pane demo](https://solidos.org/docs/pane-demo/).
+A pane is an object with `name`, `icon`, `label(subject, context)` and `render(subject, context)`. Registered panes are offered after the built-in ones. You can also load panes from URLs at run time, from a JSS server's `--panes` list, or with `?pane=` in the SolidOS Browser. See [Dynamic panes](/docs/panes/dynamic-panes) and the [Custom pane demo](https://solidos.org/docs/pane-demo/).
 
 ## Build from source
 
@@ -184,7 +184,7 @@ By default the build takes solid-ui and solid-panes from `node_modules`. To buil
 
 ## Where it runs
 
-- **Any static host**, as a browse page: [Embedding mashlib](/docs/guides/embedding-mashlib), [mashlib.com](https://mashlib.com/).
+- **Any static host**, as a browse page: [Embedding mashlib](/docs/guides/embedding-mashlib), [SolidOS Browser](https://solidos.org/docs/browser/).
 - **JavaScript Solid Server** serves a data browser page for every resource: [Running SolidOS on JSS](/docs/guides/running-on-jss).
 - **Node Solid Server** serves mashlib's `databrowser.html` for RDF resources. Its latest release, 6.0.0, depends on mashlib `^2.0.0`, so it ships 2.x.
 - **Data Kitchen**, a desktop app: [SolidOS/data-kitchen](https://github.com/SolidOS/data-kitchen).

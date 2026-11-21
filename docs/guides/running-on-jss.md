@@ -113,7 +113,7 @@ jss start --port 8732 --host 127.0.0.1 --root ./jss-data \
 
 ## JSON-LD and ACLs
 
-JSS accepts access control documents only as JSON-LD. A Turtle write to an ACL is answered with `415` and an `Accept-Put` header. SolidOS writes ACLs as Turtle (the sharing editor, new address books, long chats and schedules), so with the official mashlib bundle those writes fail on JSS. The no-build SolidOS at `mashlib.com/dynamic` retries such a write once as JSON-LD, which is one reason to use it on JSS.
+JSS accepts access control documents only as JSON-LD. A Turtle write to an ACL is answered with `415` and an `Accept-Put` header. SolidOS writes ACLs as Turtle (the sharing editor, new address books, long chats and schedules), so with the official mashlib bundle those writes fail on JSS. The no-build SolidOS retries such a write once as JSON-LD, which is one reason to use it on JSS.
 
 ## See also
 
