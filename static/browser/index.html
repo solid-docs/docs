@@ -29,8 +29,8 @@
          so the page's own address can be bookmarked or sent to someone.
          ?pane=<address of a pane module> adds a pane (may be repeated). A pane is code, so
          one from a site this browser has not allowed before is asked about first. -->
-    <script src="https://mashlib.com/dynamic/dist/manifest.js"></script>
-    <script src="https://mashlib.com/dynamic/src/importmap.js"></script>
+    <script src="https://mashlib.com/dynamic/v/0.0.1/dist/manifest.js"></script>
+    <script src="https://mashlib.com/dynamic/v/0.0.1/src/importmap.js"></script>
     <style>
       :root { --browse-bar-height: 56px }
       /* mashlib's stylesheet arrives after this one and has rules of its own for body: the id
@@ -117,7 +117,7 @@
           history.replaceState(history.state, '', location.pathname + '?' + encoded + location.hash)
         }
       }
-      await import('https://mashlib.com/dynamic/dist/mashlib.js')
+      await import('https://mashlib.com/dynamic/v/0.0.1/dist/mashlib.js')
 
       const dom = document
       const outliner = panes.getOutliner(dom)
@@ -207,7 +207,7 @@
       // The person's own panes and apps (userTools.js, beside mashlib.js): the panes named by ?pane=, and, once
       // logged in, those registered in their tool index; the apps in it as "Open with" links.
       // A pane from a site this browser has not allowed before is asked about first.
-      const { userTools, paneAddress } = await import('https://mashlib.com/dynamic/dist/userTools.js')
+      const { userTools, paneAddress } = await import('https://mashlib.com/dynamic/v/0.0.1/dist/userTools.js')
       tools = await userTools({
         dom, panes, store, $rdf, authn: SolidLogic.authn,
         subject: here,
