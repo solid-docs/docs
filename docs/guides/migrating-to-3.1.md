@@ -181,4 +181,4 @@ These two libraries changed the most. In short:
 
 - [Embedding mashlib](/docs/guides/embedding-mashlib)
 - [mashlib](/docs/libraries/mashlib)
-- [mashlib.com and the no-build data browser](/docs/guides/mashlib-com)
+- [The no-build data browser](/docs/guides/mashlib-com)

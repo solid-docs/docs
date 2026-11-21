@@ -12,7 +12,7 @@ The SolidOS data browser runs entirely in the browser. Deploying it means servin
 
 | Way | What you host | SolidOS version | Read |
 |---|---|---|---|
-| Use the SolidOS Browser | nothing | 3.1 | [mashlib.com](/docs/guides/mashlib-com) |
+| Use the SolidOS Browser | nothing | 3.1 | [the no-build data browser](/docs/guides/mashlib-com) |
 | Static site, files at the root | `mashlib/dist/` | the one you copy | [below](#static-site) |
 | Your page, mashlib from a CDN | one HTML page and two small files | the one you pin | [below](#a-page-with-mashlib-from-a-cdn) |
 | JavaScript Solid Server pod | the server | 3.1 with `--mashlib-module` | [Running SolidOS on JSS](/docs/guides/running-on-jss) |
@@ -79,4 +79,4 @@ Serve the page over HTTPS. The login client uses the browser's Web Crypto API, w
 
 - [mashlib](/docs/libraries/mashlib)
 - [Embedding mashlib](/docs/guides/embedding-mashlib)
-- [mashlib.com and the no-build data browser](/docs/guides/mashlib-com)
+- [The no-build data browser](/docs/guides/mashlib-com)

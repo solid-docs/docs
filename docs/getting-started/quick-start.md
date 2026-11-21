@@ -34,7 +34,7 @@ Open http://localhost:8000/mashlib/browse.html?uri=https://testingsolidos.solidc
 
 You see the same profile as in the SolidOS Browser. Every file under `mashlib/`, `src/` and `panes/` is loaded as it is, so you can edit one and reload. The libraries it imports (rdflib, solid-logic, lit and others) come from a CDN through `src/importmap.js`, so the page needs internet access.
 
-`mashlib/databrowser.html?uri=<address>` is the same without the address bar. See [mashlib.com and no-build SolidOS](../guides/mashlib-com.md) for what is in the tree.
+`mashlib/databrowser.html?uri=<address>` is the same without the address bar. See [No-build SolidOS](../guides/mashlib-com.md) for what is in the tree.
 
 ## 3. On a pod server
 

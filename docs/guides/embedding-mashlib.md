@@ -334,7 +334,7 @@ mashlib 3.1.0 fetches three more files when it needs them, and asks for them at 
 ## See also
 
 - [Migrating to 3.1](/docs/guides/migrating-to-3.1)
-- [mashlib.com and the no-build data browser](/docs/guides/mashlib-com)
+- [The no-build data browser](/docs/guides/mashlib-com)
 - [Running SolidOS on JSS](/docs/guides/running-on-jss)
 - [Navigation](/docs/panes/navigation)
 - [Deployment](/docs/reference/deployment)

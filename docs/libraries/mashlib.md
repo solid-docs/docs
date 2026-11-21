@@ -12,7 +12,7 @@ This page is the reference. For walk-throughs, see:
 
 - [Embedding mashlib](/docs/guides/embedding-mashlib): your own page with the data browser in it
 - [Migrating to 3.1](/docs/guides/migrating-to-3.1): what changed since 2.x
-- [mashlib.com and the no-build data browser](/docs/guides/mashlib-com)
+- [The no-build data browser](/docs/guides/mashlib-com)
 - [Running SolidOS on JSS](/docs/guides/running-on-jss)
 
 Try it: the [Data island](https://solidos.org/docs/data-island/) and [Custom pane](https://solidos.org/docs/pane-demo/) demos on this site load the 3.1.0 bundle from jsDelivr. The [SolidOS Browser](https://solidos.org/docs/browser/) runs SolidOS 3.1 as ES modules, so a link can add a pane.

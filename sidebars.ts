@@ -21,7 +21,7 @@ const sidebars: SidebarsConfig = {
       items: [
         {type: 'doc', id: 'guides/migrating-to-3.1', label: 'Migrating to 3.1'},
         {type: 'doc', id: 'guides/embedding-mashlib', label: 'Embedding mashlib'},
-        {type: 'doc', id: 'guides/mashlib-com', label: 'mashlib.com and no-build'},
+        {type: 'doc', id: 'guides/mashlib-com', label: 'The no-build data browser'},
         {type: 'doc', id: 'guides/running-on-jss', label: 'Running on JSS'},
       ],
     },

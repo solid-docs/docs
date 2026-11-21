@@ -38,7 +38,7 @@ jss start --mashlib-module https://mashlib.com/dynamic/dist/boot.js
 
 For every resource a browser navigates to, JSS returns a small page: a `<div id="mashlib">`, a `<script type="module">` for the URL you gave, and a stylesheet at the same URL with `.js` replaced by `.css`. The module does the rest.
 
-`https://mashlib.com/dynamic/dist/boot.js` is the no-build SolidOS 3.1 (mashlib 3.1.0, solid-panes 5.1.0, solid-ui 5.1.0 and the panes as ES modules), described in [mashlib.com](/docs/guides/mashlib-com#the-no-build-version). Two entry points are published:
+`https://mashlib.com/dynamic/dist/boot.js` is the no-build SolidOS 3.1 (mashlib 3.1.0, solid-panes 5.1.0, solid-ui 5.1.0 and the panes as ES modules), described in [the no-build data browser](/docs/guides/mashlib-com#the-no-build-version). Two entry points are published:
 
 | URL | What it is |
 |---|---|
@@ -118,6 +118,6 @@ JSS accepts access control documents only as JSON-LD. A Turtle write to an ACL i
 ## See also
 
 - [JSS: Mashlib Data Browser](https://github.com/JavaScriptSolidServer/JavaScriptSolidServer/blob/gh-pages/docs/mashlib.md), the reference for these flags
-- [mashlib.com and the no-build data browser](/docs/guides/mashlib-com)
+- [The no-build data browser](/docs/guides/mashlib-com)
 - [Dynamic panes](/docs/panes/dynamic-panes)
 - [Deployment](/docs/reference/deployment)

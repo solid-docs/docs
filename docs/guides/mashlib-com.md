@@ -1,10 +1,10 @@
 ---
 sidebar_position: 3
-title: mashlib.com and the no-build data browser
+title: The no-build data browser
 description: What mashlib.com and mashlib.com/dynamic serve, linking to a resource, and adding a pane by link with ?pane=
 ---
 
-# mashlib.com and the no-build data browser
+# The no-build data browser
 
 [mashlib.com](https://mashlib.com/) is a public SolidOS 3.1 data browser: paste the address of a pod, a folder, a profile or any document on a pod, and look at it. [mashlib.com/dynamic](https://mashlib.com/dynamic/) is the same data browser built without a build step, and it can load extra panes named in a link.
 

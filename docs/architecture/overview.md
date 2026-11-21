@@ -155,7 +155,7 @@ The larger panes are separate packages that solid-panes imports and registers: f
 
 | Setup | What serves the page | Read more |
 |-------|----------------------|-----------|
-| The SolidOS Browser | SolidOS 3.1 as plain ES modules with an address bar | [mashlib.com and no-build SolidOS](../guides/mashlib-com.md) |
+| The SolidOS Browser | SolidOS 3.1 as plain ES modules with an address bar | [No-build SolidOS](../guides/mashlib-com.md) |
 | A pod server | the server answers a browser's request for a resource with `databrowser.html` | [Running SolidOS on JSS](../guides/running-on-jss.md) |
 | Your own page | a page that loads mashlib and points it at a resource | [Embedding mashlib](../guides/embedding-mashlib.md) |
 | Desktop | [Data Kitchen](https://github.com/SolidOS/data-kitchen), mashlib in Electron | |

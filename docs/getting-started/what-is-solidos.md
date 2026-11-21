@@ -37,7 +37,7 @@ You can add panes of your own without rebuilding SolidOS: a pane is one ES modul
 
 ## Where SolidOS runs
 
-- **The SolidOS Browser.** The [SolidOS Browser](https://solidos.org/docs/browser/) is SolidOS 3.1 as plain ES modules with an address bar and no build step. It can load extra panes from a link. See [mashlib.com and no-build SolidOS](../guides/mashlib-com.md).
+- **The SolidOS Browser.** The [SolidOS Browser](https://solidos.org/docs/browser/) is SolidOS 3.1 as plain ES modules with an address bar and no build step. It can load extra panes from a link. See [No-build SolidOS](../guides/mashlib-com.md).
 - **On a pod server.** A Solid server can answer a browser's request for a resource with the data browser, so the pod shows itself in SolidOS. solidcommunity.net does this. The JavaScript Solid Server (JSS) does it with one flag. See [Running SolidOS on JSS](../guides/running-on-jss.md).
 - **In your own page.** Load mashlib in a page and point it at a resource. See [Embedding mashlib](../guides/embedding-mashlib.md).
 - **On the desktop.** [Data Kitchen](https://github.com/SolidOS/data-kitchen) wraps mashlib in Electron.
