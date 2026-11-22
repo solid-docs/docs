@@ -27,10 +27,15 @@
          the header beside the account buttons instead of a grey strip above them.
          ?uri=<address> opens one straight away, and is kept in step as you move around,
          so the page's own address can be bookmarked or sent to someone.
-         ?pane=<address of a pane module> adds a pane (may be repeated). A pane is code, so
-         one from a site this browser has not allowed before is asked about first. -->
-    <script src="https://mashlib.com/dynamic/v/0.0.1/dist/manifest.js"></script>
-    <script src="https://mashlib.com/dynamic/v/0.0.1/src/importmap.js"></script>
+         ?pane=<address of a pane module> adds a pane (may be repeated). Once logged in, the panes
+         registered in the person's tool index are added too (toolIndex.js). A pane is code, so
+         one from a site this browser has not allowed before is asked about first.
+         ?frame=<address of a pane module> adds a pane as a frame, drawn for every subject (as a
+         pane named by ?pane= whose default export says frame: true; see userTools.js).
+         A pane on show whose default export says chrome: 'none' hides the bar; the address
+         cannot. -->
+    <script src="https://mashlib.com/dynamic/v/0.0.3/dist/manifest.js"></script>
+    <script src="https://mashlib.com/dynamic/v/0.0.3/src/importmap.js"></script>
     <style>
       :root { --browse-bar-height: 56px }
       /* mashlib's stylesheet arrives after this one and has rules of its own for body: the id
@@ -75,6 +80,13 @@
       .browse-go:hover, .browse-go:focus-visible { background: #6a3bf0; outline: none }
       .browse-account { flex: none; display: flex; align-items: center }
 
+      /* No chrome (a pane on show with chrome: 'none'): the pane has the page. */
+      html[data-chrome="none"] .browse-bar,
+      html[data-chrome="none"] .browse-open-with,
+      html[data-chrome="none"] #OutlineView solid-ui-file-explorer-provider[data-outline-top] > solid-ui-file-explorer-header { display: none }
+      /* A question about a pane is still asked, above whatever the pane draws. */
+      html[data-chrome="none"] .browse-ask { position: fixed; z-index: 200; top: 16px; left: 16px; right: 16px; margin: 0 auto }
+
       /* The header takes the place of the data browser's own: the outline starts below it. */
       .browse-main { margin: 0; padding: 0 }
       .browse-main .outline-view { width: 100% }
@@ -117,7 +129,7 @@
           history.replaceState(history.state, '', location.pathname + '?' + encoded + location.hash)
         }
       }
-      await import('https://mashlib.com/dynamic/v/0.0.1/dist/mashlib.js')
+      await import('https://mashlib.com/dynamic/v/0.0.3/dist/mashlib.js')
 
       const dom = document
       const outliner = panes.getOutliner(dom)
@@ -128,6 +140,8 @@
       const ready = panes.initializeProfileHeading(() => here() || location.href) // as upstream: with nothing on show, the page itself
       let request = 0
       let tools = null // set below, once SolidOS is up (userTools.js, beside mashlib.js)
+      const whoNow = () => SolidLogic.authn.currentUser()?.uri || ''
+      let drawnAs // who was logged in when the view on show was drawn; undefined before the first
 
       // The page's address says what is on show (?uri=…), one history entry per thing visited.
       function remember (uri, replace) {
@@ -142,6 +156,7 @@
       const gotoSubject = outliner.GotoSubject.bind(outliner)
       outliner.GotoSubject = function (subject, expand, pane, solo, referrer, table, options) {
         if (solo && subject && subject.uri) {
+          drawnAs = whoNow()
           field.value = subject.uri
           remember(subject.uri, false)
           welcome.hidden = true
@@ -200,19 +215,24 @@
 
       // The bar can wrap on a narrow screen: tell the layout how tall it really is.
       const bar = dom.querySelector('.browse-bar')
-      const measure = () => dom.documentElement.style.setProperty('--app-header-height', bar.getBoundingClientRect().height + 'px')
+      // (With no chrome, html[data-chrome="none"], mashlib's stylesheet holds the offset at 0, and
+      // the bar's height is kept for when it comes back.)
+      const measure = () => {
+        if (dom.documentElement.dataset.chrome !== 'none') dom.documentElement.style.setProperty('--app-header-height', bar.getBoundingClientRect().height + 'px')
+      }
       measure()
       new ResizeObserver(measure).observe(bar)
 
       // The person's own panes and apps (userTools.js, beside mashlib.js): the panes named by ?pane=, and, once
       // logged in, those registered in their tool index; the apps in it as "Open with" links.
       // A pane from a site this browser has not allowed before is asked about first.
-      const { userTools, paneAddress } = await import('https://mashlib.com/dynamic/v/0.0.1/dist/userTools.js')
+      const { userTools, paneAddress } = await import('https://mashlib.com/dynamic/v/0.0.3/dist/userTools.js')
       tools = await userTools({
         dom, panes, store, $rdf, authn: SolidLogic.authn,
         subject: here,
         show: () => go(here(), true),
-        linkPanes: [...new Set(new URLSearchParams(location.search).getAll('pane'))].map(paneAddress)
+        linkPanes: [...new Set(new URLSearchParams(location.search).getAll('pane'))].map(paneAddress),
+        framePanes: [...new Set(new URLSearchParams(location.search).getAll('frame'))].map(paneAddress)
       })
 
       // Back and forward: show what the page's address now says. (mashlib's own handler would
@@ -224,9 +244,11 @@
         else { field.value = ''; welcome.hidden = false; dom.getElementById('OutlineView').replaceChildren() }
       })
 
-      // Logging in or out changes what can be seen: show the same thing again.
+      // Logging in or out changes what can be seen: show the same thing again. Only then: a
+      // session restored after the view was drawn, as the same person, draws nothing again (it
+      // would drop a pane that has just opened, and a click made at that moment).
       for (const event of ['login', 'sessionRestore', 'logout', 'sessionChange', 'identityReplaced']) {
-        SolidLogic.authn.authSession.events.on(event, () => { if (here()) go(here(), true) })
+        SolidLogic.authn.authSession.events.on(event, () => { if (here() && drawnAs !== undefined && whoNow() !== drawnAs) go(here(), true) })
       }
 
       if (here()) go(here(), true)
